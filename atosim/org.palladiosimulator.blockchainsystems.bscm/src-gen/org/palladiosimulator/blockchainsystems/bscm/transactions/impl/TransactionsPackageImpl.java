@@ -18,6 +18,10 @@ import org.eclipse.emf.ecore.EcorePackage;
 
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackmodelPackage;
+
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.impl.AttackmodelPackageImpl;
+
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainsystemPackage;
 
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.impl.BlockchainsystemPackageImpl;
@@ -139,12 +143,12 @@ public class TransactionsPackageImpl extends EPackageImpl implements Transaction
 		isInited = true;
 
 		// Initialize simple dependencies
-		PcmPackage.eINSTANCE.eClass();
-		IdentifierPackage.eINSTANCE.eClass();
 		EcorePackage.eINSTANCE.eClass();
+		IdentifierPackage.eINSTANCE.eClass();
+		PcmPackage.eINSTANCE.eClass();
+		ProbfunctionPackage.eINSTANCE.eClass();
 		StoexPackage.eINSTANCE.eClass();
 		UnitsPackage.eINSTANCE.eClass();
-		ProbfunctionPackage.eINSTANCE.eClass();
 
 		// Obtain or create and register interdependencies
 		Object registeredPackage = EPackage.Registry.INSTANCE.getEPackage(NodeallocationPackage.eNS_URI);
@@ -179,6 +183,10 @@ public class TransactionsPackageImpl extends EPackageImpl implements Transaction
 		LinkallocationPackageImpl theLinkallocationPackage = (LinkallocationPackageImpl) (registeredPackage instanceof LinkallocationPackageImpl
 				? registeredPackage
 				: LinkallocationPackage.eINSTANCE);
+		registeredPackage = EPackage.Registry.INSTANCE.getEPackage(AttackmodelPackage.eNS_URI);
+		AttackmodelPackageImpl theAttackmodelPackage = (AttackmodelPackageImpl) (registeredPackage instanceof AttackmodelPackageImpl
+				? registeredPackage
+				: AttackmodelPackage.eINSTANCE);
 
 		// Create package meta-data objects
 		theTransactionsPackage.createPackageContents();
@@ -190,6 +198,7 @@ public class TransactionsPackageImpl extends EPackageImpl implements Transaction
 		theNodeenvironmentPackage.createPackageContents();
 		theGeographicalregionsPackage.createPackageContents();
 		theLinkallocationPackage.createPackageContents();
+		theAttackmodelPackage.createPackageContents();
 
 		// Initialize created meta-data
 		theTransactionsPackage.initializePackageContents();
@@ -201,6 +210,7 @@ public class TransactionsPackageImpl extends EPackageImpl implements Transaction
 		theNodeenvironmentPackage.initializePackageContents();
 		theGeographicalregionsPackage.initializePackageContents();
 		theLinkallocationPackage.initializePackageContents();
+		theAttackmodelPackage.initializePackageContents();
 
 		// Mark meta-data to indicate it can't be changed
 		theTransactionsPackage.freeze();

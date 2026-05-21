@@ -151,22 +151,13 @@ public interface LinkallocationPackage extends EPackage {
 	int LINK_ALLOCATION__THROUGHPUT_SPECIFICATION = EntityPackage.ENTITY_FEATURE_COUNT + 1;
 
 	/**
-	 * The feature id for the '<em><b>Bandwidth Specification</b></em>' containment reference.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int LINK_ALLOCATION__BANDWIDTH_SPECIFICATION = EntityPackage.ENTITY_FEATURE_COUNT + 2;
-
-	/**
 	 * The number of structural features of the '<em>Link Allocation</em>' class.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @generated
 	 * @ordered
 	 */
-	int LINK_ALLOCATION_FEATURE_COUNT = EntityPackage.ENTITY_FEATURE_COUNT + 3;
+	int LINK_ALLOCATION_FEATURE_COUNT = EntityPackage.ENTITY_FEATURE_COUNT + 2;
 
 	/**
 	 * The meta object id for the '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkLatencySpecificationImpl <em>Link Latency Specification</em>}' class.
@@ -206,70 +197,6 @@ public interface LinkallocationPackage extends EPackage {
 	int LINK_LATENCY_SPECIFICATION_FEATURE_COUNT = EntityPackage.ENTITY_FEATURE_COUNT + 0;
 
 	/**
-	 * The meta object id for the '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.BandwidthSpecificationImpl <em>Bandwidth Specification</em>}' class.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.BandwidthSpecificationImpl
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getBandwidthSpecification()
-	 * @generated
-	 */
-	int BANDWIDTH_SPECIFICATION = 3;
-
-	/**
-	 * The feature id for the '<em><b>Id</b></em>' attribute.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BANDWIDTH_SPECIFICATION__ID = EntityPackage.ENTITY__ID;
-
-	/**
-	 * The feature id for the '<em><b>Entity Name</b></em>' attribute.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BANDWIDTH_SPECIFICATION__ENTITY_NAME = EntityPackage.ENTITY__ENTITY_NAME;
-
-	/**
-	 * The feature id for the '<em><b>Bandwidth</b></em>' attribute.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BANDWIDTH_SPECIFICATION__BANDWIDTH = EntityPackage.ENTITY_FEATURE_COUNT + 0;
-
-	/**
-	 * The feature id for the '<em><b>Heterogeneity Link Target</b></em>' attribute.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BANDWIDTH_SPECIFICATION__HETEROGENEITY_LINK_TARGET = EntityPackage.ENTITY_FEATURE_COUNT + 1;
-
-	/**
-	 * The feature id for the '<em><b>Heterogeneity Node Target</b></em>' attribute.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BANDWIDTH_SPECIFICATION__HETEROGENEITY_NODE_TARGET = EntityPackage.ENTITY_FEATURE_COUNT + 2;
-
-	/**
-	 * The number of structural features of the '<em>Bandwidth Specification</em>' class.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BANDWIDTH_SPECIFICATION_FEATURE_COUNT = EntityPackage.ENTITY_FEATURE_COUNT + 3;
-
-	/**
 	 * The meta object id for the '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.DynamicLinkLatencySpecificationValueImpl <em>Dynamic Link Latency Specification Value</em>}' class.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
@@ -277,7 +204,7 @@ public interface LinkallocationPackage extends EPackage {
 	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getDynamicLinkLatencySpecificationValue()
 	 * @generated
 	 */
-	int DYNAMIC_LINK_LATENCY_SPECIFICATION_VALUE = 4;
+	int DYNAMIC_LINK_LATENCY_SPECIFICATION_VALUE = 3;
 
 	/**
 	 * The feature id for the '<em><b>Id</b></em>' attribute.
@@ -341,7 +268,7 @@ public interface LinkallocationPackage extends EPackage {
 	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getLinkThroughputSpecification()
 	 * @generated
 	 */
-	int LINK_THROUGHPUT_SPECIFICATION = 5;
+	int LINK_THROUGHPUT_SPECIFICATION = 4;
 
 	/**
 	 * The feature id for the '<em><b>Id</b></em>' attribute.
@@ -378,7 +305,7 @@ public interface LinkallocationPackage extends EPackage {
 	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getDynamicLinkThroughputSpecificationValue()
 	 * @generated
 	 */
-	int DYNAMIC_LINK_THROUGHPUT_SPECIFICATION_VALUE = 6;
+	int DYNAMIC_LINK_THROUGHPUT_SPECIFICATION_VALUE = 5;
 
 	/**
 	 * The feature id for the '<em><b>Id</b></em>' attribute.
@@ -442,7 +369,7 @@ public interface LinkallocationPackage extends EPackage {
 	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getDynamicLinkLatencySpecification()
 	 * @generated
 	 */
-	int DYNAMIC_LINK_LATENCY_SPECIFICATION = 7;
+	int DYNAMIC_LINK_LATENCY_SPECIFICATION = 6;
 
 	/**
 	 * The feature id for the '<em><b>Id</b></em>' attribute.
@@ -488,7 +415,7 @@ public interface LinkallocationPackage extends EPackage {
 	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getDynamicLinkThroughputSpecification()
 	 * @generated
 	 */
-	int DYNAMIC_LINK_THROUGHPUT_SPECIFICATION = 8;
+	int DYNAMIC_LINK_THROUGHPUT_SPECIFICATION = 7;
 
 	/**
 	 * The feature id for the '<em><b>Id</b></em>' attribute.
@@ -534,7 +461,7 @@ public interface LinkallocationPackage extends EPackage {
 	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getStaticLinkLatencySpecification()
 	 * @generated
 	 */
-	int STATIC_LINK_LATENCY_SPECIFICATION = 9;
+	int STATIC_LINK_LATENCY_SPECIFICATION = 8;
 
 	/**
 	 * The feature id for the '<em><b>Id</b></em>' attribute.
@@ -580,7 +507,7 @@ public interface LinkallocationPackage extends EPackage {
 	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getStaticLinkThroughputSpecification()
 	 * @generated
 	 */
-	int STATIC_LINK_THROUGHPUT_SPECIFICATION = 10;
+	int STATIC_LINK_THROUGHPUT_SPECIFICATION = 9;
 
 	/**
 	 * The feature id for the '<em><b>Id</b></em>' attribute.
@@ -672,17 +599,6 @@ public interface LinkallocationPackage extends EPackage {
 	EReference getLinkAllocation_ThroughputSpecification();
 
 	/**
-	 * Returns the meta object for the containment reference '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.LinkAllocation#getBandwidthSpecification <em>Bandwidth Specification</em>}'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return the meta object for the containment reference '<em>Bandwidth Specification</em>'.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.LinkAllocation#getBandwidthSpecification()
-	 * @see #getLinkAllocation()
-	 * @generated
-	 */
-	EReference getLinkAllocation_BandwidthSpecification();
-
-	/**
 	 * Returns the meta object for class '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.LinkLatencySpecification <em>Link Latency Specification</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
@@ -691,49 +607,6 @@ public interface LinkallocationPackage extends EPackage {
 	 * @generated
 	 */
 	EClass getLinkLatencySpecification();
-
-	/**
-	 * Returns the meta object for class '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification <em>Bandwidth Specification</em>}'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return the meta object for class '<em>Bandwidth Specification</em>'.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification
-	 * @generated
-	 */
-	EClass getBandwidthSpecification();
-
-	/**
-	 * Returns the meta object for the attribute '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification#getBandwidth <em>Bandwidth</em>}'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return the meta object for the attribute '<em>Bandwidth</em>'.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification#getBandwidth()
-	 * @see #getBandwidthSpecification()
-	 * @generated
-	 */
-	EAttribute getBandwidthSpecification_Bandwidth();
-
-	/**
-	 * Returns the meta object for the attribute '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification#getHeterogeneityLinkTarget <em>Heterogeneity Link Target</em>}'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return the meta object for the attribute '<em>Heterogeneity Link Target</em>'.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification#getHeterogeneityLinkTarget()
-	 * @see #getBandwidthSpecification()
-	 * @generated
-	 */
-	EAttribute getBandwidthSpecification_HeterogeneityLinkTarget();
-
-	/**
-	 * Returns the meta object for the attribute '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification#getHeterogeneityNodeTarget <em>Heterogeneity Node Target</em>}'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return the meta object for the attribute '<em>Heterogeneity Node Target</em>'.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification#getHeterogeneityNodeTarget()
-	 * @see #getBandwidthSpecification()
-	 * @generated
-	 */
-	EAttribute getBandwidthSpecification_HeterogeneityNodeTarget();
 
 	/**
 	 * Returns the meta object for class '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.DynamicLinkLatencySpecificationValue <em>Dynamic Link Latency Specification Value</em>}'.
@@ -983,14 +856,6 @@ public interface LinkallocationPackage extends EPackage {
 		EReference LINK_ALLOCATION__THROUGHPUT_SPECIFICATION = eINSTANCE.getLinkAllocation_ThroughputSpecification();
 
 		/**
-		 * The meta object literal for the '<em><b>Bandwidth Specification</b></em>' containment reference feature.
-		 * <!-- begin-user-doc -->
-		 * <!-- end-user-doc -->
-		 * @generated
-		 */
-		EReference LINK_ALLOCATION__BANDWIDTH_SPECIFICATION = eINSTANCE.getLinkAllocation_BandwidthSpecification();
-
-		/**
 		 * The meta object literal for the '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkLatencySpecificationImpl <em>Link Latency Specification</em>}' class.
 		 * <!-- begin-user-doc -->
 		 * <!-- end-user-doc -->
@@ -999,42 +864,6 @@ public interface LinkallocationPackage extends EPackage {
 		 * @generated
 		 */
 		EClass LINK_LATENCY_SPECIFICATION = eINSTANCE.getLinkLatencySpecification();
-
-		/**
-		 * The meta object literal for the '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.BandwidthSpecificationImpl <em>Bandwidth Specification</em>}' class.
-		 * <!-- begin-user-doc -->
-		 * <!-- end-user-doc -->
-		 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.BandwidthSpecificationImpl
-		 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.LinkallocationPackageImpl#getBandwidthSpecification()
-		 * @generated
-		 */
-		EClass BANDWIDTH_SPECIFICATION = eINSTANCE.getBandwidthSpecification();
-
-		/**
-		 * The meta object literal for the '<em><b>Bandwidth</b></em>' attribute feature.
-		 * <!-- begin-user-doc -->
-		 * <!-- end-user-doc -->
-		 * @generated
-		 */
-		EAttribute BANDWIDTH_SPECIFICATION__BANDWIDTH = eINSTANCE.getBandwidthSpecification_Bandwidth();
-
-		/**
-		 * The meta object literal for the '<em><b>Heterogeneity Link Target</b></em>' attribute feature.
-		 * <!-- begin-user-doc -->
-		 * <!-- end-user-doc -->
-		 * @generated
-		 */
-		EAttribute BANDWIDTH_SPECIFICATION__HETEROGENEITY_LINK_TARGET = eINSTANCE
-				.getBandwidthSpecification_HeterogeneityLinkTarget();
-
-		/**
-		 * The meta object literal for the '<em><b>Heterogeneity Node Target</b></em>' attribute feature.
-		 * <!-- begin-user-doc -->
-		 * <!-- end-user-doc -->
-		 * @generated
-		 */
-		EAttribute BANDWIDTH_SPECIFICATION__HETEROGENEITY_NODE_TARGET = eINSTANCE
-				.getBandwidthSpecification_HeterogeneityNodeTarget();
 
 		/**
 		 * The meta object literal for the '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.impl.DynamicLinkLatencySpecificationValueImpl <em>Dynamic Link Latency Specification Value</em>}' class.

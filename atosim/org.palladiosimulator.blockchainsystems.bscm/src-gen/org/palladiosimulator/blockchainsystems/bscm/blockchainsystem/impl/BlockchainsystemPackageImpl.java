@@ -18,6 +18,10 @@ import org.eclipse.emf.ecore.EcorePackage;
 
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackmodelPackage;
+
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.impl.AttackmodelPackageImpl;
+
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystem;
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystemSpecification;
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainsystemFactory;
@@ -131,12 +135,12 @@ public class BlockchainsystemPackageImpl extends EPackageImpl implements Blockch
 		isInited = true;
 
 		// Initialize simple dependencies
-		PcmPackage.eINSTANCE.eClass();
-		IdentifierPackage.eINSTANCE.eClass();
 		EcorePackage.eINSTANCE.eClass();
+		IdentifierPackage.eINSTANCE.eClass();
+		PcmPackage.eINSTANCE.eClass();
+		ProbfunctionPackage.eINSTANCE.eClass();
 		StoexPackage.eINSTANCE.eClass();
 		UnitsPackage.eINSTANCE.eClass();
-		ProbfunctionPackage.eINSTANCE.eClass();
 
 		// Obtain or create and register interdependencies
 		Object registeredPackage = EPackage.Registry.INSTANCE.getEPackage(NodeallocationPackage.eNS_URI);
@@ -171,6 +175,10 @@ public class BlockchainsystemPackageImpl extends EPackageImpl implements Blockch
 		TransactionsPackageImpl theTransactionsPackage = (TransactionsPackageImpl) (registeredPackage instanceof TransactionsPackageImpl
 				? registeredPackage
 				: TransactionsPackage.eINSTANCE);
+		registeredPackage = EPackage.Registry.INSTANCE.getEPackage(AttackmodelPackage.eNS_URI);
+		AttackmodelPackageImpl theAttackmodelPackage = (AttackmodelPackageImpl) (registeredPackage instanceof AttackmodelPackageImpl
+				? registeredPackage
+				: AttackmodelPackage.eINSTANCE);
 
 		// Create package meta-data objects
 		theBlockchainsystemPackage.createPackageContents();
@@ -182,6 +190,7 @@ public class BlockchainsystemPackageImpl extends EPackageImpl implements Blockch
 		theGeographicalregionsPackage.createPackageContents();
 		theLinkallocationPackage.createPackageContents();
 		theTransactionsPackage.createPackageContents();
+		theAttackmodelPackage.createPackageContents();
 
 		// Initialize created meta-data
 		theBlockchainsystemPackage.initializePackageContents();
@@ -193,6 +202,7 @@ public class BlockchainsystemPackageImpl extends EPackageImpl implements Blockch
 		theGeographicalregionsPackage.initializePackageContents();
 		theLinkallocationPackage.initializePackageContents();
 		theTransactionsPackage.initializePackageContents();
+		theAttackmodelPackage.initializePackageContents();
 
 		// Mark meta-data to indicate it can't be changed
 		theBlockchainsystemPackage.freeze();
@@ -308,26 +318,6 @@ public class BlockchainsystemPackageImpl extends EPackageImpl implements Blockch
 	 * @generated
 	 */
 	@Override
-	public EAttribute getBlockchainSystemSpecification_HashRateConcentration() {
-		return (EAttribute) blockchainSystemSpecificationEClass.getEStructuralFeatures().get(4);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EAttribute getBlockchainSystemSpecification_NumberOfAttacker() {
-		return (EAttribute) blockchainSystemSpecificationEClass.getEStructuralFeatures().get(5);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
 	public BlockchainsystemFactory getBlockchainsystemFactory() {
 		return (BlockchainsystemFactory) getEFactoryInstance();
 	}
@@ -364,8 +354,6 @@ public class BlockchainsystemPackageImpl extends EPackageImpl implements Blockch
 				BLOCKCHAIN_SYSTEM_SPECIFICATION__NUM_OF_REQUIRED_SECURITY_CONFIRMATIONS);
 		createEAttribute(blockchainSystemSpecificationEClass, BLOCKCHAIN_SYSTEM_SPECIFICATION__MAX_BLOCK_SIZE);
 		createEAttribute(blockchainSystemSpecificationEClass, BLOCKCHAIN_SYSTEM_SPECIFICATION__BLOCK_REWARD);
-		createEAttribute(blockchainSystemSpecificationEClass, BLOCKCHAIN_SYSTEM_SPECIFICATION__HASH_RATE_CONCENTRATION);
-		createEAttribute(blockchainSystemSpecificationEClass, BLOCKCHAIN_SYSTEM_SPECIFICATION__NUMBER_OF_ATTACKER);
 	}
 
 	/**
@@ -442,12 +430,6 @@ public class BlockchainsystemPackageImpl extends EPackageImpl implements Blockch
 		initEAttribute(getBlockchainSystemSpecification_BlockReward(), theEcorePackage.getEDouble(), "BlockReward",
 				null, 0, 1, BlockchainSystemSpecification.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
 				!IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEAttribute(getBlockchainSystemSpecification_HashRateConcentration(), theEcorePackage.getEDouble(),
-				"HashRateConcentration", null, 1, 1, BlockchainSystemSpecification.class, !IS_TRANSIENT, !IS_VOLATILE,
-				IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEAttribute(getBlockchainSystemSpecification_NumberOfAttacker(), theEcorePackage.getEInt(),
-				"NumberOfAttacker", "0", 1, 1, BlockchainSystemSpecification.class, !IS_TRANSIENT, !IS_VOLATILE,
-				IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
 		// Create resource
 		createResource(eNS_URI);

@@ -60,8 +60,6 @@ public class LinkallocationFactoryImpl extends EFactoryImpl implements Linkalloc
 			return createLinkAllocationRepository();
 		case LinkallocationPackage.LINK_ALLOCATION:
 			return createLinkAllocation();
-		case LinkallocationPackage.BANDWIDTH_SPECIFICATION:
-			return createBandwidthSpecification();
 		case LinkallocationPackage.DYNAMIC_LINK_LATENCY_SPECIFICATION_VALUE:
 			return createDynamicLinkLatencySpecificationValue();
 		case LinkallocationPackage.DYNAMIC_LINK_THROUGHPUT_SPECIFICATION_VALUE:
@@ -99,17 +97,6 @@ public class LinkallocationFactoryImpl extends EFactoryImpl implements Linkalloc
 	public LinkAllocation createLinkAllocation() {
 		LinkAllocationImpl linkAllocation = new LinkAllocationImpl();
 		return linkAllocation;
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public BandwidthSpecification createBandwidthSpecification() {
-		BandwidthSpecificationImpl bandwidthSpecification = new BandwidthSpecificationImpl();
-		return bandwidthSpecification;
 	}
 
 	/**

@@ -48,21 +48,7 @@ class BlockchainImpl(
   override fun appendBlock(block: Block): BlockAppendingResult {
     val alreadyKnown = hasBlockWithHash(block.hash)
 
-    println(
-      "APPEND ENTER " +
-              "chain=${System.identityHashCode(this)} " +
-              "hash=${block.hash} " +
-              "prev=${block.previousHash} " +
-              "alreadyKnown=$alreadyKnown"
-    )
-
     if (alreadyKnown) {
-      println(
-        "APPEND EXIT " +
-                "chain=${System.identityHashCode(this)} " +
-                "hash=${block.hash} " +
-                "result=AlreadyAppended"
-      )
       return BlockAppendingResult.createBlockAlreadyAppendedResult()
     }
 
@@ -71,54 +57,20 @@ class BlockchainImpl(
 
       if (this.length < newBlockchainElementPosition) {
         appendIncludedBlock(block, previousBlockchainElement, newBlockchainElementPosition)
-
-        println(
-          "APPEND EXIT " +
-                  "chain=${System.identityHashCode(this)} " +
-                  "hash=${block.hash} " +
-                  "result=Appended " +
-                  "blockType=${BlockType.IncludedBlock} " +
-                  "newPosition=$newBlockchainElementPosition " +
-                  "length=${this.length}"
-        )
         return BlockAppendingResult.createBlockAppendedResult(BlockType.IncludedBlock)
 
       } else if (this.length == newBlockchainElementPosition) {
         appendForkingBlock(block, previousBlockchainElement, newBlockchainElementPosition)
 
-        println(
-          "APPEND EXIT " +
-                  "chain=${System.identityHashCode(this)} " +
-                  "hash=${block.hash} " +
-                  "result=Appended " +
-                  "blockType=${BlockType.ForkingBlock} " +
-                  "newPosition=$newBlockchainElementPosition " +
-                  "length=${this.length}"
-        )
         return BlockAppendingResult.createBlockAppendedResult(BlockType.ForkingBlock)
 
       } else {
         appendStaleBlock(block, previousBlockchainElement, newBlockchainElementPosition)
 
-        println(
-          "APPEND EXIT " +
-                  "chain=${System.identityHashCode(this)} " +
-                  "hash=${block.hash} " +
-                  "result=Appended " +
-                  "blockType=${BlockType.StaleBlock} " +
-                  "newPosition=$newBlockchainElementPosition " +
-                  "length=${this.length}"
-        )
         return BlockAppendingResult.createBlockAppendedResult(BlockType.StaleBlock)
       }
     }
-
-    println(
-      "APPEND EXIT " +
-              "chain=${System.identityHashCode(this)} " +
-              "hash=${block.hash} " +
-              "result=Orphan"
-    )
+    
     return BlockAppendingResult.createBlockNoAppendedBecauseOrphanBlockResult()
   }
 

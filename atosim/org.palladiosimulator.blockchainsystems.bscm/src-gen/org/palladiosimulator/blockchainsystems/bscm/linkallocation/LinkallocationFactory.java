@@ -41,15 +41,6 @@ public interface LinkallocationFactory extends EFactory {
 	LinkAllocation createLinkAllocation();
 
 	/**
-	 * Returns a new object of class '<em>Bandwidth Specification</em>'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return a new object of class '<em>Bandwidth Specification</em>'.
-	 * @generated
-	 */
-	BandwidthSpecification createBandwidthSpecification();
-
-	/**
 	 * Returns a new object of class '<em>Dynamic Link Latency Specification Value</em>'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->

@@ -18,6 +18,10 @@ import org.eclipse.emf.ecore.EcorePackage;
 
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackmodelPackage;
+
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.impl.AttackmodelPackageImpl;
+
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainsystemPackage;
 
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.impl.BlockchainsystemPackageImpl;
@@ -165,12 +169,12 @@ public class BlockchainsystemComponentRepositoryPackageImpl extends EPackageImpl
 		isInited = true;
 
 		// Initialize simple dependencies
-		PcmPackage.eINSTANCE.eClass();
-		IdentifierPackage.eINSTANCE.eClass();
 		EcorePackage.eINSTANCE.eClass();
+		IdentifierPackage.eINSTANCE.eClass();
+		PcmPackage.eINSTANCE.eClass();
+		ProbfunctionPackage.eINSTANCE.eClass();
 		StoexPackage.eINSTANCE.eClass();
 		UnitsPackage.eINSTANCE.eClass();
-		ProbfunctionPackage.eINSTANCE.eClass();
 
 		// Obtain or create and register interdependencies
 		Object registeredPackage = EPackage.Registry.INSTANCE.getEPackage(NodeallocationPackage.eNS_URI);
@@ -205,6 +209,10 @@ public class BlockchainsystemComponentRepositoryPackageImpl extends EPackageImpl
 		TransactionsPackageImpl theTransactionsPackage = (TransactionsPackageImpl) (registeredPackage instanceof TransactionsPackageImpl
 				? registeredPackage
 				: TransactionsPackage.eINSTANCE);
+		registeredPackage = EPackage.Registry.INSTANCE.getEPackage(AttackmodelPackage.eNS_URI);
+		AttackmodelPackageImpl theAttackmodelPackage = (AttackmodelPackageImpl) (registeredPackage instanceof AttackmodelPackageImpl
+				? registeredPackage
+				: AttackmodelPackage.eINSTANCE);
 
 		// Create package meta-data objects
 		theBlockchainsystemComponentRepositoryPackage.createPackageContents();
@@ -216,6 +224,7 @@ public class BlockchainsystemComponentRepositoryPackageImpl extends EPackageImpl
 		theGeographicalregionsPackage.createPackageContents();
 		theLinkallocationPackage.createPackageContents();
 		theTransactionsPackage.createPackageContents();
+		theAttackmodelPackage.createPackageContents();
 
 		// Initialize created meta-data
 		theBlockchainsystemComponentRepositoryPackage.initializePackageContents();
@@ -227,6 +236,7 @@ public class BlockchainsystemComponentRepositoryPackageImpl extends EPackageImpl
 		theGeographicalregionsPackage.initializePackageContents();
 		theLinkallocationPackage.initializePackageContents();
 		theTransactionsPackage.initializePackageContents();
+		theAttackmodelPackage.initializePackageContents();
 
 		// Mark meta-data to indicate it can't be changed
 		theBlockchainsystemComponentRepositoryPackage.freeze();
@@ -285,16 +295,6 @@ public class BlockchainsystemComponentRepositoryPackageImpl extends EPackageImpl
 	@Override
 	public EReference getBlockValidatorComponent_ValidationDuration() {
 		return (EReference) blockValidatorComponentEClass.getEStructuralFeatures().get(0);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EAttribute getBlockValidatorComponent_Crashed() {
-		return (EAttribute) blockValidatorComponentEClass.getEStructuralFeatures().get(1);
 	}
 
 	/**
@@ -405,7 +405,6 @@ public class BlockchainsystemComponentRepositoryPackageImpl extends EPackageImpl
 
 		blockValidatorComponentEClass = createEClass(BLOCK_VALIDATOR_COMPONENT);
 		createEReference(blockValidatorComponentEClass, BLOCK_VALIDATOR_COMPONENT__VALIDATION_DURATION);
-		createEAttribute(blockValidatorComponentEClass, BLOCK_VALIDATOR_COMPONENT__CRASHED);
 
 		miningProcessComponentEClass = createEClass(MINING_PROCESS_COMPONENT);
 		createEAttribute(miningProcessComponentEClass, MINING_PROCESS_COMPONENT__IS_MINING_PROCESS_ENABLED);
@@ -474,9 +473,6 @@ public class BlockchainsystemComponentRepositoryPackageImpl extends EPackageImpl
 		initEReference(getBlockValidatorComponent_ValidationDuration(), this.getBlockValiationDurationSpecification(),
 				null, "ValidationDuration", null, 1, 1, BlockValidatorComponent.class, !IS_TRANSIENT, !IS_VOLATILE,
 				IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEAttribute(getBlockValidatorComponent_Crashed(), theEcorePackage.getEBoolean(), "crashed", null, 0, 1,
-				BlockValidatorComponent.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID,
-				IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
 		initEClass(miningProcessComponentEClass, MiningProcessComponent.class, "MiningProcessComponent", !IS_ABSTRACT,
 				!IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);

@@ -22,6 +22,7 @@
       </wizard>
    </extension>
 
+
    <extension point="org.eclipse.ui.editors">
       <!-- @generated bscm -->
       <editor
@@ -84,7 +85,7 @@
             id="org.palladiosimulator.blockchainsystems.bscm.blockchainsystemComponentRepository.presentation.BlockchainsystemComponentRepositoryEditorID"
             name="%_UI_BlockchainsystemComponentRepositoryEditor_label"
             icon="icons/full/obj16/BlockchainsystemComponentRepositoryModelFile.gif"
-            extensions="bscmrepository"
+            extensions="blockchainsystemcomponentrepository"
             class="org.palladiosimulator.blockchainsystems.bscm.blockchainsystemComponentRepository.presentation.BlockchainsystemComponentRepositoryEditor"
             contributorClass="org.palladiosimulator.blockchainsystems.bscm.blockchainsystemComponentRepository.presentation.BlockchainsystemComponentRepositoryActionBarContributor">
       </editor>
@@ -255,6 +256,34 @@
             extensions="transactions"
             class="org.palladiosimulator.blockchainsystems.bscm.transactions.presentation.TransactionsEditor"
             contributorClass="org.palladiosimulator.blockchainsystems.bscm.transactions.presentation.TransactionsActionBarContributor">
+      </editor>
+   </extension>
+
+   <extension point="org.eclipse.ui.newWizards">
+      <!-- @generated bscm -->
+      <category
+            id="org.eclipse.emf.ecore.Wizard.category.ID"
+            name="%_UI_Wizard_category"/>
+      <wizard
+            id="org.palladiosimulator.blockchainsystems.bscm.attackmodel.presentation.AttackmodelModelWizardID"
+            name="%_UI_AttackmodelModelWizard_label"
+            class="org.palladiosimulator.blockchainsystems.bscm.attackmodel.presentation.AttackmodelModelWizard"
+            category="org.eclipse.emf.ecore.Wizard.category.ID"
+            icon="icons/full/obj16/AttackmodelModelFile.gif">
+         <description>%_UI_AttackmodelModelWizard_description</description>
+         <selection class="org.eclipse.core.resources.IResource"/>
+      </wizard>
+   </extension>
+
+   <extension point="org.eclipse.ui.editors">
+      <!-- @generated bscm -->
+      <editor
+            id="org.palladiosimulator.blockchainsystems.bscm.attackmodel.presentation.AttackmodelEditorID"
+            name="%_UI_AttackmodelEditor_label"
+            icon="icons/full/obj16/AttackmodelModelFile.gif"
+            extensions="attackmodel"
+            class="org.palladiosimulator.blockchainsystems.bscm.attackmodel.presentation.AttackmodelEditor"
+            contributorClass="org.palladiosimulator.blockchainsystems.bscm.attackmodel.presentation.AttackmodelActionBarContributor">
       </editor>
    </extension>
 
