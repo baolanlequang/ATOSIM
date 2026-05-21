@@ -69,7 +69,6 @@ public class LinkAllocationItemProvider extends EntityItemProvider {
 			super.getChildrenFeatures(object);
 			childrenFeatures.add(LinkallocationPackage.Literals.LINK_ALLOCATION__LATENCY_SPECIFICATION);
 			childrenFeatures.add(LinkallocationPackage.Literals.LINK_ALLOCATION__THROUGHPUT_SPECIFICATION);
-			childrenFeatures.add(LinkallocationPackage.Literals.LINK_ALLOCATION__BANDWIDTH_SPECIFICATION);
 		}
 		return childrenFeatures;
 	}
@@ -135,7 +134,6 @@ public class LinkAllocationItemProvider extends EntityItemProvider {
 		switch (notification.getFeatureID(LinkAllocation.class)) {
 		case LinkallocationPackage.LINK_ALLOCATION__LATENCY_SPECIFICATION:
 		case LinkallocationPackage.LINK_ALLOCATION__THROUGHPUT_SPECIFICATION:
-		case LinkallocationPackage.LINK_ALLOCATION__BANDWIDTH_SPECIFICATION:
 			fireNotifyChanged(new ViewerNotification(notification, notification.getNotifier(), true, false));
 			return;
 		}
@@ -168,10 +166,6 @@ public class LinkAllocationItemProvider extends EntityItemProvider {
 		newChildDescriptors
 				.add(createChildParameter(LinkallocationPackage.Literals.LINK_ALLOCATION__THROUGHPUT_SPECIFICATION,
 						LinkallocationFactory.eINSTANCE.createStaticLinkThroughputSpecification()));
-
-		newChildDescriptors
-				.add(createChildParameter(LinkallocationPackage.Literals.LINK_ALLOCATION__BANDWIDTH_SPECIFICATION,
-						LinkallocationFactory.eINSTANCE.createBandwidthSpecification()));
 	}
 
 	/**

@@ -5,30 +5,47 @@ Bundle-SymbolicName: org.palladiosimulator.blockchainsystems.bscm.editor
  ;singleton:=true
 Automatic-Module-Name: org.palladiosimulator.blockchainsystems.bscm.edit
  or
-Bundle-Version: 0.0.1.202605111531
+Bundle-Version: 0.0.1.202603302117
 Bundle-ClassPath: .
 Bundle-Activator: org.palladiosimulator.blockchainsystems.bscm.nodealloc
  ation.presentation.BscmEditorPlugin$Implementation
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
-Export-Package: org.palladiosimulator.blockchainsystems.bscm.blockchains
- ystem.presentation,org.palladiosimulator.blockchainsystems.bscm.blockch
- ainsystemComponentRepository.presentation,org.palladiosimulator.blockch
- ainsystems.bscm.geographicalregions.presentation,org.palladiosimulator.
- blockchainsystems.bscm.linkallocation.presentation,org.palladiosimulato
- r.blockchainsystems.bscm.nodeallocation.presentation,org.palladiosimula
- tor.blockchainsystems.bscm.nodeenvironment.presentation,org.palladiosim
- ulator.blockchainsystems.bscm.nodesystem.presentation,org.palladiosimul
- ator.blockchainsystems.bscm.p2pnetwork.presentation,org.palladiosimulat
- or.blockchainsystems.bscm.transactions.presentation
+Export-Package: bscm.blockchainsystem.presentation,bscm.blockchainsystem
+ ComponentRepository.presentation,bscm.nodeallocation.presentation,bscm.
+ nodeenvironment.presentation,bscm.nodegeographicalenvironment.presentat
+ ion,bscm.nodesystem.presentation,bscm.p2pnetwork.presentation,ecore.pre
+ sentation,entity.presentation,org.palladiosimulator.blockchainsystems.b
+ scm.attackmodel.presentation,org.palladiosimulator.blockchainsystems.bs
+ cm.blockchainsystem.presentation,org.palladiosimulator.blockchainsystem
+ s.bscm.blockchainsystemComponentRepository.presentation,org.palladiosim
+ ulator.blockchainsystems.bscm.geographicalregions.presentation,org.pall
+ adiosimulator.blockchainsystems.bscm.geography.presentation,org.palladi
+ osimulator.blockchainsystems.bscm.linkallocation.presentation,org.palla
+ diosimulator.blockchainsystems.bscm.nodeallocation.presentation,org.pal
+ ladiosimulator.blockchainsystems.bscm.nodeenvironment.presentation,org.
+ palladiosimulator.blockchainsystems.bscm.nodegeographicalenvironment.pr
+ esentation,org.palladiosimulator.blockchainsystems.bscm.nodesystem.pres
+ entation,org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.presen
+ tation,org.palladiosimulator.blockchainsystems.bscm.transactions.presen
+ tation,pcm.allocation.presentation,pcm.core.composition.presentation,pc
+ m.core.entity.presentation,pcm.core.presentation,pcm.parameter.presenta
+ tion,pcm.presentation,pcm.qosannotations.presentation,pcm.qosannotation
+ s.qos_performance.presentation,pcm.qosannotations.qos_reliability.prese
+ ntation,pcm.reliability.presentation,pcm.repository.presentation,pcm.re
+ sourceenvironment.presentation,pcm.resourcetype.presentation,pcm.seff.p
+ resentation,pcm.seff.seff_performance.presentation,pcm.seff.seff_reliab
+ ility.presentation,pcm.subsystem.presentation,pcm.system.presentation,p
+ cm.usagemodel.presentation,probfunction.presentation,stoex.presentation
+ ,units.presentation
 Require-Bundle: org.eclipse.core.runtime,org.eclipse.core.resources;visi
  bility:=reexport,org.palladiosimulator.blockchainsystems.bscm.edit;visi
  bility:=reexport,org.eclipse.emf.ecore.xmi;visibility:=reexport,org.ecl
  ipse.emf.edit.ui;visibility:=reexport,org.eclipse.ui.ide;visibility:=re
- export,org.palladiosimulator.pcm.edit;visibility:=reexport,de.uka.ipd.s
- dq.identifier.edit;visibility:=reexport,org.eclipse.emf.ecore.edit;visi
- bility:=reexport,de.uka.ipd.sdq.stoex.edit;visibility:=reexport,de.uka.
- ipd.sdq.units.edit;visibility:=reexport,de.uka.ipd.sdq.probfunction.edi
+ export,org.eclipse.emf.ecore.edit;visibility:=reexport,de.uka.ipd.sdq.i
+ dentifier.edit;visibility:=reexport,org.palladiosimulator.pcm.edit;visi
+ bility:=reexport,de.uka.ipd.sdq.probfunction.edit;visibility:=reexport,
+ de.uka.ipd.sdq.stoex.edit;visibility:=reexport,de.uka.ipd.sdq.units.edi
  t;visibility:=reexport
 Bundle-ActivationPolicy: lazy
 Bundle-License: The Apache License, Version 2.0;link="http://www.apache.

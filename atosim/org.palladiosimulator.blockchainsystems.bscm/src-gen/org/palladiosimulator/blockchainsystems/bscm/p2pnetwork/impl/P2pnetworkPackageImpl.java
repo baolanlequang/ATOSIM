@@ -18,6 +18,10 @@ import org.eclipse.emf.ecore.EcorePackage;
 
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackmodelPackage;
+
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.impl.AttackmodelPackageImpl;
+
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainsystemPackage;
 
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.impl.BlockchainsystemPackageImpl;
@@ -48,7 +52,6 @@ import org.palladiosimulator.blockchainsystems.bscm.nodesystem.impl.NodesystemPa
 
 import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.BidirectionalLink;
 import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.ConnectedSubgraphsNetworkTopology;
-import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.ConnectivitySpecification;
 import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.ConstraintNetworkTopology;
 import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.ExplicitNetworkTopology;
 import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.Link;
@@ -138,13 +141,6 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	private EClass connectivitySpecificationEClass = null;
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
 	private EClass subgraphLinkEClass = null;
 
 	/**
@@ -219,12 +215,12 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 		isInited = true;
 
 		// Initialize simple dependencies
-		PcmPackage.eINSTANCE.eClass();
-		IdentifierPackage.eINSTANCE.eClass();
 		EcorePackage.eINSTANCE.eClass();
+		IdentifierPackage.eINSTANCE.eClass();
+		PcmPackage.eINSTANCE.eClass();
+		ProbfunctionPackage.eINSTANCE.eClass();
 		StoexPackage.eINSTANCE.eClass();
 		UnitsPackage.eINSTANCE.eClass();
-		ProbfunctionPackage.eINSTANCE.eClass();
 
 		// Obtain or create and register interdependencies
 		Object registeredPackage = EPackage.Registry.INSTANCE.getEPackage(NodeallocationPackage.eNS_URI);
@@ -259,6 +255,10 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 		TransactionsPackageImpl theTransactionsPackage = (TransactionsPackageImpl) (registeredPackage instanceof TransactionsPackageImpl
 				? registeredPackage
 				: TransactionsPackage.eINSTANCE);
+		registeredPackage = EPackage.Registry.INSTANCE.getEPackage(AttackmodelPackage.eNS_URI);
+		AttackmodelPackageImpl theAttackmodelPackage = (AttackmodelPackageImpl) (registeredPackage instanceof AttackmodelPackageImpl
+				? registeredPackage
+				: AttackmodelPackage.eINSTANCE);
 
 		// Create package meta-data objects
 		theP2pnetworkPackage.createPackageContents();
@@ -270,6 +270,7 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 		theGeographicalregionsPackage.createPackageContents();
 		theLinkallocationPackage.createPackageContents();
 		theTransactionsPackage.createPackageContents();
+		theAttackmodelPackage.createPackageContents();
 
 		// Initialize created meta-data
 		theP2pnetworkPackage.initializePackageContents();
@@ -281,6 +282,7 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 		theGeographicalregionsPackage.initializePackageContents();
 		theLinkallocationPackage.initializePackageContents();
 		theTransactionsPackage.initializePackageContents();
+		theAttackmodelPackage.initializePackageContents();
 
 		// Mark meta-data to indicate it can't be changed
 		theP2pnetworkPackage.freeze();
@@ -476,66 +478,6 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 	 * @generated
 	 */
 	@Override
-	public EReference getSubgraphSpecification_ConnectivitySpecification() {
-		return (EReference) subgraphSpecificationEClass.getEStructuralFeatures().get(3);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EClass getConnectivitySpecification() {
-		return connectivitySpecificationEClass;
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EReference getConnectivitySpecification_InBoundLinkAllocationSpecification() {
-		return (EReference) connectivitySpecificationEClass.getEStructuralFeatures().get(0);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EReference getConnectivitySpecification_OutBoundLinkAllocationSpecification() {
-		return (EReference) connectivitySpecificationEClass.getEStructuralFeatures().get(1);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EAttribute getConnectivitySpecification_NumberOfInbound() {
-		return (EAttribute) connectivitySpecificationEClass.getEStructuralFeatures().get(2);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EAttribute getConnectivitySpecification_NumberOfOutBound() {
-		return (EAttribute) connectivitySpecificationEClass.getEStructuralFeatures().get(3);
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
 	public EClass getSubgraphLink() {
 		return subgraphLinkEClass;
 	}
@@ -705,15 +647,6 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 		createEReference(subgraphSpecificationEClass, SUBGRAPH_SPECIFICATION__NODE_TEMPLATES);
 		createEAttribute(subgraphSpecificationEClass, SUBGRAPH_SPECIFICATION__CONNECTIVITY);
 		createEReference(subgraphSpecificationEClass, SUBGRAPH_SPECIFICATION__LINK_ALLOCATION);
-		createEReference(subgraphSpecificationEClass, SUBGRAPH_SPECIFICATION__CONNECTIVITY_SPECIFICATION);
-
-		connectivitySpecificationEClass = createEClass(CONNECTIVITY_SPECIFICATION);
-		createEReference(connectivitySpecificationEClass,
-				CONNECTIVITY_SPECIFICATION__IN_BOUND_LINK_ALLOCATION_SPECIFICATION);
-		createEReference(connectivitySpecificationEClass,
-				CONNECTIVITY_SPECIFICATION__OUT_BOUND_LINK_ALLOCATION_SPECIFICATION);
-		createEAttribute(connectivitySpecificationEClass, CONNECTIVITY_SPECIFICATION__NUMBER_OF_INBOUND);
-		createEAttribute(connectivitySpecificationEClass, CONNECTIVITY_SPECIFICATION__NUMBER_OF_OUT_BOUND);
 
 		subgraphLinkEClass = createEClass(SUBGRAPH_LINK);
 		createEReference(subgraphLinkEClass, SUBGRAPH_LINK__ALLOCATION);
@@ -777,7 +710,6 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 		linkEClass.getESuperTypes().add(theEntityPackage.getEntity());
 		connectedSubgraphsNetworkTopologyEClass.getESuperTypes().add(this.getConstraintNetworkTopology());
 		subgraphSpecificationEClass.getESuperTypes().add(theEntityPackage.getEntity());
-		connectivitySpecificationEClass.getESuperTypes().add(theEntityPackage.getEntity());
 		subgraphLinkEClass.getESuperTypes().add(theEntityPackage.getEntity());
 		subgraphNodeTemplateEClass.getESuperTypes().add(theEntityPackage.getEntity());
 		bidirectionalLinkEClass.getESuperTypes().add(this.getLink());
@@ -835,26 +767,6 @@ public class P2pnetworkPackageImpl extends EPackageImpl implements P2pnetworkPac
 		initEReference(getSubgraphSpecification_LinkAllocation(), theLinkallocationPackage.getLinkAllocation(), null,
 				"LinkAllocation", null, 1, 1, SubgraphSpecification.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
 				!IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEReference(getSubgraphSpecification_ConnectivitySpecification(), this.getConnectivitySpecification(), null,
-				"ConnectivitySpecification", null, 1, 1, SubgraphSpecification.class, !IS_TRANSIENT, !IS_VOLATILE,
-				IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-
-		initEClass(connectivitySpecificationEClass, ConnectivitySpecification.class, "ConnectivitySpecification",
-				!IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-		initEReference(getConnectivitySpecification_InBoundLinkAllocationSpecification(),
-				theLinkallocationPackage.getLinkAllocation(), null, "InBoundLinkAllocationSpecification", null, 1, 1,
-				ConnectivitySpecification.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE,
-				IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEReference(getConnectivitySpecification_OutBoundLinkAllocationSpecification(),
-				theLinkallocationPackage.getLinkAllocation(), null, "OutBoundLinkAllocationSpecification", null, 1, 1,
-				ConnectivitySpecification.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE,
-				IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEAttribute(getConnectivitySpecification_NumberOfInbound(), theEcorePackage.getEInt(), "NumberOfInbound",
-				null, 1, 1, ConnectivitySpecification.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE,
-				!IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEAttribute(getConnectivitySpecification_NumberOfOutBound(), theEcorePackage.getEInt(), "NumberOfOutBound",
-				null, 1, 1, ConnectivitySpecification.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE,
-				!IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
 		initEClass(subgraphLinkEClass, SubgraphLink.class, "SubgraphLink", !IS_ABSTRACT, !IS_INTERFACE,
 				IS_GENERATED_INSTANCE_CLASS);

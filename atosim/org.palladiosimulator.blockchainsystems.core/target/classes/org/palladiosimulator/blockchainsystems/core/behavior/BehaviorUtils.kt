@@ -40,21 +40,6 @@ object BehaviorUtils {
 
     val blockAppendingResult = context.blockchain.appendBlock(block)
 
-    if (
-      blockAppendingResult.type == BlockAppendingResultType.AlreadyAppended ||
-      blockAppendingResult.type == BlockAppendingResultType.NotAppendedBecauseOrphanBlock
-    ) {
-      println(
-        "APPEND DEBUG " +
-                "node=${context.id} " +
-                "chain=${System.identityHashCode(context.blockchain)} " +
-                "hash=${block.hash} " +
-                "prev=${block.previousHash} " +
-                "type=${blockAppendingResult.type} " +
-                "blockType=${blockAppendingResult.blockType}"
-      )
-    }
-
     return when (blockAppendingResult.type) {
       BlockAppendingResultType.Appended -> {
         val orphanBlocks = context.orphanBlockPool.takeBlocksByPreviousBlockHash(block.hash)

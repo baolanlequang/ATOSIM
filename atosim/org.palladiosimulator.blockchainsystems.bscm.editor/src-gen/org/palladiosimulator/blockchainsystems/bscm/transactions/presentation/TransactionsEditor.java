@@ -167,6 +167,8 @@ import org.eclipse.emf.ecore.provider.EcoreItemProviderAdapterFactory;
 
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.provider.AttackmodelItemProviderAdapterFactory;
+
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.provider.BlockchainsystemItemProviderAdapterFactory;
 
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystemComponentRepository.provider.BlockchainsystemComponentRepositoryItemProviderAdapterFactory;
@@ -763,6 +765,9 @@ public class TransactionsEditor extends MultiPageEditorPart
 		adapterFactory.addAdapterFactory(new GeographicalregionsItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new LinkallocationItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new TransactionsItemProviderAdapterFactory());
+		adapterFactory.addAdapterFactory(new AttackmodelItemProviderAdapterFactory());
+		adapterFactory.addAdapterFactory(new EcoreItemProviderAdapterFactory());
+		adapterFactory.addAdapterFactory(new IdentifierItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new PcmItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new CoreItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new EntityItemProviderAdapterFactory());
@@ -783,11 +788,9 @@ public class TransactionsEditor extends MultiPageEditorPart
 		adapterFactory.addAdapterFactory(new ResourceenvironmentItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new AllocationItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new SubsystemItemProviderAdapterFactory());
-		adapterFactory.addAdapterFactory(new IdentifierItemProviderAdapterFactory());
-		adapterFactory.addAdapterFactory(new EcoreItemProviderAdapterFactory());
+		adapterFactory.addAdapterFactory(new ProbfunctionItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new StoexItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new UnitsItemProviderAdapterFactory());
-		adapterFactory.addAdapterFactory(new ProbfunctionItemProviderAdapterFactory());
 		adapterFactory.addAdapterFactory(new ReflectiveItemProviderAdapterFactory());
 
 		// Create the command stack that will notify this editor as commands are executed.

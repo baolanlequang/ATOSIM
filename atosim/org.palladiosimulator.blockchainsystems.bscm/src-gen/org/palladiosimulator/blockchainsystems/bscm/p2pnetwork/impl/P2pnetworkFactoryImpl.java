@@ -66,8 +66,6 @@ public class P2pnetworkFactoryImpl extends EFactoryImpl implements P2pnetworkFac
 			return createConnectedSubgraphsNetworkTopology();
 		case P2pnetworkPackage.SUBGRAPH_SPECIFICATION:
 			return createSubgraphSpecification();
-		case P2pnetworkPackage.CONNECTIVITY_SPECIFICATION:
-			return createConnectivitySpecification();
 		case P2pnetworkPackage.SUBGRAPH_LINK:
 			return createSubgraphLink();
 		case P2pnetworkPackage.SUBGRAPH_NODE_TEMPLATE:
@@ -134,17 +132,6 @@ public class P2pnetworkFactoryImpl extends EFactoryImpl implements P2pnetworkFac
 	public SubgraphSpecification createSubgraphSpecification() {
 		SubgraphSpecificationImpl subgraphSpecification = new SubgraphSpecificationImpl();
 		return subgraphSpecification;
-	}
-
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public ConnectivitySpecification createConnectivitySpecification() {
-		ConnectivitySpecificationImpl connectivitySpecification = new ConnectivitySpecificationImpl();
-		return connectivitySpecification;
 	}
 
 	/**

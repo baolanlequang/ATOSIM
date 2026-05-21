@@ -197,31 +197,13 @@ public interface BlockchainsystemPackage extends EPackage {
 	int BLOCKCHAIN_SYSTEM_SPECIFICATION__BLOCK_REWARD = EntityPackage.ENTITY_FEATURE_COUNT + 3;
 
 	/**
-	 * The feature id for the '<em><b>Hash Rate Concentration</b></em>' attribute.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BLOCKCHAIN_SYSTEM_SPECIFICATION__HASH_RATE_CONCENTRATION = EntityPackage.ENTITY_FEATURE_COUNT + 4;
-
-	/**
-	 * The feature id for the '<em><b>Number Of Attacker</b></em>' attribute.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 * @ordered
-	 */
-	int BLOCKCHAIN_SYSTEM_SPECIFICATION__NUMBER_OF_ATTACKER = EntityPackage.ENTITY_FEATURE_COUNT + 5;
-
-	/**
 	 * The number of structural features of the '<em>Blockchain System Specification</em>' class.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @generated
 	 * @ordered
 	 */
-	int BLOCKCHAIN_SYSTEM_SPECIFICATION_FEATURE_COUNT = EntityPackage.ENTITY_FEATURE_COUNT + 6;
+	int BLOCKCHAIN_SYSTEM_SPECIFICATION_FEATURE_COUNT = EntityPackage.ENTITY_FEATURE_COUNT + 4;
 
 	/**
 	 * Returns the meta object for class '{@link org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystem <em>Blockchain System</em>}'.
@@ -330,28 +312,6 @@ public interface BlockchainsystemPackage extends EPackage {
 	 * @generated
 	 */
 	EAttribute getBlockchainSystemSpecification_BlockReward();
-
-	/**
-	 * Returns the meta object for the attribute '{@link org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystemSpecification#getHashRateConcentration <em>Hash Rate Concentration</em>}'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return the meta object for the attribute '<em>Hash Rate Concentration</em>'.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystemSpecification#getHashRateConcentration()
-	 * @see #getBlockchainSystemSpecification()
-	 * @generated
-	 */
-	EAttribute getBlockchainSystemSpecification_HashRateConcentration();
-
-	/**
-	 * Returns the meta object for the attribute '{@link org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystemSpecification#getNumberOfAttacker <em>Number Of Attacker</em>}'.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @return the meta object for the attribute '<em>Number Of Attacker</em>'.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystemSpecification#getNumberOfAttacker()
-	 * @see #getBlockchainSystemSpecification()
-	 * @generated
-	 */
-	EAttribute getBlockchainSystemSpecification_NumberOfAttacker();
 
 	/**
 	 * Returns the factory that creates the instances of the model.
@@ -464,24 +424,6 @@ public interface BlockchainsystemPackage extends EPackage {
 		 */
 		EAttribute BLOCKCHAIN_SYSTEM_SPECIFICATION__BLOCK_REWARD = eINSTANCE
 				.getBlockchainSystemSpecification_BlockReward();
-
-		/**
-		 * The meta object literal for the '<em><b>Hash Rate Concentration</b></em>' attribute feature.
-		 * <!-- begin-user-doc -->
-		 * <!-- end-user-doc -->
-		 * @generated
-		 */
-		EAttribute BLOCKCHAIN_SYSTEM_SPECIFICATION__HASH_RATE_CONCENTRATION = eINSTANCE
-				.getBlockchainSystemSpecification_HashRateConcentration();
-
-		/**
-		 * The meta object literal for the '<em><b>Number Of Attacker</b></em>' attribute feature.
-		 * <!-- begin-user-doc -->
-		 * <!-- end-user-doc -->
-		 * @generated
-		 */
-		EAttribute BLOCKCHAIN_SYSTEM_SPECIFICATION__NUMBER_OF_ATTACKER = eINSTANCE
-				.getBlockchainSystemSpecification_NumberOfAttacker();
 
 	}
 

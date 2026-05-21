@@ -90,11 +90,6 @@ public class LinkallocationAdapterFactory extends AdapterFactoryImpl {
 		}
 
 		@Override
-		public Adapter caseBandwidthSpecification(BandwidthSpecification object) {
-			return createBandwidthSpecificationAdapter();
-		}
-
-		@Override
 		public Adapter caseDynamicLinkLatencySpecificationValue(DynamicLinkLatencySpecificationValue object) {
 			return createDynamicLinkLatencySpecificationValueAdapter();
 		}
@@ -212,20 +207,6 @@ public class LinkallocationAdapterFactory extends AdapterFactoryImpl {
 	 * @generated
 	 */
 	public Adapter createLinkLatencySpecificationAdapter() {
-		return null;
-	}
-
-	/**
-	 * Creates a new adapter for an object of class '{@link org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification <em>Bandwidth Specification</em>}'.
-	 * <!-- begin-user-doc -->
-	 * This default implementation returns null so that we can easily ignore cases;
-	 * it's useful to ignore a case when inheritance will catch all the cases anyway.
-	 * <!-- end-user-doc -->
-	 * @return the new adapter.
-	 * @see org.palladiosimulator.blockchainsystems.bscm.linkallocation.BandwidthSpecification
-	 * @generated
-	 */
-	public Adapter createBandwidthSpecificationAdapter() {
 		return null;
 	}
 

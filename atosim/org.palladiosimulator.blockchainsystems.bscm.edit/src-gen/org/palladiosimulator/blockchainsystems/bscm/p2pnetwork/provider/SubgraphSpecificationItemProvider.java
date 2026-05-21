@@ -104,7 +104,6 @@ public class SubgraphSpecificationItemProvider extends EntityItemProvider {
 		if (childrenFeatures == null) {
 			super.getChildrenFeatures(object);
 			childrenFeatures.add(P2pnetworkPackage.Literals.SUBGRAPH_SPECIFICATION__NODE_TEMPLATES);
-			childrenFeatures.add(P2pnetworkPackage.Literals.SUBGRAPH_SPECIFICATION__CONNECTIVITY_SPECIFICATION);
 		}
 		return childrenFeatures;
 	}
@@ -172,7 +171,6 @@ public class SubgraphSpecificationItemProvider extends EntityItemProvider {
 			fireNotifyChanged(new ViewerNotification(notification, notification.getNotifier(), false, true));
 			return;
 		case P2pnetworkPackage.SUBGRAPH_SPECIFICATION__NODE_TEMPLATES:
-		case P2pnetworkPackage.SUBGRAPH_SPECIFICATION__CONNECTIVITY_SPECIFICATION:
 			fireNotifyChanged(new ViewerNotification(notification, notification.getNotifier(), true, false));
 			return;
 		}
@@ -192,10 +190,6 @@ public class SubgraphSpecificationItemProvider extends EntityItemProvider {
 
 		newChildDescriptors.add(createChildParameter(P2pnetworkPackage.Literals.SUBGRAPH_SPECIFICATION__NODE_TEMPLATES,
 				P2pnetworkFactory.eINSTANCE.createSubgraphNodeTemplate()));
-
-		newChildDescriptors
-				.add(createChildParameter(P2pnetworkPackage.Literals.SUBGRAPH_SPECIFICATION__CONNECTIVITY_SPECIFICATION,
-						P2pnetworkFactory.eINSTANCE.createConnectivitySpecification()));
 	}
 
 	/**

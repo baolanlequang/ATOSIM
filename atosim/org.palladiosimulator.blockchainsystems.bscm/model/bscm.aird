@@ -16,6 +16,13 @@
     <semanticResources>platform:/resource/de.uka.ipd.sdq.stoex/model/stoex.genmodel</semanticResources>
     <semanticResources>bscm.genmodel</semanticResources>
     <semanticResources>../.tycho-consumer-pom.xml</semanticResources>
+    <semanticResources>platform:/plugin/org.palladiosimulator.pcm/model/pcm.ecore</semanticResources>
+    <semanticResources>platform:/plugin/de.uka.ipd.sdq.probfunction/model/ProbabilityFunction.genmodel</semanticResources>
+    <semanticResources>platform:/plugin/org.eclipse.emf.ecore/model/Ecore.genmodel</semanticResources>
+    <semanticResources>platform:/plugin/de.uka.ipd.sdq.units/model/Units.genmodel</semanticResources>
+    <semanticResources>platform:/plugin/de.uka.ipd.sdq.stoex/model/stoex.genmodel</semanticResources>
+    <semanticResources>platform:/plugin/de.uka.ipd.sdq.identifier/model/identifier.genmodel</semanticResources>
+    <semanticResources>pcm.ecore</semanticResources>
     <ownedViews xmi:type="viewpoint:DView" uid="_pbgIAFJ0Ee-HbdXYjN690g">
       <viewpoint xmi:type="description:Viewpoint" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']"/>
       <ownedRepresentationDescriptors xmi:type="viewpoint:DRepresentationDescriptor" uid="_nrxusWCJEe-qUrSg7WZDFg" name="nodesystem class diagram" repPath="#_nrxHoGCJEe-qUrSg7WZDFg" changeId="1758306238123">
@@ -26,11 +33,11 @@
         <description xmi:type="description_1:DiagramDescription" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']"/>
         <target xmi:type="ecore:EPackage" href="bscm.ecore#//blockchainsystemComponentRepository"/>
       </ownedRepresentationDescriptors>
-      <ownedRepresentationDescriptors xmi:type="viewpoint:DRepresentationDescriptor" uid="_Z79d0GCLEe-qUrSg7WZDFg" name="p2pnetwork class diagram" repPath="#_Z77BkGCLEe-qUrSg7WZDFg" changeId="1764253487468">
+      <ownedRepresentationDescriptors xmi:type="viewpoint:DRepresentationDescriptor" uid="_Z79d0GCLEe-qUrSg7WZDFg" name="p2pnetwork class diagram" repPath="#_Z77BkGCLEe-qUrSg7WZDFg" changeId="1758306479532">
         <description xmi:type="description_1:DiagramDescription" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']"/>
         <target xmi:type="ecore:EPackage" href="bscm.ecore#//p2pnetwork"/>
       </ownedRepresentationDescriptors>
-      <ownedRepresentationDescriptors xmi:type="viewpoint:DRepresentationDescriptor" uid="_cVbIMWCOEe-qUrSg7WZDFg" name="blockchainsystem class diagram" repPath="#_cVR-QGCOEe-qUrSg7WZDFg" changeId="1764253504859">
+      <ownedRepresentationDescriptors xmi:type="viewpoint:DRepresentationDescriptor" uid="_cVbIMWCOEe-qUrSg7WZDFg" name="blockchainsystem class diagram" repPath="#_cVR-QGCOEe-qUrSg7WZDFg" changeId="1758305771941">
         <description xmi:type="description_1:DiagramDescription" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']"/>
         <target xmi:type="ecore:EPackage" href="bscm.ecore#//blockchainsystem"/>
       </ownedRepresentationDescriptors>
@@ -53,10 +60,6 @@
       <ownedRepresentationDescriptors xmi:type="viewpoint:DRepresentationDescriptor" uid="_YhTkcZR7EfCxuqfcviTScg" name="transactions class diagram" repPath="#_YhS9YJR7EfCxuqfcviTScg" changeId="1758306621079">
         <description xmi:type="description_1:DiagramDescription" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']"/>
         <target xmi:type="ecore:EPackage" href="bscm.ecore#//transactions"/>
-      </ownedRepresentationDescriptors>
-      <ownedRepresentationDescriptors xmi:type="viewpoint:DRepresentationDescriptor" uid="_p8IeMP-HEfCLmJ1D9EzzOg" name="bscm class diagram" repPath="#_p708MP-HEfCLmJ1D9EzzOg" changeId="1769961854925">
-        <description xmi:type="description_1:DiagramDescription" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']"/>
-        <target xmi:type="ecore:EPackage" href="bscm.ecore#/"/>
       </ownedRepresentationDescriptors>
     </ownedViews>
     <ownedViews xmi:type="viewpoint:DView" uid="_XsYp0FKTEe-sBOzEZAwBww">
@@ -1365,15 +1368,11 @@
               <styles xmi:type="notation:FontStyle" xmi:id="_jCHitJR5EfCxuqfcviTScg" fontName=".AppleSystemUIFont" fontHeight="8"/>
               <layoutConstraint xmi:type="notation:Location" xmi:id="_jCHitZR5EfCxuqfcviTScg"/>
             </children>
-            <children xmi:type="notation:Node" xmi:id="_2Pqw0MucEfCmQeuaI0jtqQ" type="3010" element="_2PoUksucEfCmQeuaI0jtqQ">
-              <styles xmi:type="notation:FontStyle" xmi:id="_2Pqw0cucEfCmQeuaI0jtqQ" fontName=".AppleSystemUIFont" fontHeight="8" bold="true"/>
-              <layoutConstraint xmi:type="notation:Location" xmi:id="_2Pqw0sucEfCmQeuaI0jtqQ"/>
-            </children>
             <styles xmi:type="notation:SortingStyle" xmi:id="_dW060mCOEe-qUrSg7WZDFg"/>
             <styles xmi:type="notation:FilteringStyle" xmi:id="_dW0602COEe-qUrSg7WZDFg"/>
           </children>
           <styles xmi:type="notation:ShapeStyle" xmi:id="_dW0TxWCOEe-qUrSg7WZDFg" fontName="Segoe UI" fontHeight="8"/>
-          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_dW0TxmCOEe-qUrSg7WZDFg" x="540" y="315" width="332" height="128"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_dW0TxmCOEe-qUrSg7WZDFg" x="540" y="315" width="332" height="102"/>
         </children>
         <styles xmi:type="notation:DiagramStyle" xmi:id="_cVbINWCOEe-qUrSg7WZDFg"/>
         <edges xmi:type="notation:Edge" xmi:id="_dW2I82COEe-qUrSg7WZDFg" type="4001" element="_dWwpYGCOEe-qUrSg7WZDFg" source="_dWzssGCOEe-qUrSg7WZDFg" target="_dW0TxGCOEe-qUrSg7WZDFg">
@@ -1390,7 +1389,7 @@
           <styles xmi:type="notation:FontStyle" xmi:id="_dW2I9WCOEe-qUrSg7WZDFg" fontColor="7490599" fontName="Segoe UI" fontHeight="8"/>
           <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_dW2I9mCOEe-qUrSg7WZDFg" points="[0, -40, 0, 107]$[0, -100, 0, 47]"/>
           <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_dW2wAGCOEe-qUrSg7WZDFg" id="(0.17201166180758015,0.5833333333333334)"/>
-          <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_dW2wAWCOEe-qUrSg7WZDFg" id="(0.1787878787878788,0.38888888888888884)"/>
+          <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_dW2wAWCOEe-qUrSg7WZDFg" id="(0.1787878787878788,0.48999999999999994)"/>
         </edges>
       </data>
     </ownedAnnotationEntries>
@@ -1495,14 +1494,6 @@
         <semanticElements xmi:type="ecore:EAttribute" href="bscm.ecore#//blockchainsystem/BlockchainSystemSpecification/BlockReward"/>
         <ownedStyle xmi:type="diagram:BundledImage" uid="_jB9KoJR5EfCxuqfcviTScg" labelAlignment="LEFT">
           <description xmi:type="style:BundledImageDescription" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']/@defaultLayer/@containerMappings[name='EC%20EClass']/@subNodeMappings[name='EC%20EAttribute']/@style"/>
-        </ownedStyle>
-        <actualMapping xmi:type="description_1:NodeMapping" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']/@defaultLayer/@containerMappings[name='EC%20EClass']/@subNodeMappings[name='EC%20EAttribute']"/>
-      </ownedElements>
-      <ownedElements xmi:type="diagram:DNodeListElement" uid="_2PoUksucEfCmQeuaI0jtqQ" name="BlockValidationRule : EDouble = 0.0" tooltipText="">
-        <target xmi:type="ecore:EAttribute" href="bscm.ecore#//blockchainsystem/BlockchainSystemSpecification/BlockValidationRule"/>
-        <semanticElements xmi:type="ecore:EAttribute" href="bscm.ecore#//blockchainsystem/BlockchainSystemSpecification/BlockValidationRule"/>
-        <ownedStyle xmi:type="diagram:BundledImage" uid="_2Po7oMucEfCmQeuaI0jtqQ" labelAlignment="LEFT" description="_dWvbQGCOEe-qUrSg7WZDFg">
-          <labelFormat>bold</labelFormat>
         </ownedStyle>
         <actualMapping xmi:type="description_1:NodeMapping" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']/@defaultLayer/@containerMappings[name='EC%20EClass']/@subNodeMappings[name='EC%20EAttribute']"/>
       </ownedElements>
@@ -2714,22 +2705,5 @@
     <activatedLayers xmi:type="description_1:AdditionalLayer" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']/@additionalLayers[name='Validation']"/>
     <activatedLayers xmi:type="description_1:AdditionalLayer" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Archetype']/@ownedRepresentationExtensions[name='Entities%20With%20Archetypes']/@layers[name='Archetypes']"/>
     <target xmi:type="ecore:EPackage" href="bscm.ecore#//transactions"/>
-  </diagram:DSemanticDiagram>
-  <diagram:DSemanticDiagram uid="_p708MP-HEfCLmJ1D9EzzOg">
-    <ownedAnnotationEntries xmi:type="description:AnnotationEntry" uid="_p8WgoP-HEfCLmJ1D9EzzOg" source="GMF_DIAGRAMS">
-      <data xmi:type="notation:Diagram" xmi:id="_p8Wgof-HEfCLmJ1D9EzzOg" type="Sirius" element="_p708MP-HEfCLmJ1D9EzzOg" measurementUnit="Pixel">
-        <styles xmi:type="notation:DiagramStyle" xmi:id="_p8Wgov-HEfCLmJ1D9EzzOg"/>
-      </data>
-    </ownedAnnotationEntries>
-    <ownedAnnotationEntries xmi:type="description:AnnotationEntry" uid="_p8iG0P-HEfCLmJ1D9EzzOg" source="DANNOTATION_CUSTOMIZATION_KEY">
-      <data xmi:type="diagram:ComputedStyleDescriptionRegistry" uid="_p8iG0f-HEfCLmJ1D9EzzOg"/>
-    </ownedAnnotationEntries>
-    <description xmi:type="description_1:DiagramDescription" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']"/>
-    <filterVariableHistory xmi:type="diagram:FilterVariableHistory" uid="_p8BJcP-HEfCLmJ1D9EzzOg"/>
-    <activatedLayers xmi:type="description_1:Layer" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']/@defaultLayer"/>
-    <activatedLayers xmi:type="description_1:AdditionalLayer" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']/@additionalLayers[name='Package']"/>
-    <activatedLayers xmi:type="description_1:AdditionalLayer" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Design']/@ownedRepresentations[name='Entities']/@additionalLayers[name='Validation']"/>
-    <activatedLayers xmi:type="description_1:AdditionalLayer" href="platform:/plugin/org.eclipse.emf.ecoretools.design/description/ecore.odesign#//@ownedViewpoints[name='Archetype']/@ownedRepresentationExtensions[name='Entities%20With%20Archetypes']/@layers[name='Archetypes']"/>
-    <target xmi:type="ecore:EPackage" href="bscm.ecore#/"/>
   </diagram:DSemanticDiagram>
 </xmi:XMI>

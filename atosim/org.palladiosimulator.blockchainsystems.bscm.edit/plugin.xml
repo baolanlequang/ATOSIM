@@ -19,6 +19,7 @@
                org.eclipse.emf.edit.provider.IItemPropertySource"/>
    </extension>
 
+
    <extension point="org.eclipse.emf.edit.itemProviderAdapterFactories">
       <!-- @generated bscm -->
       <factory
@@ -115,6 +116,19 @@
       <factory
             uri="http://palladiosimulator.org/BlockchainSystemComponentModel/Transactions/1.0"
             class="org.palladiosimulator.blockchainsystems.bscm.transactions.provider.TransactionsItemProviderAdapterFactory"
+            supportedTypes=
+              "org.eclipse.emf.edit.provider.IEditingDomainItemProvider
+               org.eclipse.emf.edit.provider.IStructuredItemContentProvider
+               org.eclipse.emf.edit.provider.ITreeItemContentProvider
+               org.eclipse.emf.edit.provider.IItemLabelProvider
+               org.eclipse.emf.edit.provider.IItemPropertySource"/>
+   </extension>
+
+   <extension point="org.eclipse.emf.edit.itemProviderAdapterFactories">
+      <!-- @generated bscm -->
+      <factory
+            uri="http://palladiosimulator.org/BlockchainSystemComponentModel/AttackModel/1.0"
+            class="org.palladiosimulator.blockchainsystems.bscm.attackmodel.provider.AttackmodelItemProviderAdapterFactory"
             supportedTypes=
               "org.eclipse.emf.edit.provider.IEditingDomainItemProvider
                org.eclipse.emf.edit.provider.IStructuredItemContentProvider
