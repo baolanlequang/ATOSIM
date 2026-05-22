@@ -1,5 +1,6 @@
 package org.palladiosimulator.blockchainsystems.atosim;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -21,6 +22,7 @@ import org.palladiosimulator.blockchainsystems.threesim.creation.ThreesimBlockch
 import org.palladiosimulator.blockchainsystems.threesim.creation.network.connectedsubgraphs.ConnectedSubgraphNetworkBlockchainSystemFactory;
 import org.palladiosimulator.blockchainsystems.threesim.creation.network.explicit.ExplicitNetworkBlockchainSystemFactory;
 import org.palladiosimulator.blockchainsystems.threesim.serialization.ThreesimSerializers;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimMonteCarloSimulation;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSingleSimulation;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
@@ -33,15 +35,15 @@ public class ATOSIMSimulationFactory implements Simulation {
             SimulationParameters simulationParameters,
             Map<String, String> configuration) {
 
+        ThreesimSimulationParameters threesimSimulationParameters =
+                getThreesimSimulationParametersFromConfiguration(configuration);
+
         ThreesimBlockchainSystemFactory blockchainSystemFactory =
                 createBlockchainSystemFactory(simulationParameters, configuration);
-        blockchainSystemFactory.createBlockchainSystem();
+        blockchainSystemFactory.createBlockchainSystem(threesimSimulationParameters);
 
         int maxAllowedBlockchainLength =
                 Math.toIntExact(simulationParameters.getMaxAllowedBlockchainLength());
-
-        ThreesimSimulationParameters threesimSimulationParameters =
-                getThreesimSimulationParametersFromConfiguration(configuration);
 
         LogOutputProviderImpl logOutputProvider;
         try {
@@ -90,26 +92,38 @@ public class ATOSIMSimulationFactory implements Simulation {
             Map<String, String> configuration) {
 
         double failureThroughputThreshold =
-                Double.parseDouble(configuration.getOrDefault(
-                        "failureThroughputThreshold", "1.0"));
-
+                Double.parseDouble(configuration.getOrDefault("failureThroughputThreshold", "1.0"));
         double shannonEntropyK =
-                Double.parseDouble(configuration.getOrDefault(
-                        "shannonEntropyK", "1.0"));
-
+                Double.parseDouble(configuration.getOrDefault("shannonEntropyK", "1.0"));
         double nakamotoCoefficientThreshold =
-                Double.parseDouble(configuration.getOrDefault(
-                        "nakamotoCoefficientThreshold", "50.0"));
-
+                Double.parseDouble(configuration.getOrDefault("nakamotoCoefficientThreshold", "50.0"));
         double reliabilityObservationTimespan =
-                Double.parseDouble(configuration.getOrDefault(
-                        "reliabilityObservationTimespan", "24.0"));
+                Double.parseDouble(configuration.getOrDefault("reliabilityObservationTimespan", "24.0"));
+        double blockInterval =
+                Double.parseDouble(configuration.getOrDefault("block_creation_interval", "6000.0"));
+        int maxBlockSize =
+                Integer.parseInt(configuration.getOrDefault("max_block_size", "1000000"));
 
         return new ThreesimSimulationParameters(
                 failureThroughputThreshold,
                 shannonEntropyK,
                 nakamotoCoefficientThreshold,
-                reliabilityObservationTimespan);
+                reliabilityObservationTimespan,
+                AttackType.NONE,
+                false,
+                AttackType.NONE,
+                Collections.emptySet(),
+                0.0,
+                0.0,
+                0L,
+                0L,
+                6,
+                blockInterval,
+                0.0,
+                8,
+                maxBlockSize,
+                100.0
+        );
     }
 
     private ThreesimBlockchainSystemFactory createBlockchainSystemFactory(
@@ -130,15 +144,13 @@ public class ATOSIMSimulationFactory implements Simulation {
         if (networkTopology instanceof ConnectedSubgraphsNetworkTopology) {
             return new ConnectedSubgraphNetworkBlockchainSystemFactory(
                     designBlockchainSystem,
-                    (ConnectedSubgraphsNetworkTopology) networkTopology,
-                    false);
+                    (ConnectedSubgraphsNetworkTopology) networkTopology);
         }
 
         if (networkTopology instanceof ExplicitNetworkTopology) {
             return new ExplicitNetworkBlockchainSystemFactory(
                     designBlockchainSystem,
-                    (ExplicitNetworkTopology) networkTopology,
-                    false);
+                    (ExplicitNetworkTopology) networkTopology);
         }
 
         throw new IllegalStateException(
