@@ -1,16 +1,3 @@
-/**
- * RESPONSIBILITY:
- * - Batch runner for multiple simulations based on a CSV file.
- * - Merges: (1) base testmodels/configuration.json (simulation thresholds)
- *   with (2) one CSV row per experiment (system parameters).
- *
- * KEY IMPROVEMENTS:
- * - Keeps the CSV structure exactly as provided by the user.
- * - Validates that all required columns are present before each run.
- * - Selects the correct model from testmodels/ using config_id → threesim-config_id.
- * - Ensures consistent and reproducible execution across all configurations.
- */
-
 package org.palladiosimulator.blockchainsystems.atosim;
 
 import java.io.BufferedReader;
@@ -27,8 +14,6 @@ import com.google.gson.reflect.TypeToken;
 
 public class ATOSIMSimulator {
 	
-	//TODO: Update this simulator
-
     // ----------------------------------------------------
     // DEFAULT LOCATIONS (can be overridden via CLI args)
     // ----------------------------------------------------
@@ -49,7 +34,7 @@ public class ATOSIMSimulator {
 
         BlockchainATOSIMStandalone simulator =
                 new BlockchainATOSIMStandalone(
-                        "org.palladiosimulator.blockchainsystems.trilemma",
+                        "org.palladiosimulator.blockchainsystems.atomsim",
                         Activator.class);
 
         if (!simulator.initAnalysis()) {
@@ -84,13 +69,8 @@ public class ATOSIMSimulator {
                 // Copy CSV parameters as-is
                 config.putAll(row);
 
-                // ----------------------------------------------------
-                // Revised to take into account 50 blockchain system models: deterministic model selection
-                // config_id = N → testmodels/threesim-N/Net.blockchainsystem
-                // ----------------------------------------------------
                 Path modelPath = pickModelPath(testmodelsDir, configId);
                 config.put("blockchainSystemModelFilePath", modelPath.toString());
-                // ----------------------------------------------------
 
                 System.out.println("\n▶ Run " + runId + " | config_id=" + configId);
                 System.out.println("   Using model: " + modelPath.toAbsolutePath());
@@ -202,19 +182,12 @@ public class ATOSIMSimulator {
         }
     }
 
-    // ----------------------------------------------------
-    // Revised to take into account 50 blockchain system models: deterministic model resolver
-    // ----------------------------------------------------
     private static Path pickModelPath(Path testmodelsDir, String configId) {
-
-        // Each configuration has exactly one model folder:
-        // testmodels/threesim-<config_id>/
         Path modelPath =
                 testmodelsDir
                         .resolve("threesim-" + configId)
                         .resolve("Net.blockchainsystem");
 
-        // Fail fast if the model is missing or misconfigured
         if (!Files.exists(modelPath)) {
             throw new IllegalArgumentException(
                     "❌ Model not found for config_id=" + configId +

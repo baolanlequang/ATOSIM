@@ -147,6 +147,7 @@ public class BlockchainATOSIMStandalone {
 
         } catch (StandaloneInitializationException e) {
             logger.error("Unable to initialize standalone environment.", e);
+            System.out.println(e.toString());
             return false;
         }
     }
