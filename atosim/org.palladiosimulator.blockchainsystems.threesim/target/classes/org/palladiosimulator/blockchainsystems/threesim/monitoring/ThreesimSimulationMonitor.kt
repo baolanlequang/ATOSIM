@@ -109,20 +109,6 @@ class ThreesimSimulationMonitor(
   fun getFinalState(
     finalSystemTime: Long,
   ): ThreesimSimulationMonitorState {
-    println("===== MONITOR FINAL STATE DEBUG =====")
-    println("submittedTransactions=$numberOfSubmittedTransactions")
-    println("confirmedTransactions=${calculateNumberOfConfirmedTransactions()}")
-    println("confirmedBlocks=${calculateNumberOfConfirmedBlocks()}")
-    println("staleBlocks=${calculateNumberOfStaleBlocks()}")
-    println("avgThroughputWithoutFailure=${calculateAverageThroughputWithoutFailure()}")
-    println("avgThroughputDuringFailure=${calculateAverageThroughputDuringFailure()}")
-    println("avgLatencyWithoutFailure=${calculateAverageConfirmationLatencyWithoutFailure()}")
-    println("avgLatencyDuringFailure=${calculateAverageConfirmationLatencyDuringFailure()}")
-    println("raceAttackSucceeded=$raceAttackSucceeded")
-    println("attackSuccessTime=$attackSuccessTime")
-    println("totalRewards=${getTotalBlockRewards()}")
-    println("attackerRewards=${simulationParameters.attackerNodeIds.sumOf { getBlockRewardsForNode(it) }}")
-
     return ThreesimSimulationMonitorState(
       numberOfNodes = nodes.size,
       hashPowerPerNode = calculateHashPowerPerNode(),
@@ -269,11 +255,6 @@ class ThreesimSimulationMonitor(
   override fun shouldTerminate(): Boolean {
     val maxExceeded = maxBlockchainLengthCondition.hasLengthExceeded()
 
-    if (maxExceeded) {
-      println("TERM maxExceeded")
-      return true
-    }
-
     if (simulationParameters.attackType == AttackType.RACE) {
       val confirmedBlocks = calculateNumberOfConfirmedBlocks()
       val reachedDepth = confirmedBlocks >= simulationParameters.confirmationDepth
@@ -283,10 +264,6 @@ class ThreesimSimulationMonitor(
         lastTerminationDebugRaceAttackSucceeded != raceAttackSucceeded ||
         lastTerminationDebugReachedDepth != reachedDepth
       ) {
-        println(
-          "TERM c=$confirmedBlocks/${simulationParameters.confirmationDepth} " +
-                  "race=$raceAttackSucceeded depth=$reachedDepth"
-        )
 
         lastTerminationDebugConfirmedBlocks = confirmedBlocks
         lastTerminationDebugRaceAttackSucceeded = raceAttackSucceeded
@@ -475,14 +452,6 @@ class ThreesimSimulationMonitor(
         raceWinningPrevHash = prevHash
         raceWinningAttackerBlockHash = winningAttackerHash
         raceProvisionalSuccessTime = occurrenceTime
-
-        println(
-          "RACE DEBUG provisional win prevHash=$prevHash " +
-                  "winningAttackerBlock=$winningAttackerHash " +
-                  "attackerConfirmed=$attackerConfirmed " +
-                  "honestStale=$honestStale " +
-                  "occurrenceTime=$occurrenceTime"
-        )
       }
     }
 
@@ -496,13 +465,6 @@ class ThreesimSimulationMonitor(
       if (attackSuccessTime == null) {
         attackSuccessTime = raceProvisionalSuccessTime ?: occurrenceTime
       }
-
-      println(
-        "RACE DEBUG final success winningAttackerBlock=$winningHash " +
-                "depth=$confirmationsOnWinningBranch/${simulationParameters.confirmationDepth} " +
-                "attackSuccessTime=$attackSuccessTime " +
-                "occurrenceTime=$occurrenceTime"
-      )
     }
   }
 
