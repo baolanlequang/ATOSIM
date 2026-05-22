@@ -57,12 +57,9 @@ public class BlockchainATOSIMStandalone {
         return initStandalone();
     }
     
-    //TODO: Update from this
-
-/**
- * Runs one simulation and writes a dedicated JSON file for this configuration.
- * Output filename includes config_id to avoid collisions between runs.
- */
+    /**
+     * Runs one simulation and writes a dedicated JSON file for this configuration.
+     */
 
     public void runSimulation(Map<String, String> configuration, int runId) {
     	
@@ -149,8 +146,6 @@ public class BlockchainATOSIMStandalone {
             return true;
 
         } catch (StandaloneInitializationException e) {
-        	e.printStackTrace();
-        	System.out.println("test");
             logger.error("Unable to initialize standalone environment.", e);
             return false;
         }

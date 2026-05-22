@@ -26,23 +26,17 @@ import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSingl
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 
 public class ATOSIMSimulationFactory implements Simulation {
-	
-	//TODO: Update this factory
 
     private final Simulation simulation;
 
     public ATOSIMSimulationFactory(
             SimulationParameters simulationParameters,
             Map<String, String> configuration) {
-    	
-    	
 
         ThreesimBlockchainSystemFactory blockchainSystemFactory =
                 createBlockchainSystemFactory(simulationParameters, configuration);
         blockchainSystemFactory.createBlockchainSystem();
-        
 
-        // ✅ FIX: Threesim expects int, SimulationParameters returns long
         int maxAllowedBlockchainLength =
                 Math.toIntExact(simulationParameters.getMaxAllowedBlockchainLength());
 

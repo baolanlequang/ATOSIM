@@ -8,9 +8,10 @@ import org.palladiosimulator.blockchainsystems.bscm.blockchainsystemComponentRep
 
 import com.google.common.io.Files;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Map; // ✅ FIX: Map was missing → caused runtime compilation error
+import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -21,109 +22,67 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 
 public class BlockchainSystemModelLoader {
 
-//    private final ResourceSet resourceSet = new ResourceSetImpl();
-
     public BlockchainSystem load(String uri) {
-
-        String folderName = Paths.get(uri).getParent().getFileName().toString();
-        String fileName = Paths.get(uri).getFileName().toString();
+        Path modelPath = Paths.get(uri).toAbsolutePath();
+        Path folderPath = modelPath.getParent();
+        String folderName = folderPath.getFileName().toString();
+        String fileName = modelPath.getFileName().toString();
         String baseName = Files.getNameWithoutExtension(fileName);
-        
+
         ResourceSet resourceSet = new ResourceSetImpl();
+        XMIResourceFactoryImpl xmiFactory = new XMIResourceFactoryImpl();
 
-        try {
-        	XMIResourceFactoryImpl xmiFactory = new XMIResourceFactoryImpl();
-        	resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("blockchainsystem", xmiFactory);
-        	resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("p2pnetwork", xmiFactory);
-        	resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("bscmrepository", xmiFactory);
-        	resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("nodeallocation", xmiFactory);
-        	resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("geographicalregions", xmiFactory);
-        	resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("linkallocation", xmiFactory);
-        	resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("transactions", xmiFactory);
+        for (String ext : new String[]{
+                "blockchainsystem", "p2pnetwork", "bscmrepository",
+                "nodeallocation", "geographicalregions", "linkallocation", "transactions"}) {
+            resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(ext, xmiFactory);
+        }
 
-        	resourceSet.getPackageRegistry().put(
-        		    BlockchainsystemPackage.eNS_URI, 
-        		    BlockchainsystemPackage.eINSTANCE
-        		    );
-        	resourceSet.getPackageRegistry().put(
-        			P2pnetworkPackage.eNS_URI, 
-        			P2pnetworkPackage.eINSTANCE
-        		    );
-        	resourceSet.getPackageRegistry().put(
-        			NodeallocationPackage.eNS_URI, 
-        			NodeallocationPackage.eINSTANCE
-        		    );
-        	resourceSet.getPackageRegistry().put(
-        			BlockchainsystemComponentRepositoryPackage.eNS_URI, 
-        			BlockchainsystemComponentRepositoryPackage.eINSTANCE
-        		    );
-        	
-	        resourceSet.getURIConverter().getURIMap().put(createRelativePluginURI(folderName, fileName), createFilePluginURI(folderName, fileName));
-	        resourceSet.getURIConverter().getURIMap().put(createRelativePluginURI(folderName, baseName + ".p2pnetwork"), createFilePluginURI(folderName, baseName + ".p2pnetwork"));
-	        resourceSet.getURIConverter().getURIMap().put(createRelativePluginURI(folderName, baseName + ".nodeallocation"), createFilePluginURI(folderName, baseName + ".nodeallocation"));
-	        resourceSet.getURIConverter().getURIMap().put(createRelativePluginURI(folderName, baseName + ".bscmrepository"), createFilePluginURI(folderName, baseName + ".bscmrepository"));
-	        resourceSet.getURIConverter().getURIMap().put(createRelativePluginURI(folderName, baseName + ".geographicalregions"), createFilePluginURI(folderName, baseName + ".geographicalregions"));
-	        resourceSet.getURIConverter().getURIMap().put(createRelativePluginURI(folderName, baseName + ".linkallocation"), createFilePluginURI(folderName, baseName + ".linkallocation"));
-	        resourceSet.getURIConverter().getURIMap().put(createRelativePluginURI(folderName, baseName + ".transactions"), createFilePluginURI(folderName, baseName + ".transactions"));
-	        
-	        resourceSet.getResource(createRelativePluginURI(folderName, fileName), true);
-	        resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".p2pnetwork"), true);
-	        resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".nodeallocation"), true);
-	        resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".bscmrepository"), true);
-	        resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".geographicalregions"), true);
-	        resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".linkallocation"), true);
-	        resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".transactions"), true);
-        } catch (Exception e) {
-        	resourceSet = null;
-        	resourceSet = new ResourceSetImpl();
-        	BlockchainsystemPackage.eINSTANCE.eClass();
-        	
-        	resourceSet.getResource(createRelativePluginURI(folderName, fileName), true);
-            resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".p2pnetwork"), true);
-            resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".nodeallocation"), true);
-            resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".bscmrepository"), true);
-            resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".geographicalregions"), true);
-            resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".linkallocation"), true);
-            resourceSet.getResource(createRelativePluginURI(folderName, baseName + ".transactions"), true);
+        resourceSet.getPackageRegistry().put(BlockchainsystemPackage.eNS_URI, BlockchainsystemPackage.eINSTANCE);
+        resourceSet.getPackageRegistry().put(P2pnetworkPackage.eNS_URI, P2pnetworkPackage.eINSTANCE);
+        resourceSet.getPackageRegistry().put(NodeallocationPackage.eNS_URI, NodeallocationPackage.eINSTANCE);
+        resourceSet.getPackageRegistry().put(BlockchainsystemComponentRepositoryPackage.eNS_URI,
+                BlockchainsystemComponentRepositoryPackage.eINSTANCE);
+
+        String[] relativeNames = {
+                fileName,
+                baseName + ".p2pnetwork",
+                baseName + ".nodeallocation",
+                baseName + ".bscmrepository",
+                baseName + ".geographicalregions",
+                baseName + ".linkallocation",
+                baseName + ".transactions"
+        };
+
+        for (String name : relativeNames) {
+            resourceSet.getURIConverter().getURIMap().put(
+                    createPluginURI(folderName, name),
+                    URI.createFileURI(folderPath.resolve(name).toString()));
+        }
+
+        for (String name : relativeNames) {
+            resourceSet.getResource(createPluginURI(folderName, name), true);
         }
 
         ArrayList<Resource> currentResources;
         do {
             currentResources = new ArrayList<>(resourceSet.getResources());
-            for (final Resource r : currentResources) {
-            	EcoreUtil.resolveAll(r);
+            for (Resource r : currentResources) {
+                EcoreUtil.resolveAll(r);
             }
         } while (currentResources.size() != resourceSet.getResources().size());
-        
-        return (BlockchainSystem) currentResources
-                .get(0)
-                .getContents()
-                .get(0);
+
+        return (BlockchainSystem) resourceSet.getResources().get(0).getContents().get(0);
     }
 
-    /**
-     * Overload used by TrilemmaSimulationFactory.
-     * Configuration is forwarded for future CSV-based model overrides.
-     */
     public BlockchainSystem load(String uri, Map<String, String> configuration) {
         return load(uri);
     }
 
-    private URI createRelativePluginURI(String folder, String relativePath) {
-        String path =
-                Paths.get(
-                        "org.palladiosimulator.blockchainsystems.atosim/testmodels/" + folder,
-                        relativePath)
-                     .toString();
+    private URI createPluginURI(String folder, String relativePath) {
+        String path = Paths.get(
+                "org.palladiosimulator.blockchainsystems.atosim/testmodels/" + folder,
+                relativePath).toString();
         return URI.createPlatformPluginURI(path, false);
-    }
-    
-    private URI createFilePluginURI(String folder, String relativePath) {
-        String path =
-                Paths.get(
-                        "org.palladiosimulator.blockchainsystems.atosim/testmodels/" + folder,
-                        relativePath)
-                     .toString();
-        return URI.createURI(path);
     }
 }
