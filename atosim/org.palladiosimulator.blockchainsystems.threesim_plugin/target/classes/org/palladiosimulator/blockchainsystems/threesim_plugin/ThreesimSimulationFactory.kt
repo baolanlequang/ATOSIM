@@ -101,6 +101,8 @@ class ThreesimSimulationFactory(
         ThreesimAttributes.RELIABILITY_OBSERVATION_TIMESPAN,
         ThreesimAttributes.RELIABILITY_OBSERVATION_TIMESPAN_DEFAULT
       ).toDouble(),
+
+      attackType = AttackType.NONE,
       combinedAttackEnabled = combinedAttackEnabled,
       secondaryAttackType = secondaryAttackType,
 
@@ -108,7 +110,6 @@ class ThreesimSimulationFactory(
         ThreesimAttributes.TRANSACTION_A_DELAY,
         ThreesimAttributes.TRANSACTION_A_DELAY_DEFAULT
       ).toLong(),
-
       deltaB = configuration.getAttribute(
         ThreesimAttributes.TRANSACTION_B_ACCELERATION,
         ThreesimAttributes.TRANSACTION_B_ACCELERATION_DEFAULT
