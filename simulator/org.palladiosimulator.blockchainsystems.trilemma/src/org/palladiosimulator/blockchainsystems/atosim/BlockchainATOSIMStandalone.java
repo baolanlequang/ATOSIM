@@ -159,8 +159,8 @@ public class BlockchainATOSIMStandalone {
             simulationType = SimulationType.MonteCarlo;
         }
 
-        int maxAllowedBlockchainLength =
-                Integer.parseInt(
+        long maxAllowedBlockchainLength =
+                Long.parseLong(
                         configuration.getOrDefault(
                                 "maxAllowedBlockchainLength", "30"));
 
@@ -177,11 +177,9 @@ public class BlockchainATOSIMStandalone {
                 ? new MonteCarloSimulationParameters(
                 maxAllowedBlockchainLength,
                 numberOfMonteCarloRounds,
-                blockchainSystemModelFilePath,
-                0)
+                blockchainSystemModelFilePath)
                 : new SingleSimulationParameters(
                 maxAllowedBlockchainLength,
-                blockchainSystemModelFilePath,
-                0);
+                blockchainSystemModelFilePath);
     }
 }
