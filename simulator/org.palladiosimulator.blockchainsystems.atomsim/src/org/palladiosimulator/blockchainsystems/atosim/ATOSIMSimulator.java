@@ -161,16 +161,18 @@ public class ATOSIMSimulator {
     private static void validateCsvColumns(Map<String, String> row) {
 
         List<String> required = List.of(
-        		"config_id",
-        		"Hnode",
-        		"Hlink",
-        		"block_creation_interval",
-        		"hashrate_concentration",
-        		"max_block_size",
-        		"inbound_connections",
-        		"outbound_connections",
-        		"number_of_attackers",
-        		"validator_count"
+                "config_id",
+                "validator_count",
+                "node_degree",
+                "propagation_delay",
+                "block_creation_interval",
+                "max_block_size",
+                "attacker_hash_power",
+                "tie_breaking_parameter",
+                "transaction_delay",
+                "transaction_acceleration",
+                "number_of_attackers",
+                "attacker_hash_power_realized"
         );
 
         for (String key : required) {
