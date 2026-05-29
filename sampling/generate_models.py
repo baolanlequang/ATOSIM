@@ -14,13 +14,15 @@ Mapping (CSV column -> base file -> attribute):
   validator_count          Net.p2pnetwork        NodeTemplates.NumberOfNodeOccurences (every template)
   propagation_delay        Net.linkallocation    Latency                (all Values, both LinkAllocations)
   transaction_delay        Net.transactions      MeanTransactionCreationInterval
+  attacker_hash_power      Net.attackmodel       attackers.powerShare    (only if Net.attackmodel exists)
 
-Other CSV columns (attacker_*, tie_breaking_parameter, transaction_acceleration)
-are not written into the model files; they belong to the runtime configuration.
+Other CSV columns (attacker_hash_power_realized, tie_breaking_parameter,
+transaction_acceleration, number_of_attackers) are not written into the model
+files; they belong to the runtime configuration.
 
 Usage:
     python generate_models.py
-    python generate_models.py --csv path/to.csv --base path/to/threesim-net-base --out path/to/out
+    python generate_models.py --csv path/to.csv --base path/to/threesim-net-2sc --out path/to/out
 """
 
 import argparse
@@ -36,9 +38,11 @@ BASE_FILES = (
     "Net.p2pnetwork",
     "Net.nodeallocation",
     "Net.bscmrepository",
+    "Net.blockchainsystemcomponentrepository",
     "Net.geographicalregions",
     "Net.linkallocation",
     "Net.transactions",
+    "Net.attackmodel",
     "representations.aird",
 )
 
@@ -89,6 +93,13 @@ def patch_transactions(path: Path, transaction_delay: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def patch_attackmodel(path: Path, attacker_hash_power: str) -> None:
+    text = path.read_text(encoding="utf-8")
+    text, n = _replace_attr(text, "powerShare", f"{float(attacker_hash_power)}")
+    _require(text, "powerShare", n, path)
+    path.write_text(text, encoding="utf-8")
+
+
 def generate_one(base_dir: Path, out_dir: Path, row: dict) -> Path:
     config_id = row["config_id"].strip()
     target = out_dir / f"atomsim-{config_id}"
@@ -116,10 +127,15 @@ def generate_one(base_dir: Path, out_dir: Path, row: dict) -> Path:
         target / "Net.linkallocation",
         row["propagation_delay"],
     )
-    patch_transactions(
-        target / "Net.transactions",
-        row["transaction_delay"],
-    )
+    if "transaction_delay" in row and row["transaction_delay"]:
+        patch_transactions(
+            target / "Net.transactions",
+            row["transaction_delay"],
+        )
+
+    attackmodel_path = target / "Net.attackmodel"
+    if attackmodel_path.exists() and row.get("attacker_hash_power"):
+        patch_attackmodel(attackmodel_path, row["attacker_hash_power"])
 
     return target
 
@@ -137,7 +153,7 @@ def main() -> int:
     parser.add_argument(
         "--base",
         type=Path,
-        default=script_dir / "threesim-net-base",
+        default=script_dir / "threesim-net-2sc",
         help="Path to the base model template directory.",
     )
     parser.add_argument(
@@ -166,8 +182,9 @@ def main() -> int:
             "propagation_delay",
             "block_creation_interval",
             "max_block_size",
-            "transaction_delay",
         }
+        if (args.base / "Net.attackmodel").exists():
+            required.add("attacker_hash_power")
         missing = required - set(reader.fieldnames or [])
         if missing:
             print(f"CSV missing required columns: {sorted(missing)}", file=sys.stderr)

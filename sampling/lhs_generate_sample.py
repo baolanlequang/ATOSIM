@@ -18,15 +18,13 @@ rng = np.random.default_rng(SEED)
 # -----------------------------
 
 param_ranges = {
-    "validator_count":           (20,     5_000),
-    "node_degree":               (1,      250),
-    "propagation_delay":         (6_500,  40_000),
-    "block_creation_interval":   (60,     1_200),
-    "max_block_size":            (0.25,   8.0),
-    "attacker_hash_power":       (0.2,    0.9),
-    "tie_breaking_parameter":    (0.0,    1.0),
-    "transaction_delay":         (0,      6_000),
-    "transaction_acceleration":  (0,      6_000),
+    "validator_count":          (20,    5_000),
+    "node_degree":              (1,     250),
+    "propagation_delay":        (6_500, 40_000),
+    "block_creation_interval":  (60,    1_200),
+    "max_block_size":           (0.25,  8.0),
+    "attacker_hash_power":      (0.2,   0.9),
+    "tie_breaking_parameter":   (0.0,   1.0),
 }
 
 param_names = list(param_ranges.keys())
@@ -40,7 +38,7 @@ attacker_col = param_names.index("attacker_hash_power")
 # scipy < 1.8 does not expose optimization="random-cd"; fall back to a seed
 # sweep that selects the unit design with the lowest centred discrepancy (CD).
 try:
-    sampler  = qmc.LatinHypercube(d=DIM, seed=SEED, optimization="random-cd")
+    sampler = qmc.LatinHypercube(d=DIM, seed=SEED, optimization="random-cd")
     lhs_unit = sampler.random(n=N_SAMPLES)
 except TypeError:
     best_unit, best_cd = None, float("inf")
@@ -69,10 +67,9 @@ df = pd.DataFrame(lhs_scaled, columns=param_names)
 integer_params = [
     "validator_count",
     "node_degree",
-    "max_block_size",
-    "block_creation_interval",
     "propagation_delay",
-    "transaction_acceleration",
+    "block_creation_interval",
+    "max_block_size"
 ]
 
 for p in integer_params:
@@ -89,7 +86,7 @@ for p in integer_params:
 # - EXACT_25_ATTACK_SHARE rows closest to 0.25 are snapped to exactly 0.25
 #   as calibrated security-threshold reference cases.
 # - number_of_attackers is derived as round(attacker_hash_power * validator_count)
-#   and capped below majority (< 0.5).
+#   and capped strictly below majority (< 0.5).
 
 n_zero     = int(round(N_SAMPLES * ZERO_ATTACK_SHARE))
 n_exact_25 = int(round(N_SAMPLES * EXACT_25_ATTACK_SHARE))
@@ -108,16 +105,16 @@ closest_to_25 = remaining_idx[
 ]
 exact_25_idx = closest_to_25[:n_exact_25]
 
-# Derive number_of_attackers for all rows.
+# Default attacker counts for all rows.
 df["number_of_attackers"] = (
     df["attacker_hash_power"] * df["validator_count"]
 ).round().astype(int)
 
 # Cap strictly below majority.
-max_attackers = (np.floor(0.49 * df["validator_count"])).astype(int)
+max_attackers = np.floor(0.49 * df["validator_count"]).astype(int)
 df["number_of_attackers"] = np.minimum(df["number_of_attackers"], max_attackers)
 
-# Enforce zero-attacker control cases.
+# Enforce explicit zero-attacker cases.
 df.loc[zero_idx, "attacker_hash_power"]  = 0.0
 df.loc[zero_idx, "number_of_attackers"]  = 0
 
@@ -136,14 +133,11 @@ df["number_of_attackers"] = np.minimum(
     df["validator_count"]
 )
 
-df["node_degree"] = (
-    np.minimum(df["node_degree"], df["validator_count"] - 1)
-    .clip(lower=1)
-    .astype(int)
-)
+df["node_degree"] = np.minimum(df["node_degree"], df["validator_count"] - 1)
+df["node_degree"] = df["node_degree"].clip(lower=1).astype(int)
 
 df["tie_breaking_parameter"] = df["tie_breaking_parameter"].clip(0.0, 1.0)
-df["attacker_hash_power"] = df["attacker_hash_power"].clip(0.0, 1.0)
+df["attacker_hash_power"]    = df["attacker_hash_power"].clip(0.0, 1.0)
 
 df["attacker_hash_power_realized"] = (
     df["number_of_attackers"] / df["validator_count"]
@@ -153,16 +147,15 @@ df["attacker_hash_power_realized"] = (
 # 8. Final checks
 # -----------------------------
 
-assert (df["number_of_attackers"] >= 0).all()
 assert (df["number_of_attackers"] <= df["validator_count"]).all()
-assert (df["attacker_hash_power_realized"] < 0.5).all()
+assert (df["number_of_attackers"] >= 0).all()
 assert (df["node_degree"] >= 1).all()
 assert (df["node_degree"] <= df["validator_count"] - 1).all()
-assert (df["attacker_hash_power"] == 0.0).sum() == n_zero
-assert np.isclose((df["attacker_hash_power"] == 0.25).sum(), n_exact_25)
+assert (df["attacker_hash_power_realized"] < 0.5).all()
 assert (df["tie_breaking_parameter"] >= 0.0).all() and (df["tie_breaking_parameter"] <= 1.0).all()
-assert (df["transaction_delay"] >= 0).all()
-assert (df["transaction_acceleration"] >= 0).all()
+assert (df["number_of_attackers"] == 0).sum() == n_zero
+assert np.isclose((df["attacker_hash_power"] == 0.25).sum(), n_exact_25)
+assert (df["attacker_hash_power_realized"] > 0.25).any()
 
 # -----------------------------
 # 9. Cleanup + save
@@ -175,6 +168,7 @@ df.to_csv(outfile, index=False)
 print("LHS configurations generated.")
 print(f"Total zero-attacker contexts  : {(df['number_of_attackers'] == 0).sum()}")
 print(f"Exact 0.25 hash-power contexts: {(df['attacker_hash_power'] == 0.25).sum()}")
+print(f"Realized attacker fraction > 0.25: {(df['attacker_hash_power_realized'] > 0.25).sum()}")
 print(f"Max realized attacker fraction: {df['attacker_hash_power_realized'].max():.6f}")
 print(df[[
     "config_id",

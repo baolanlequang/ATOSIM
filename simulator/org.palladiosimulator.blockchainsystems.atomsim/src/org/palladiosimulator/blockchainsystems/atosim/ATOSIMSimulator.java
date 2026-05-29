@@ -169,8 +169,6 @@ public class ATOSIMSimulator {
                 "max_block_size",
                 "attacker_hash_power",
                 "tie_breaking_parameter",
-                "transaction_delay",
-                "transaction_acceleration",
                 "number_of_attackers",
                 "attacker_hash_power_realized"
         );
