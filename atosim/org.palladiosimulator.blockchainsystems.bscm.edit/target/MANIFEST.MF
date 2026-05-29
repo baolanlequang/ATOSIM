@@ -4,37 +4,23 @@ Bundle-Name: %pluginName
 Bundle-SymbolicName: org.palladiosimulator.blockchainsystems.bscm.edit;s
  ingleton:=true
 Automatic-Module-Name: org.palladiosimulator.blockchainsystems.bscm.edit
-Bundle-Version: 0.0.1.202605251145
+Bundle-Version: 0.0.1.202605290911
 Bundle-ClassPath: .
 Bundle-Activator: org.palladiosimulator.blockchainsystems.bscm.nodealloc
  ation.provider.BscmEditPlugin$Implementation
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
-Export-Package: bscm.blockchainsystem.provider,bscm.blockchainsystemComp
- onentRepository.provider,bscm.nodeallocation.provider,bscm.nodeenvironm
- ent.provider,bscm.nodegeographicalenvironment.provider,bscm.nodesystem.
- provider,bscm.p2pnetwork.provider,ecore.provider,entity.provider,identi
- fier.provider,org.palladiosimulator.blockchainsystems.bscm.attackmodel.
- provider,org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.
- provider,org.palladiosimulator.blockchainsystems.bscm.blockchainsystemC
- omponentRepository.provider,org.palladiosimulator.blockchainsystems.bsc
- m.geographicalregions.provider,org.palladiosimulator.blockchainsystems.
- bscm.geography.provider,org.palladiosimulator.blockchainsystems.bscm.li
- nkallocation.provider,org.palladiosimulator.blockchainsystems.bscm.node
- allocation.provider,org.palladiosimulator.blockchainsystems.bscm.nodeen
- vironment.provider,org.palladiosimulator.blockchainsystems.bscm.nodegeo
- graphicalenvironment.provider,org.palladiosimulator.blockchainsystems.b
- scm.nodesystem.provider,org.palladiosimulator.blockchainsystems.bscm.p2
- pnetwork.provider,org.palladiosimulator.blockchainsystems.bscm.transact
- ions.provider,pcm.allocation.provider,pcm.core.composition.provider,pcm
- .core.entity.provider,pcm.core.provider,pcm.parameter.provider,pcm.prot
- ocol.provider,pcm.provider,pcm.qosannotations.provider,pcm.qosannotatio
- ns.qos_performance.provider,pcm.qosannotations.qos_reliability.provider
- ,pcm.reliability.provider,pcm.repository.provider,pcm.resourceenvironme
- nt.provider,pcm.resourcetype.provider,pcm.seff.provider,pcm.seff.seff_p
- erformance.provider,pcm.seff.seff_reliability.provider,pcm.subsystem.pr
- ovider,pcm.system.provider,pcm.usagemodel.provider,probfunction.provide
- r,stoex.provider,units.provider
+Export-Package: org.palladiosimulator.blockchainsystems.bscm.attackmodel
+ .provider,org.palladiosimulator.blockchainsystems.bscm.blockchainsystem
+ .provider,org.palladiosimulator.blockchainsystems.bscm.blockchainsystem
+ ComponentRepository.provider,org.palladiosimulator.blockchainsystems.bs
+ cm.geographicalregions.provider,org.palladiosimulator.blockchainsystems
+ .bscm.linkallocation.provider,org.palladiosimulator.blockchainsystems.b
+ scm.nodeallocation.provider,org.palladiosimulator.blockchainsystems.bsc
+ m.nodeenvironment.provider,org.palladiosimulator.blockchainsystems.bscm
+ .nodesystem.provider,org.palladiosimulator.blockchainsystems.bscm.p2pne
+ twork.provider,org.palladiosimulator.blockchainsystems.bscm.transaction
+ s.provider
 Require-Bundle: org.eclipse.core.runtime,org.palladiosimulator.blockchai
  nsystems.bscm;visibility:=reexport,org.eclipse.emf.edit;visibility:=ree
  xport,org.eclipse.emf.ecore;visibility:=reexport,org.eclipse.emf.ecore.

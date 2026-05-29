@@ -1,0 +1,66 @@
+{
+  "simulationParameters": {
+    "maxAllowedBlockchainLength": 25,
+    "numberOfMonteCarloRounds": 1,
+    "blockchainSystemModelFilePath": "platform:/resource/threesim-ring-base/Net.blockchainsystem"
+  },
+  "threesimSimulationParameters": {
+    "failureThroughputThreshold": 1.0,
+    "shannonEntropyK": 1.0,
+    "nakamotoCoefficientThreshold": 50.0,
+    "reliabilityObservationTimespan": 24.0,
+    "attackType": "SELFISH_MINING",
+    "attackerHashPower": 0.3,
+    "gamma": 0.0,
+    "deltaA": 0,
+    "deltaB": 0,
+    "confirmationDepth": 6,
+    "blockInterval": 600.0,
+    "propagationDelay": 0.0,
+    "nodeDegree": 8,
+    "maxBlockSize": 1000000,
+    "networkBandwidth": 100.0
+  },
+  "generalResults": [
+    {"name": "GeographicalDiversity", "value": 0.7499999999999999, "unit": "%"},
+    {"name": "NakamotoCoefficient", "value": 10, "unit": "validating nodes"}
+  ],
+  "simulationRoundResults": [
+    [
+      {"name": "AttackSuccessTime", "value": -1.0, "unit": "ms"},
+      {"name": "Attacker Revenue Share", "value": 52.083333333333336, "unit": "%"},
+      {"name": "AvailabilityScalability", "value": 0.01928374655647383, "unit": "%"},
+      {"name": "AvailabilitySecurity", "value": 0.6921435707591571, "unit": "%"},
+      {"name": "Consistency", "value": 15544.235294117647, "unit": "ms"},
+      {"name": "DoubleSpendSuccessProbability", "value": 0.13211116871353512},
+      {"name": "FaultTolerance", "value": {"throughputDelta": {"value": 371.1197284946682, "unit": "transactions/min"}, "confirmationLatencyDelta": {"value": 1061.583333333334, "unit": "ms"}}},
+      {"name": "Finney Attack Success", "value": 0},
+      {"name": "ForkProbability", "value": 0.0},
+      {"name": "GiniCoefficient", "value": 0.9687499999999989},
+      {"name": "HerfindahlHirschmanIndex", "value": 1.0},
+      {"name": "Race Attack Success", "value": 0},
+      {"name": "Reliability", "value": 0.0, "unit": "%"},
+      {"name": "ShannonEntropy", "value": 4.499406563602213, "unit": "bits"},
+      {"name": "StaleBlockRate", "value": 5.0, "unit": "ratio"},
+      {"name": "TransactionThroughput", "value": 11.682567939695698, "unit": "transactions/min"}
+    ]
+  ],
+  "averageSimulationRoundResult": [
+    {"name": "HerfindahlHirschmanIndex", "average": 1.0, "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "AttackSuccessTime", "average": -1.0, "unit": "ms", "standardDeviation": 0.0},
+    {"name": "Consistency", "average": 15544.235294117647, "unit": "ms", "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "ShannonEntropy", "average": 4.499406563602213, "unit": "bits", "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "FaultTolerance", "average": {"throughputDelta": {"name": "throughputDelta", "average": 371.1197284946682, "unit": "transactions/min", "standardDeviation": 0.0, "coefficientOfVariation": 0.0}, "confirmationLatencyDelta": {"name": "confirmationLatencyDelta", "average": 1061.583333333334, "unit": "ms", "standardDeviation": 0.0, "coefficientOfVariation": 0.0}}},
+    {"name": "DoubleSpendSuccessProbability", "average": 0.13211116871353512, "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "StaleBlockRate", "average": 5.0, "unit": "ratio", "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "AvailabilityScalability", "average": 0.01928374655647383, "unit": "%", "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "GiniCoefficient", "average": 0.9687499999999989, "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "AvailabilitySecurity", "average": 0.6921435707591571, "unit": "%", "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "ForkProbability", "average": 0.0, "standardDeviation": 0.0},
+    {"name": "TransactionThroughput", "average": 11.682567939695698, "unit": "transactions/min", "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "Finney Attack Success", "average": 0.0, "standardDeviation": 0.0},
+    {"name": "Attacker Revenue Share", "average": 52.083333333333336, "unit": "%", "standardDeviation": 0.0, "coefficientOfVariation": 0.0},
+    {"name": "Race Attack Success", "average": 0.0, "standardDeviation": 0.0},
+    {"name": "Reliability", "average": 0.0, "unit": "%", "standardDeviation": 0.0}
+  ]
+}

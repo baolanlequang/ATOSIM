@@ -21,7 +21,6 @@ import org.palladiosimulator.blockchainsystems.plugin.simulation.MonteCarloSimul
 import org.palladiosimulator.blockchainsystems.threesim.creation.ThreesimBlockchainSystemFactory;
 import org.palladiosimulator.blockchainsystems.threesim.creation.network.connectedsubgraphs.ConnectedSubgraphNetworkBlockchainSystemFactory;
 import org.palladiosimulator.blockchainsystems.threesim.creation.network.explicit.ExplicitNetworkBlockchainSystemFactory;
-import org.palladiosimulator.blockchainsystems.threesim.serialization.ThreesimSerializers;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimMonteCarloSimulation;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSingleSimulation;
@@ -29,7 +28,7 @@ import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimul
 
 public class ATOSIMSimulationFactory implements Simulation {
 
-    private final Simulation simulation;
+    private Simulation simulation;
 
     public ATOSIMSimulationFactory(
             SimulationParameters simulationParameters,
@@ -46,41 +45,40 @@ public class ATOSIMSimulationFactory implements Simulation {
                 Math.toIntExact(simulationParameters.getMaxAllowedBlockchainLength());
 
         LogOutputProviderImpl logOutputProvider;
-        try {
-            logOutputProvider =
-                    LogOutputProviderImpl.Companion.fromLaunchConfiguration(
-                            ThreesimSerializers.INSTANCE.getJson(), null);
-        } catch (CoreException e) {
-            logOutputProvider = null;
-            e.printStackTrace();
-        }
+		try {
+			logOutputProvider = LogOutputProviderImpl.fromLaunchConfiguration(null);
+			if (simulationParameters instanceof MonteCarloSimulationParameters) {
 
-        if (simulationParameters instanceof MonteCarloSimulationParameters) {
+	            MonteCarloSimulationProgressMonitorAdapter progressMonitor =
+	                    new MonteCarloSimulationProgressMonitorAdapter(null);
 
-            MonteCarloSimulationProgressMonitorAdapter progressMonitor =
-                    new MonteCarloSimulationProgressMonitorAdapter(null);
+	            this.simulation =
+	                    new ThreesimMonteCarloSimulation(
+	                            progressMonitor,
+	                            blockchainSystemFactory,
+	                            logOutputProvider,
+	                            maxAllowedBlockchainLength,
+	                            (MonteCarloSimulationParameters) simulationParameters,
+	                            threesimSimulationParameters
+	                    );
 
-            this.simulation =
-                    new ThreesimMonteCarloSimulation(
-                            progressMonitor,
-                            blockchainSystemFactory,
-                            logOutputProvider,
-                            maxAllowedBlockchainLength,
-                            (MonteCarloSimulationParameters) simulationParameters,
-                            threesimSimulationParameters
-                    );
+	        } else {
 
-        } else {
+	            this.simulation =
+	                    new ThreesimSingleSimulation(
+	                            blockchainSystemFactory,
+	                            logOutputProvider,
+	                            maxAllowedBlockchainLength,
+	                            (SingleSimulationParameters) simulationParameters,
+	                            threesimSimulationParameters
+	                    );
+	        }
+		} catch (CoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-            this.simulation =
-                    new ThreesimSingleSimulation(
-                            blockchainSystemFactory,
-                            logOutputProvider,
-                            maxAllowedBlockchainLength,
-                            (SingleSimulationParameters) simulationParameters,
-                            threesimSimulationParameters
-                    );
-        }
+        
     }
 
     @Override
@@ -109,9 +107,9 @@ public class ATOSIMSimulationFactory implements Simulation {
                 shannonEntropyK,
                 nakamotoCoefficientThreshold,
                 reliabilityObservationTimespan,
-                AttackType.NONE,
+                AttackType.SELFISH_MINING,
                 false,
-                AttackType.NONE,
+                AttackType.SELFISH_MINING,
                 Collections.emptySet(),
                 0.0,
                 0.0,
