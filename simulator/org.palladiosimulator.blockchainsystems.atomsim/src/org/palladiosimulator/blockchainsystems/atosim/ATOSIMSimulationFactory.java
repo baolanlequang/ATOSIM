@@ -28,7 +28,7 @@ import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimul
 
 public class ATOSIMSimulationFactory implements Simulation {
 
-    private Simulation simulation;
+    private final Simulation simulation;
 
     public ATOSIMSimulationFactory(
             SimulationParameters simulationParameters,
@@ -39,46 +39,40 @@ public class ATOSIMSimulationFactory implements Simulation {
 
         ThreesimBlockchainSystemFactory blockchainSystemFactory =
                 createBlockchainSystemFactory(simulationParameters, configuration);
-        blockchainSystemFactory.createBlockchainSystem(threesimSimulationParameters);
 
         int maxAllowedBlockchainLength =
                 Math.toIntExact(simulationParameters.getMaxAllowedBlockchainLength());
 
         LogOutputProviderImpl logOutputProvider;
-		try {
-			logOutputProvider = LogOutputProviderImpl.fromLaunchConfiguration(null);
-			if (simulationParameters instanceof MonteCarloSimulationParameters) {
+        try {
+            logOutputProvider = LogOutputProviderImpl.fromLaunchConfiguration(null);
+        } catch (CoreException e) {
+            throw new RuntimeException("Failed to build log output provider", e);
+        }
 
-	            MonteCarloSimulationProgressMonitorAdapter progressMonitor =
-	                    new MonteCarloSimulationProgressMonitorAdapter(null);
+        if (simulationParameters instanceof MonteCarloSimulationParameters) {
+            MonteCarloSimulationProgressMonitorAdapter progressMonitor =
+                    new MonteCarloSimulationProgressMonitorAdapter(null);
 
-	            this.simulation =
-	                    new ThreesimMonteCarloSimulation(
-	                            progressMonitor,
-	                            blockchainSystemFactory,
-	                            logOutputProvider,
-	                            maxAllowedBlockchainLength,
-	                            (MonteCarloSimulationParameters) simulationParameters,
-	                            threesimSimulationParameters
-	                    );
-
-	        } else {
-
-	            this.simulation =
-	                    new ThreesimSingleSimulation(
-	                            blockchainSystemFactory,
-	                            logOutputProvider,
-	                            maxAllowedBlockchainLength,
-	                            (SingleSimulationParameters) simulationParameters,
-	                            threesimSimulationParameters
-	                    );
-	        }
-		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-        
+            this.simulation =
+                    new ThreesimMonteCarloSimulation(
+                            progressMonitor,
+                            blockchainSystemFactory,
+                            logOutputProvider,
+                            maxAllowedBlockchainLength,
+                            (MonteCarloSimulationParameters) simulationParameters,
+                            threesimSimulationParameters
+                    );
+        } else {
+            this.simulation =
+                    new ThreesimSingleSimulation(
+                            blockchainSystemFactory,
+                            logOutputProvider,
+                            maxAllowedBlockchainLength,
+                            (SingleSimulationParameters) simulationParameters,
+                            threesimSimulationParameters
+                    );
+        }
     }
 
     @Override
@@ -98,27 +92,42 @@ public class ATOSIMSimulationFactory implements Simulation {
         double reliabilityObservationTimespan =
                 Double.parseDouble(configuration.getOrDefault("reliabilityObservationTimespan", "24.0"));
         double blockInterval =
-                Double.parseDouble(configuration.getOrDefault("block_creation_interval", "6000.0"));
+                Double.parseDouble(configuration.getOrDefault("block_creation_interval", "600.0"));
         int maxBlockSize =
                 Integer.parseInt(configuration.getOrDefault("max_block_size", "1000000"));
+        double propagationDelay =
+                Double.parseDouble(configuration.getOrDefault("propagation_delay", "0.0"));
+        int nodeDegree =
+                Integer.parseInt(configuration.getOrDefault("node_degree", "8"));
+        double attackerHashPower =
+                Double.parseDouble(configuration.getOrDefault("attacker_hash_power", "0.0"));
+        double gamma =
+                Double.parseDouble(configuration.getOrDefault("tie_breaking_parameter", "0.0"));
+        long deltaA =
+                Long.parseLong(configuration.getOrDefault("transaction_delay", "0"));
+        long deltaB =
+                Long.parseLong(configuration.getOrDefault("transaction_acceleration", "0"));
+        int numberOfAttackers =
+                Integer.parseInt(configuration.getOrDefault("number_of_attackers", "0"));
+        AttackType attackType = numberOfAttackers > 0 ? AttackType.SELFISH_MINING : AttackType.NONE;
 
         return new ThreesimSimulationParameters(
                 failureThroughputThreshold,
                 shannonEntropyK,
                 nakamotoCoefficientThreshold,
                 reliabilityObservationTimespan,
-                AttackType.SELFISH_MINING,
+                attackType,
                 false,
-                AttackType.SELFISH_MINING,
+                AttackType.NONE,
                 Collections.emptySet(),
-                0.0,
-                0.0,
-                0L,
-                0L,
+                attackerHashPower,
+                gamma,
+                deltaA,
+                deltaB,
                 6,
                 blockInterval,
-                0.0,
-                8,
+                propagationDelay,
+                nodeDegree,
                 maxBlockSize,
                 100.0
         );
