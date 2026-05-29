@@ -5,39 +5,23 @@ Bundle-SymbolicName: org.palladiosimulator.blockchainsystems.bscm.editor
  ;singleton:=true
 Automatic-Module-Name: org.palladiosimulator.blockchainsystems.bscm.edit
  or
-Bundle-Version: 0.0.1.202605251145
+Bundle-Version: 0.0.1.202605290911
 Bundle-ClassPath: .
 Bundle-Activator: org.palladiosimulator.blockchainsystems.bscm.nodealloc
  ation.presentation.BscmEditorPlugin$Implementation
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
-Export-Package: bscm.blockchainsystem.presentation,bscm.blockchainsystem
- ComponentRepository.presentation,bscm.nodeallocation.presentation,bscm.
- nodeenvironment.presentation,bscm.nodegeographicalenvironment.presentat
- ion,bscm.nodesystem.presentation,bscm.p2pnetwork.presentation,ecore.pre
- sentation,entity.presentation,org.palladiosimulator.blockchainsystems.b
- scm.attackmodel.presentation,org.palladiosimulator.blockchainsystems.bs
- cm.blockchainsystem.presentation,org.palladiosimulator.blockchainsystem
- s.bscm.blockchainsystemComponentRepository.presentation,org.palladiosim
- ulator.blockchainsystems.bscm.geographicalregions.presentation,org.pall
- adiosimulator.blockchainsystems.bscm.geography.presentation,org.palladi
- osimulator.blockchainsystems.bscm.linkallocation.presentation,org.palla
- diosimulator.blockchainsystems.bscm.nodeallocation.presentation,org.pal
- ladiosimulator.blockchainsystems.bscm.nodeenvironment.presentation,org.
- palladiosimulator.blockchainsystems.bscm.nodegeographicalenvironment.pr
- esentation,org.palladiosimulator.blockchainsystems.bscm.nodesystem.pres
- entation,org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.presen
- tation,org.palladiosimulator.blockchainsystems.bscm.transactions.presen
- tation,pcm.allocation.presentation,pcm.core.composition.presentation,pc
- m.core.entity.presentation,pcm.core.presentation,pcm.parameter.presenta
- tion,pcm.presentation,pcm.qosannotations.presentation,pcm.qosannotation
- s.qos_performance.presentation,pcm.qosannotations.qos_reliability.prese
- ntation,pcm.reliability.presentation,pcm.repository.presentation,pcm.re
- sourceenvironment.presentation,pcm.resourcetype.presentation,pcm.seff.p
- resentation,pcm.seff.seff_performance.presentation,pcm.seff.seff_reliab
- ility.presentation,pcm.subsystem.presentation,pcm.system.presentation,p
- cm.usagemodel.presentation,probfunction.presentation,stoex.presentation
- ,units.presentation
+Export-Package: org.palladiosimulator.blockchainsystems.bscm.attackmodel
+ .presentation,org.palladiosimulator.blockchainsystems.bscm.blockchainsy
+ stem.presentation,org.palladiosimulator.blockchainsystems.bscm.blockcha
+ insystemComponentRepository.presentation,org.palladiosimulator.blockcha
+ insystems.bscm.geographicalregions.presentation,org.palladiosimulator.b
+ lockchainsystems.bscm.linkallocation.presentation,org.palladiosimulator
+ .blockchainsystems.bscm.nodeallocation.presentation,org.palladiosimulat
+ or.blockchainsystems.bscm.nodeenvironment.presentation,org.palladiosimu
+ lator.blockchainsystems.bscm.nodesystem.presentation,org.palladiosimula
+ tor.blockchainsystems.bscm.p2pnetwork.presentation,org.palladiosimulato
+ r.blockchainsystems.bscm.transactions.presentation
 Require-Bundle: org.eclipse.core.runtime,org.eclipse.core.resources;visi
  bility:=reexport,org.palladiosimulator.blockchainsystems.bscm.edit;visi
  bility:=reexport,org.eclipse.emf.ecore.xmi;visibility:=reexport,org.ecl

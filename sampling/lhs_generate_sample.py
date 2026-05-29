@@ -69,9 +69,9 @@ df = pd.DataFrame(lhs_scaled, columns=param_names)
 integer_params = [
     "validator_count",
     "node_degree",
-    "propagation_delay",
+    "max_block_size",
     "block_creation_interval",
-    "transaction_delay",
+    "propagation_delay",
     "transaction_acceleration",
 ]
 

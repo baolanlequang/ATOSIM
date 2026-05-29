@@ -32,7 +32,6 @@ import tools.mdsd.library.standalone.initialization.StandaloneInitializationExce
 import tools.mdsd.library.standalone.initialization.StandaloneInitializerBuilder;
 
 import org.palladiosimulator.blockchainsystems.core.simulation.abstractions.SimulationParameters;
-import org.palladiosimulator.blockchainsystems.threesim.serialization.ThreesimSerializers;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimSimulationResultSerializer;
 import org.palladiosimulator.blockchainsystems.core.simulation.MonteCarloSimulationParameters;
 import org.palladiosimulator.blockchainsystems.core.simulation.SimulationType;
@@ -76,49 +75,50 @@ public class BlockchainATOSIMStandalone {
                 new ATOSIMSimulationFactory(simulationParameters, configuration);
 
         var result = simulationFactory.run();
+        System.out.println("result: "  + result);
 
-        var serializer =
-                new ThreesimSimulationResultSerializer(
-                        ThreesimSerializers.INSTANCE.getJson());
-
-        String simulationJson = serializer.serialize(result);
-        
-        var stopTime = System.nanoTime();
-        
-        long after = runtime.totalMemory() - runtime.freeMemory();
-        var memoryUsed = (after - before) / (1024 * 1024);
-
-        Map<String, Object> finalResult = new LinkedHashMap<>();
-        finalResult.put("runId", runId);
-        finalResult.put("config_id", configuration.get("config_id"));
-        finalResult.put("inputParameters", configuration);
-        finalResult.put("simulationResult",
-                com.google.gson.JsonParser.parseString(simulationJson));
-        finalResult.put("startSimulationTime", startTime);
-        finalResult.put("stopSimulationTime", stopTime);
-        finalResult.put("simulationTime", stopTime - startTime);
-        finalResult.put("memoryUsed", memoryUsed); // in MB
-
-        String jsonResult = new com.google.gson.GsonBuilder()
-                .setPrettyPrinting()
-                .create()
-                .toJson(finalResult);
-
-        try {
-            Path outputFile = createOutputPath(runId);
-            Files.createDirectories(outputFile.getParent());
-
-            try (BufferedWriter writer =
-                         Files.newBufferedWriter(outputFile)) {
-                writer.write(jsonResult);
-            }
-
-            System.out.println("✔ Result saved: "
-                    + outputFile.toAbsolutePath());
-
-        } catch (IOException e) {
-            logger.error("Failed to write simulation result", e);
-        }
+//        var serializer =
+//                new ThreesimSimulationResultSerializer(
+//                        ThreesimSerializers.INSTANCE.getJson());
+//
+//        String simulationJson = serializer.serialize(result);
+//        
+//        var stopTime = System.nanoTime();
+//        
+//        long after = runtime.totalMemory() - runtime.freeMemory();
+//        var memoryUsed = (after - before) / (1024 * 1024);
+//
+//        Map<String, Object> finalResult = new LinkedHashMap<>();
+//        finalResult.put("runId", runId);
+//        finalResult.put("config_id", configuration.get("config_id"));
+//        finalResult.put("inputParameters", configuration);
+//        finalResult.put("simulationResult",
+//                com.google.gson.JsonParser.parseString(simulationJson));
+//        finalResult.put("startSimulationTime", startTime);
+//        finalResult.put("stopSimulationTime", stopTime);
+//        finalResult.put("simulationTime", stopTime - startTime);
+//        finalResult.put("memoryUsed", memoryUsed); // in MB
+//
+//        String jsonResult = new com.google.gson.GsonBuilder()
+//                .setPrettyPrinting()
+//                .create()
+//                .toJson(finalResult);
+//
+//        try {
+//            Path outputFile = createOutputPath(runId);
+//            Files.createDirectories(outputFile.getParent());
+//
+//            try (BufferedWriter writer =
+//                         Files.newBufferedWriter(outputFile)) {
+//                writer.write(jsonResult);
+//            }
+//
+//            System.out.println("✔ Result saved: "
+//                    + outputFile.toAbsolutePath());
+//
+//        } catch (IOException e) {
+//            logger.error("Failed to write simulation result", e);
+//        }
     }
 
 /**

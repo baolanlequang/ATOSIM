@@ -187,7 +187,7 @@ public class ATOSIMSimulator {
     private static Path pickModelPath(Path testmodelsDir, String configId) {
         Path modelPath =
                 testmodelsDir
-                        .resolve("threesim-" + configId)
+                        .resolve("atomsim-" + configId)
                         .resolve("Net.blockchainsystem");
 
         if (!Files.exists(modelPath)) {

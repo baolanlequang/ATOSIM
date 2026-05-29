@@ -35,7 +35,7 @@ BASE_FILES = (
     "Net.blockchainsystem",
     "Net.p2pnetwork",
     "Net.nodeallocation",
-    "Net.blockchainsystemcomponentrepository",
+    "Net.bscmrepository",
     "Net.geographicalregions",
     "Net.linkallocation",
     "Net.transactions",
