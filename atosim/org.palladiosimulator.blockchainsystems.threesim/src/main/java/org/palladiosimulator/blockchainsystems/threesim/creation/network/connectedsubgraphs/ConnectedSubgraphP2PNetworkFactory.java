@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -84,17 +85,22 @@ public class ConnectedSubgraphP2PNetworkFactory extends AbstractThreesimP2PNetwo
             }
 
             P2PNode[] arr = nodes.toArray(new P2PNode[0]);
+            Random rng = new Random();
             for (P2PNode current : arr) {
                 while (initialDegrees.get(current) > 0) {
-                    List<P2PNode> candidates = new ArrayList<>();
-                    for (P2PNode n : arr) {
-                        if (n != current && !networkGraph.containsEdge(n, current)
-                                && !networkGraph.containsEdge(current, n)) {
-                            candidates.add(n);
+                    if (networkGraph.outDegreeOf(current) >= arr.length - 1) {
+                        initialDegrees.decrement(current);
+                        continue;
+                    }
+                    P2PNode selected = null;
+                    for (int attempt = 0; attempt < arr.length; attempt++) {
+                        P2PNode candidate = arr[rng.nextInt(arr.length)];
+                        if (candidate != current && !networkGraph.containsEdge(current, candidate)) {
+                            selected = candidate;
+                            break;
                         }
                     }
-                    if (candidates.isEmpty()) { initialDegrees.decrement(current); continue; }
-                    P2PNode selected = candidates.get((int) (Math.random() * candidates.size()));
+                    if (selected == null) { initialDegrees.decrement(current); continue; }
                     JGraphExtensions.addBidirectionalEdge(networkGraph, current, selected,
                             (from, to) -> new P2PLink(latency, throughput, from, to));
                     initialDegrees.decrement(current);

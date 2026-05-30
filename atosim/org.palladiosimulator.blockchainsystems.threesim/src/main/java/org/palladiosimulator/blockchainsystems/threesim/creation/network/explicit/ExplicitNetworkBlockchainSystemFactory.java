@@ -6,6 +6,7 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.P2PNetwo
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.ResourcePowerCalculator;
 import org.palladiosimulator.blockchainsystems.threesim.creation.ThreesimBlockchainSystemFactory;
 import org.palladiosimulator.blockchainsystems.threesim.creation.abstractions.NodeAllocationResolver;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystem;
 
@@ -17,9 +18,9 @@ public class ExplicitNetworkBlockchainSystemFactory extends ThreesimBlockchainSy
     }
 
     @Override
-    protected P2PNetworkFactory createP2PNetworkFactory() {
+    protected P2PNetworkFactory createP2PNetworkFactory(ThreesimSimulationParameters params) {
         return new ExplicitTopologyP2PNetworkFactory(
-                (ExplicitNetworkTopology) networkTopology, simulationParameters);
+                (ExplicitNetworkTopology) networkTopology, params);
     }
 
     @Override
