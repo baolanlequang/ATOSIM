@@ -18,7 +18,7 @@ rng = np.random.default_rng(SEED)
 # -----------------------------
 
 param_ranges = {
-    "validator_count":          (20,    5_000),
+    "validator_count":          (20,    1_000),
     "node_degree":              (1,     250),
     "propagation_delay":        (6_500, 40_000),
     "block_creation_interval":  (60,    1_200),

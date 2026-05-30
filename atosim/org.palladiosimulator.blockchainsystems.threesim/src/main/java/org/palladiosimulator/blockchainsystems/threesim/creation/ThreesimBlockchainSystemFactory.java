@@ -36,7 +36,6 @@ public abstract class ThreesimBlockchainSystemFactory {
 
     protected final BlockchainSystem designBlockchainSystem;
     protected final NetworkTopology networkTopology;
-    protected ThreesimSimulationParameters simulationParameters;
 
     protected ThreesimBlockchainSystemFactory(BlockchainSystem designBlockchainSystem,
             NetworkTopology networkTopology) {
@@ -44,14 +43,12 @@ public abstract class ThreesimBlockchainSystemFactory {
         this.networkTopology = networkTopology;
     }
 
-    protected abstract P2PNetworkFactory createP2PNetworkFactory();
+    protected abstract P2PNetworkFactory createP2PNetworkFactory(ThreesimSimulationParameters params);
     protected abstract NodeAllocationResolver getNodeAllocationResolver(P2PNetworkCreationResult networkCreationResult);
     protected abstract ResourcePowerCalculator getResourcePowerCalculator(P2PNetworkCreationResult networkCreationResult);
 
     public BlockchainSystemWithParameters createBlockchainSystem(ThreesimSimulationParameters params) {
-        this.simulationParameters = params;
-
-        P2PNetworkFactory networkFactory = createP2PNetworkFactory();
+        P2PNetworkFactory networkFactory = createP2PNetworkFactory(params);
         P2PNetworkCreationResult networkCreationResult = networkFactory.createP2PNetwork();
 
         NodeAllocationResolver nodeAllocationResolver = getNodeAllocationResolver(networkCreationResult);
