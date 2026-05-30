@@ -7,6 +7,7 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.P2PNetwo
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.ResourcePowerCalculator;
 import org.palladiosimulator.blockchainsystems.threesim.creation.ThreesimBlockchainSystemFactory;
 import org.palladiosimulator.blockchainsystems.threesim.creation.abstractions.NodeAllocationResolver;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 
 public class ConnectedSubgraphNetworkBlockchainSystemFactory extends ThreesimBlockchainSystemFactory {
 
@@ -16,9 +17,9 @@ public class ConnectedSubgraphNetworkBlockchainSystemFactory extends ThreesimBlo
     }
 
     @Override
-    protected P2PNetworkFactory createP2PNetworkFactory() {
+    protected P2PNetworkFactory createP2PNetworkFactory(ThreesimSimulationParameters params) {
         return new ConnectedSubgraphP2PNetworkFactory(
-                (ConnectedSubgraphsNetworkTopology) networkTopology, simulationParameters);
+                (ConnectedSubgraphsNetworkTopology) networkTopology, params);
     }
 
     @Override

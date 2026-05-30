@@ -3,9 +3,9 @@ package org.palladiosimulator.blockchainsystems.core.simulation.abstractions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class MonteCarloSimulation<R extends SimulationRoundResult> implements Simulation {
 
@@ -21,11 +21,14 @@ public abstract class MonteCarloSimulation<R extends SimulationRoundResult> impl
     public MonteCarloSimulationResult run() {
         progressMonitor.onSimulationStarted(numberOfRounds);
 
-        ExecutorService executor = Executors.newWorkStealingPool();
+        AtomicInteger roundCounter = new AtomicInteger(0);
+        ForkJoinPool executor = ForkJoinPool.commonPool();
         List<Callable<R>> tasks = new ArrayList<>();
         for (int i = 0; i < numberOfRounds; i++) {
             tasks.add(() -> {
-                R result = performSimulationRound();
+            	R result = performSimulationRound();
+                int round = roundCounter.incrementAndGet();
+                System.out.println("Monte Carlo round " + round + "/" + numberOfRounds + " finished");
                 progressMonitor.onSimulationRoundFinished();
                 return result;
             });
@@ -39,8 +42,6 @@ public abstract class MonteCarloSimulation<R extends SimulationRoundResult> impl
             }
         } catch (Exception e) {
             throw new RuntimeException("Monte Carlo simulation failed", e);
-        } finally {
-            executor.shutdown();
         }
 
         progressMonitor.onSimulationFinished();
