@@ -20,10 +20,17 @@ Mapping (CSV column -> base file -> attribute):
   propagation_delay        Net.linkallocation    Latency                (all Values, both LinkAllocations)
   transaction_delay        Net.transactions      MeanTransactionCreationInterval
   attacker_hash_power      Net.attackmodel       attackers.powerShare    (only if Net.attackmodel exists)
+  number_of_attackers      Net.attackmodel       Rebuilds the <attackers> list with
+                                                 min(number_of_attackers, available NodeSystems)
+                                                 AttackerNode elements. Each carries the full
+                                                 attacker_hash_power as its powerShare and links a
+                                                 distinct NodeSystem chosen at random (seeded by
+                                                 config_id) from the regenerated Net.nodeallocation;
+                                                 the attack's monitoredNodes is updated to match.
 
 Other CSV columns (attacker_hash_power_realized, tie_breaking_parameter,
-transaction_acceleration, number_of_attackers) are not written into the model
-files; they belong to the runtime configuration.
+transaction_acceleration) are not written into the model files; they belong to
+the runtime configuration.
 
 Usage:
     python generate_models.py
@@ -32,6 +39,7 @@ Usage:
 
 import argparse
 import csv
+import random
 import re
 import shutil
 import sys
@@ -169,10 +177,60 @@ def patch_transactions(path: Path, transaction_delay: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def patch_attackmodel(path: Path, attacker_hash_power: str) -> None:
+_ATTACKERS_BLOCK = re.compile(r"<attackers\b.*?</attackers>", re.DOTALL)
+_NODE_SYSTEM_ID = re.compile(r'<NodeSystem\b[^>]*\bid="([^"]+)"')
+
+
+def _node_system_ids(nodealloc_path: Path) -> list[str]:
+    text = nodealloc_path.read_text(encoding="utf-8")
+    ids = _NODE_SYSTEM_ID.findall(text)
+    if not ids:
+        raise RuntimeError(f"{nodealloc_path}: no <NodeSystem> elements found.")
+    return ids
+
+
+def patch_attackmodel(
+    path: Path,
+    attacker_hash_power: str,
+    number_of_attackers: int,
+    node_system_ids: list[str],
+    rng: random.Random,
+) -> None:
+    """Rebuild the <attackers> list with one AttackerNode per attacker.
+
+    Each AttackerNode carries the full ``attacker_hash_power`` as its powerShare
+    and links a *distinct* NodeSystem picked at random from ``node_system_ids``.
+    The number of attackers is capped at the number of available NodeSystems.
+    The attack's ``monitoredNodes`` attribute is rewritten to reference every
+    newly created AttackerNode.
+    """
     text = path.read_text(encoding="utf-8")
-    text, n = _replace_attr(text, "powerShare", f"{float(attacker_hash_power)}")
-    _require(text, "powerShare", n, path)
+
+    if _ATTACKERS_BLOCK.search(text) is None:
+        raise RuntimeError(f"{path}: no <attackers> block found.")
+
+    count = max(1, min(number_of_attackers, len(node_system_ids)))
+    chosen_node_systems = rng.sample(node_system_ids, count)
+    attacker_ids = [_new_id() for _ in range(count)]
+    power_share = f"{float(attacker_hash_power)}"
+
+    def make_attacker(attacker_id: str, node_system_id: str) -> str:
+        return (
+            f'<attackers id="{attacker_id}" powerShare="{power_share}">\n'
+            f'    <linkedNodeSystem href="Net.nodeallocation#{node_system_id}"/>\n'
+            f"  </attackers>"
+        )
+
+    attackers_block = "\n  ".join(
+        make_attacker(aid, nsid) for aid, nsid in zip(attacker_ids, chosen_node_systems)
+    )
+
+    parts = _ATTACKERS_BLOCK.split(text)
+    text = parts[0] + attackers_block + parts[-1]
+
+    text, n = _replace_attr(text, "monitoredNodes", " ".join(attacker_ids))
+    _require(text, "monitoredNodes", n, path)
+
     path.write_text(text, encoding="utf-8")
 
 
@@ -211,7 +269,16 @@ def generate_one(base_dir: Path, out_dir: Path, row: dict) -> Path:
 
     attackmodel_path = target / "Net.attackmodel"
     if attackmodel_path.exists() and row.get("attacker_hash_power"):
-        patch_attackmodel(attackmodel_path, row["attacker_hash_power"])
+        number_of_attackers = int(row.get("number_of_attackers") or 1)
+        node_system_ids = _node_system_ids(target / "Net.nodeallocation")
+        rng = random.Random(config_id)
+        patch_attackmodel(
+            attackmodel_path,
+            row["attacker_hash_power"],
+            number_of_attackers,
+            node_system_ids,
+            rng,
+        )
 
     return target
 
