@@ -129,7 +129,7 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
         combinedAttackLabel.setText("Combined Attack Mode:");
 
         combinedAttackModeCombo = new Combo(group, SWT.DROP_DOWN | SWT.READ_ONLY);
-        combinedAttackModeCombo.setItems("None", "Selfish + Race", "Selfish + Finney");
+        combinedAttackModeCombo.setItems("None", "Selfish + Race", "Selfish + Finney", "Selfish + Lead Stubborn", "Selfish + Trail Stubborn");
         combinedAttackModeCombo.select(0);
         combinedAttackModeCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
@@ -169,6 +169,10 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
                 combinedAttackModeCombo.select(1);
             } else if (ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_FINNEY.equals(mode)) {
                 combinedAttackModeCombo.select(2);
+            } else if (ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_LEAD_STUBBORN.equals(mode)) {
+                combinedAttackModeCombo.select(3);
+            } else if (ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_TRAIL_STUBBORN.equals(mode)) {
+                combinedAttackModeCombo.select(4);
             } else {
                 combinedAttackModeCombo.select(0);
             }
@@ -194,6 +198,8 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
         String combinedMode = switch (combinedAttackModeCombo.getSelectionIndex()) {
             case 1 -> ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_RACE;
             case 2 -> ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_FINNEY;
+            case 3 -> ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_LEAD_STUBBORN;
+            case 4 -> ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_TRAIL_STUBBORN;
             default -> ThreesimAttributes.COMBINED_ATTACK_MODE_NONE;
         };
         configuration.setAttribute(ThreesimAttributes.COMBINED_ATTACK_MODE, combinedMode);

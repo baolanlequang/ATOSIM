@@ -228,8 +228,9 @@ def patch_attackmodel(
     parts = _ATTACKERS_BLOCK.split(text)
     text = parts[0] + attackers_block + parts[-1]
 
-    text, n = _replace_attr(text, "monitoredNodes", " ".join(attacker_ids))
-    _require(text, "monitoredNodes", n, path)
+    if 'monitoredNodes=' in text:
+        text, n = _replace_attr(text, "monitoredNodes", " ".join(attacker_ids))
+        _require(text, "monitoredNodes", n, path)
 
     path.write_text(text, encoding="utf-8")
 

@@ -71,6 +71,8 @@ public class ThreesimSimulationFactory implements SimulationFactory {
             AttackType secondaryAttackType = switch (combinedAttackMode) {
                 case ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_RACE -> AttackType.RACE;
                 case ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_FINNEY -> AttackType.FINNEY;
+                case ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_LEAD_STUBBORN -> AttackType.LEAD_STUBBORN_MINING;
+                case ThreesimAttributes.COMBINED_ATTACK_MODE_SELFISH_TRAIL_STUBBORN -> AttackType.TRAIL_STUBBORN_MINING;
                 default -> AttackType.NONE;
             };
 
