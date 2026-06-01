@@ -1,7 +1,9 @@
 package org.palladiosimulator.blockchainsystems.threesim.behavior;
 
 import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishFinneyNodeBehavior;
+import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishLeadStubbornNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishRaceNodeBehavior;
+import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishTrailStubbornNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.EqualForkStubbornMiningNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.FinneyMiningNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.GammaAwareHonestBlockchainSystemNodeBehavior;
@@ -37,13 +39,16 @@ public class ThreesimBlockchainSystemNodeBehaviorFactory implements BlockchainSy
                 case FINNEY -> new FinneyMiningNodeBehavior();
                 case COMBINED_SELFISH_RACE -> new CombinedSelfishRaceNodeBehavior();
                 case COMBINED_SELFISH_FINNEY -> new CombinedSelfishFinneyNodeBehavior();
+                case COMBINED_SELFISH_LEAD_STUBBORN -> new CombinedSelfishLeadStubbornNodeBehavior();
+                case COMBINED_SELFISH_TRAIL_STUBBORN -> new CombinedSelfishTrailStubbornNodeBehavior();
                 default -> new HonestBlockchainSystemNodeBehavior();
             };
         }
 
         return switch (_simulationParameters.getAttackType()) {
             case SELFISH_MINING, LEAD_STUBBORN_MINING, EQUAL_FORK_STUBBORN_MINING,
-                 TRAIL_STUBBORN_MINING, RACE, COMBINED_SELFISH_RACE, COMBINED_SELFISH_FINNEY, MAJORITY ->
+                 TRAIL_STUBBORN_MINING, RACE, COMBINED_SELFISH_RACE, COMBINED_SELFISH_FINNEY,
+                 COMBINED_SELFISH_LEAD_STUBBORN, COMBINED_SELFISH_TRAIL_STUBBORN, MAJORITY ->
                     new GammaAwareHonestBlockchainSystemNodeBehavior(
                             _simulationParameters.getAttackerNodeIds(),
                             _simulationParameters.getGamma()
