@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=48
-#SBATCH --mem=64000
+#SBATCH --mem=240000
 #SBATCH --output=logs/atosim-selfish-%j.out
 #SBATCH --error=logs/atosim-selfish-%j.err
 
@@ -16,7 +16,7 @@ set -euo pipefail
 
 mkdir -p logs
 
-java -Xms8g -Xmx56g -jar atosim.jar \
+java -Xms16g -Xmx220g -jar atosim.jar \
      simulator/org.palladiosimulator.blockchainsystems.atomsim/optimized_deterministic_lhs_configurations.csv \
      simulator/org.palladiosimulator.blockchainsystems.atomsim/testmodels \
      simulator/org.palladiosimulator.blockchainsystems.atomsim/testmodels/configuration.json
