@@ -35,16 +35,26 @@ public class AttackModelMapper {
         } else if (base.isCombinedAttackEnabled() && attackType == AttackType.SELFISH_MINING
                 && base.getSecondaryAttackType() == AttackType.FINNEY) {
             finalAttackType = AttackType.COMBINED_SELFISH_FINNEY;
+        } else if (base.isCombinedAttackEnabled() && attackType == AttackType.SELFISH_MINING
+                && base.getSecondaryAttackType() == AttackType.LEAD_STUBBORN_MINING) {
+            finalAttackType = AttackType.COMBINED_SELFISH_LEAD_STUBBORN;
+        } else if (base.isCombinedAttackEnabled() && attackType == AttackType.SELFISH_MINING
+                && base.getSecondaryAttackType() == AttackType.TRAIL_STUBBORN_MINING) {
+            finalAttackType = AttackType.COMBINED_SELFISH_TRAIL_STUBBORN;
         } else {
             finalAttackType = attackType;
         }
 
         boolean combinedAttackEnabled = finalAttackType == AttackType.COMBINED_SELFISH_RACE
-                || finalAttackType == AttackType.COMBINED_SELFISH_FINNEY;
+                || finalAttackType == AttackType.COMBINED_SELFISH_FINNEY
+                || finalAttackType == AttackType.COMBINED_SELFISH_LEAD_STUBBORN
+                || finalAttackType == AttackType.COMBINED_SELFISH_TRAIL_STUBBORN;
 
         AttackType secondaryAttackType = switch (finalAttackType) {
             case COMBINED_SELFISH_RACE -> AttackType.RACE;
             case COMBINED_SELFISH_FINNEY -> AttackType.FINNEY;
+            case COMBINED_SELFISH_LEAD_STUBBORN -> AttackType.LEAD_STUBBORN_MINING;
+            case COMBINED_SELFISH_TRAIL_STUBBORN -> AttackType.TRAIL_STUBBORN_MINING;
             default -> AttackType.NONE;
         };
 

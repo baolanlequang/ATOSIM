@@ -22,11 +22,11 @@ Make sure the following prerequisites are installed:
   - `org.palladiosimulator.blockchainsystems.plugin`
   - `org.palladiosimulator.blockchainsystems.threesim`
   - `org.palladiosimulator.blockchainsystems.threesim_plugin`
-  - `org.palladiosimulator.blockchainsystems.atomsim`
+  - `org.palladiosimulator.blockchainsystems.atosim`
 
 ### Usage
 1. Edit `configuration.json` to change the configuation of the simulator in `testmodels` folder
-2. Copy all models in `sampling/generated_models/` to `org.palladiosimulator.blockchainsystems.atomsim/testmodels`
+2. Copy all models in `sampling/generated_models/` to `org.palladiosimulator.blockchainsystems.atosim/testmodels`
 3. Run:
 - `ATOSIMSimulator.java` as Java Application to run the simulation.
 4. The results will be placed at `indiv_json`
