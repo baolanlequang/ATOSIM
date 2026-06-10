@@ -8,8 +8,10 @@ attack-strategy experiment, then compared across strategies.
 Methods
 -------
   - Descriptive statistics per strategy
-  - f-ANOVA (Type II OLS) per strategy
-  - Fractional logistic regression (GLM Binomial) per strategy
+  - f-ANOVA (Type II OLS, multi-parameter) per strategy
+  - One-way f-ANOVA per parameter (Low/Medium/High levels) per strategy
+  - Fractional logistic regression (GLM Binomial) with odds ratios
+    and 95% confidence intervals per strategy
   - Cross-strategy comparison
 
 Output
@@ -169,7 +171,8 @@ for folder, title in STRATEGIES.items():
 # 2. Per-strategy analysis
 #    For each strategy: descriptive stats, f-ANOVA, logistic regression
 # ─────────────────────────────────────────────────────────────────────────────
-anova_all    = {}   # folder -> anova table
+anova_all    = {}   # folder -> anova table (Type II OLS, multi-parameter)
+oneway_all   = {}   # folder -> one-way ANOVA-by-level table
 logit_all    = {}   # folder -> {"raw": model, "std": model}
 desc_all     = {}   # folder -> describe DataFrame
 
@@ -207,6 +210,46 @@ for folder, title in STRATEGIES.items():
               f"{row['eta_sq']*100:>7.2f}% {sig_stars(p):>5}")
     print(f"  R² = {model_ols.rsquared:.4f}  |  Adj-R² = {model_ols.rsquared_adj:.4f}")
     anova_tbl.to_csv(os.path.join(TABLES_DIR, f"anova_{folder}.csv"))
+
+    # ── One-way f-ANOVA per parameter (Low/Medium/High levels) ──────────────
+    # For each parameter independently, split its observed range into three
+    # equal-frequency levels (tertiles) and test whether mean DSP differs
+    # significantly across these levels using a one-way ANOVA F-test.
+    print("\n[One-Way f-ANOVA per Parameter — Low/Medium/High Levels]")
+    oneway_rows = []
+    df_levels = df.copy()
+    for p_col in PARAM_COLS:
+        try:
+            levels = pd.qcut(df[p_col], q=3, labels=["Low", "Medium", "High"], duplicates="drop")
+        except ValueError:
+            levels = pd.cut(df[p_col], bins=3, labels=["Low", "Medium", "High"])
+        df_levels[f"{p_col}_level"] = levels
+
+        groups = [df.loc[levels == lvl, "success_prob"].values
+                  for lvl in levels.cat.categories]
+        groups = [g for g in groups if len(g) > 0]
+        f_stat, p_val = stats.f_oneway(*groups)
+
+        row = {
+            "Parameter":    PARAM_LABELS[p_col],
+            "F_statistic":  f_stat,
+            "p_value":      p_val,
+            "Significance": sig_stars(p_val),
+        }
+        for lvl in levels.cat.categories:
+            mask = levels == lvl
+            row[f"Mean_DSP_{lvl}"] = df.loc[mask, "success_prob"].mean()
+            row[f"N_{lvl}"]        = int(mask.sum())
+        oneway_rows.append(row)
+
+        print(f"  {PARAM_LABELS[p_col]:<28} F={f_stat:>9.3f}  p={p_val:>12.4e}  "
+              f"{sig_stars(p_val):>4}  | Mean DSP (L/M/H) = "
+              + " / ".join(f"{row.get(f'Mean_DSP_{lvl}', float('nan')):.3f}"
+                            for lvl in ["Low", "Medium", "High"]))
+
+    oneway_df = pd.DataFrame(oneway_rows)
+    oneway_all[folder] = (oneway_df, df_levels)
+    oneway_df.to_csv(os.path.join(TABLES_DIR, f"oneway_anova_{folder}.csv"), index=False)
 
     # ── Logistic regression ────────────────────────────────────────────────
     print("\n[Fractional Logistic Regression]")
@@ -338,6 +381,35 @@ for folder, title in STRATEGIES.items():
     plt.savefig(fpath, dpi=300, bbox_inches="tight")
     plt.close()
     print(f"  Saved → figures/anova_{folder}.png")
+
+# ── 4a-bis. Per-strategy: one-way ANOVA boxplots (DSP by parameter level) ──
+for folder, title in STRATEGIES.items():
+    oneway_df, df_levels = oneway_all[folder]
+
+    fig, axes = plt.subplots(2, 4, figsize=(20, 9))
+    axes = axes.flatten()
+    for i, p_col in enumerate(PARAM_COLS):
+        ax = axes[i]
+        level_col = f"{p_col}_level"
+        order = ["Low", "Medium", "High"]
+        present = [lvl for lvl in order if lvl in df_levels[level_col].cat.categories]
+        sns.boxplot(data=df_levels, x=level_col, y="success_prob", order=present,
+                    ax=ax, palette="Blues", hue=level_col, legend=False)
+        row = oneway_df[oneway_df["Parameter"] == PARAM_LABELS[p_col]].iloc[0]
+        ax.set_title(f"{PARAM_LABELS[p_col]}\nF={row['F_statistic']:.2f}, "
+                      f"p={row['p_value']:.2e} {row['Significance']}",
+                      fontweight="bold", fontsize=10)
+        ax.set_xlabel("Level")
+        ax.set_ylabel("DSP" if i % 4 == 0 else "")
+        ax.grid(axis="y", linestyle="--", alpha=0.3)
+    axes[-1].axis("off")
+    fig.suptitle(f"One-Way f-ANOVA: DSP by Parameter Level (Low/Medium/High)\n{title}",
+                 fontsize=14, fontweight="bold", y=1.02)
+    plt.tight_layout()
+    fpath = os.path.join(FIGURES_DIR, f"oneway_anova_{folder}.png")
+    plt.savefig(fpath, dpi=300, bbox_inches="tight")
+    plt.close()
+    print(f"  Saved → figures/oneway_anova_{folder}.png")
 
 # ── 4b. Per-strategy: logistic regression forest plot ────────────────────
 for folder, title in STRATEGIES.items():

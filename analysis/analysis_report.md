@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-09  
 **Framework:** ATOSIM (Architecture-based Trilemma Simulator)  
-**Methods:** Descriptive Statistics · f-ANOVA (Type II OLS) · Fractional Logistic Regression  
+**Methods:** Descriptive Statistics · f-ANOVA (Type II OLS, multi-parameter) · One-Way f-ANOVA per Parameter (Low/Medium/High levels) · Fractional Logistic Regression with Odds Ratios and 95% CIs  
 **Script:** [analysis/analysis_script.py](analysis/analysis_script.py)
 
 ---
@@ -43,7 +43,13 @@ This report analyzes how seven network and protocol parameters influence the **d
 
 ## 2. Per-Strategy Analysis
 
-Each section below presents: descriptive statistics, f-ANOVA results, and logistic regression results for one experiment.
+Each section below presents a self-contained analysis of one experiment: descriptive statistics, multi-parameter f-ANOVA, one-way f-ANOVA per parameter (Low/Medium/High levels), and logistic regression with odds ratios and 95% confidence intervals.
+
+### Methodology Notes
+
+- **Multi-parameter f-ANOVA (Type II OLS):** All seven parameters are entered simultaneously into an OLS regression of DSP; Type II ANOVA partitions variance (η²) attributable to each parameter while controlling for the others.
+- **One-way f-ANOVA per parameter:** Each parameter is independently split into three equal-frequency levels (tertiles: Low / Medium / High). A one-way ANOVA F-test then asks whether mean DSP differs significantly across these three levels for that parameter alone — i.e., **"are there statistically significant differences in attack success probability across different levels of the parameter?"**
+- **Fractional logistic regression (GLM Binomial):** All seven parameters are included as independent variables, DSP (∈[0,1]) as the dependent variable. Coefficients are exponentiated to odds ratios (OR) with 95% confidence intervals; OR > 1 indicates increasing odds of attack success per unit increase in the parameter, OR < 1 indicates decreasing odds, and an interval excluding 1 indicates significance.
 
 ---
 
@@ -85,21 +91,39 @@ Attacker hash power explains **83.5%** of total variance. All other parameters c
 
 *See: `figures/anova_selfish.png`*
 
+#### One-Way f-ANOVA per Parameter (Low / Medium / High Levels)
+
+Each parameter is split into three equal-frequency levels (tertiles), and a one-way ANOVA tests whether mean DSP differs across these levels.
+
+| Parameter | F-statistic | p-value | Sig | Mean DSP (Low) | Mean DSP (Medium) | Mean DSP (High) |
+|-----------|-------------|---------|-----|-----------------|---------------------|-------------------|
+| **Attacker Hash Power** | **1,971.10** | **4.89×10⁻²³⁷** | **\*\*\*** | **0.148** | **0.957** | **1.000** |
+| Number of Nodes | 0.113 | 0.893 | ns | 0.709 | 0.689 | 0.706 |
+| Node Degree | 0.134 | 0.875 | ns | 0.703 | 0.688 | 0.712 |
+| Propagation Delay (ms) | 0.338 | 0.713 | ns | 0.691 | 0.723 | 0.689 |
+| Block Interval (s) | 0.065 | 0.937 | ns | 0.693 | 0.710 | 0.700 |
+| Max Block Size (MB) | 0.081 | 0.922 | ns | 0.698 | 0.713 | 0.695 |
+| Tie-Breaking Parameter γ | 0.016 | 0.984 | ns | 0.701 | 0.697 | 0.705 |
+
+**Attacker hash power shows a dramatic, highly significant level effect**: mean DSP rises from 0.148 in the Low-α tertile (α roughly < 0.35) to 0.957 in the Medium tertile and saturates at 1.000 in the High tertile (α roughly > 0.65). All other parameters show essentially flat DSP means (~0.69–0.72) across their Low/Medium/High levels, with F-statistics below 0.4 and p-values > 0.7 — i.e., **no statistically significant difference in attack success probability across levels** for any of these six parameters.
+
+*See: `figures/oneway_anova_selfish.png`*
+
 #### Logistic Regression Results (GLM Binomial)
 
-| Parameter | Coefficient | z | p-value | Odds Ratio | Significant? |
-|-----------|-------------|---|---------|------------|--------------|
-| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **Yes** |
-| Tie-Breaking Parameter γ | 0.040 | 0.051 | 0.960 | 1.041 | No |
-| Block Interval (s) | −2.7×10⁻⁵ | −0.036 | 0.971 | 1.000 | No |
-| Number of Nodes | 2.6×10⁻⁵ | 0.030 | 0.976 | 1.000 | No |
-| Propagation Delay (ms) | −2.4×10⁻⁷ | −0.009 | 0.992 | 1.000 | No |
-| Max Block Size (MB) | 4.5×10⁻⁴ | 0.004 | 0.997 | 1.000 | No |
-| Node Degree | −9.1×10⁻⁶ | −0.003 | 0.999 | 1.000 | No |
+| Parameter | Coefficient | z | p-value | Odds Ratio | 95% CI (OR) | Significant? |
+|-----------|-------------|---|---------|------------|-------------|--------------|
+| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **[1.42×10⁸, 2.05×10¹⁴]** | **Yes** |
+| Tie-Breaking Parameter γ | 0.040 | 0.051 | 0.960 | 1.041 | [0.222, 4.875] | No |
+| Block Interval (s) | −2.7×10⁻⁵ | −0.036 | 0.971 | 1.000 | [0.999, 1.001] | No |
+| Number of Nodes | 2.6×10⁻⁵ | 0.030 | 0.976 | 1.000 | [0.998, 1.002] | No |
+| Propagation Delay (ms) | −2.4×10⁻⁷ | −0.009 | 0.992 | 1.000 | [1.000, 1.000] | No |
+| Max Block Size (MB) | 4.5×10⁻⁴ | 0.004 | 0.997 | 1.000 | [0.816, 1.227] | No |
+| Node Degree | −9.1×10⁻⁶ | −0.003 | 0.999 | 1.000 | [0.993, 1.007] | No |
 
 **McFadden R² = 0.855  |  Deviance = 5.62**
 
-The extremely large positive coefficient for attacker hash power (25.86) confirms a sharp logistic threshold: as α increases past ~0.39, attack success probability transitions rapidly from near-zero to near-one.
+The extremely large positive coefficient for attacker hash power (25.86) confirms a sharp logistic threshold: as α increases past ~0.39, attack success probability transitions rapidly from near-zero to near-one. Its 95% CI for the odds ratio, [1.42×10⁸, 2.05×10¹⁴], is enormous but **excludes 1 by many orders of magnitude**, confirming significance. Every other parameter has a 95% CI that **comfortably includes 1**, confirming no measurable effect on the odds of attack success.
 
 *See: `figures/logistic_forest_selfish.png`, `figures/scatter_selfish.png`*
 
@@ -130,12 +154,28 @@ Identical to S1 — the same LHS parameter configurations are used across all st
 
 *See: `figures/anova_lead_stubborn.png`*
 
+#### One-Way f-ANOVA per Parameter (Low / Medium / High Levels)
+
+| Parameter | F-statistic | p-value | Sig | Mean DSP (Low) | Mean DSP (Medium) | Mean DSP (High) |
+|-----------|-------------|---------|-----|-----------------|---------------------|-------------------|
+| **Attacker Hash Power** | **1,971.10** | **4.89×10⁻²³⁷** | **\*\*\*** | **0.148** | **0.957** | **1.000** |
+| Number of Nodes | 0.113 | 0.893 | ns | 0.709 | 0.689 | 0.706 |
+| Node Degree | 0.134 | 0.875 | ns | 0.703 | 0.688 | 0.712 |
+| Propagation Delay (ms) | 0.338 | 0.713 | ns | 0.691 | 0.723 | 0.689 |
+| Block Interval (s) | 0.065 | 0.937 | ns | 0.693 | 0.710 | 0.700 |
+| Max Block Size (MB) | 0.081 | 0.922 | ns | 0.698 | 0.713 | 0.695 |
+| Tie-Breaking Parameter γ | 0.016 | 0.984 | ns | 0.701 | 0.697 | 0.705 |
+
+Same pattern as S1: only attacker hash power shows a significant level effect, with mean DSP rising from 0.148 (Low) to 1.000 (High).
+
+*See: `figures/oneway_anova_lead_stubborn.png`*
+
 #### Logistic Regression Results
 
-| Parameter | Coefficient | z | p-value | Odds Ratio | Significant? |
-|-----------|-------------|---|---------|------------|--------------|
-| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **Yes** |
-| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | No |
+| Parameter | Coefficient | z | p-value | Odds Ratio | 95% CI (OR) | Significant? |
+|-----------|-------------|---|---------|------------|-------------|--------------|
+| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **[1.42×10⁸, 2.05×10¹⁴]** | **Yes** |
+| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | includes 1 | No |
 
 **McFadden R² = 0.855  |  Deviance = 5.62**
 
@@ -168,12 +208,28 @@ Identical to S1 — same LHS configurations.
 
 *See: `figures/anova_trail_stubborn.png`*
 
+#### One-Way f-ANOVA per Parameter (Low / Medium / High Levels)
+
+| Parameter | F-statistic | p-value | Sig | Mean DSP (Low) | Mean DSP (Medium) | Mean DSP (High) |
+|-----------|-------------|---------|-----|-----------------|---------------------|-------------------|
+| **Attacker Hash Power** | **1,971.10** | **4.89×10⁻²³⁷** | **\*\*\*** | **0.148** | **0.957** | **1.000** |
+| Number of Nodes | 0.113 | 0.893 | ns | 0.709 | 0.689 | 0.706 |
+| Node Degree | 0.134 | 0.875 | ns | 0.703 | 0.688 | 0.712 |
+| Propagation Delay (ms) | 0.338 | 0.713 | ns | 0.691 | 0.723 | 0.689 |
+| Block Interval (s) | 0.065 | 0.937 | ns | 0.693 | 0.710 | 0.700 |
+| Max Block Size (MB) | 0.081 | 0.922 | ns | 0.698 | 0.713 | 0.695 |
+| Tie-Breaking Parameter γ | 0.016 | 0.984 | ns | 0.701 | 0.697 | 0.705 |
+
+Same pattern as S1: only attacker hash power shows a significant level effect, with mean DSP rising from 0.148 (Low) to 1.000 (High).
+
+*See: `figures/oneway_anova_trail_stubborn.png`*
+
 #### Logistic Regression Results
 
-| Parameter | Coefficient | z | p-value | Odds Ratio | Significant? |
-|-----------|-------------|---|---------|------------|--------------|
-| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **Yes** |
-| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | No |
+| Parameter | Coefficient | z | p-value | Odds Ratio | 95% CI (OR) | Significant? |
+|-----------|-------------|---|---------|------------|-------------|--------------|
+| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **[1.42×10⁸, 2.05×10¹⁴]** | **Yes** |
+| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | includes 1 | No |
 
 **McFadden R² = 0.855  |  Deviance = 5.62**
 
@@ -206,12 +262,28 @@ Identical to S1 — same LHS configurations.
 
 *See: `figures/anova_selfish_lead_stubborn.png`*
 
+#### One-Way f-ANOVA per Parameter (Low / Medium / High Levels)
+
+| Parameter | F-statistic | p-value | Sig | Mean DSP (Low) | Mean DSP (Medium) | Mean DSP (High) |
+|-----------|-------------|---------|-----|-----------------|---------------------|-------------------|
+| **Attacker Hash Power** | **1,971.10** | **4.89×10⁻²³⁷** | **\*\*\*** | **0.148** | **0.957** | **1.000** |
+| Number of Nodes | 0.113 | 0.893 | ns | 0.709 | 0.689 | 0.706 |
+| Node Degree | 0.134 | 0.875 | ns | 0.703 | 0.688 | 0.712 |
+| Propagation Delay (ms) | 0.338 | 0.713 | ns | 0.691 | 0.723 | 0.689 |
+| Block Interval (s) | 0.065 | 0.937 | ns | 0.693 | 0.710 | 0.700 |
+| Max Block Size (MB) | 0.081 | 0.922 | ns | 0.698 | 0.713 | 0.695 |
+| Tie-Breaking Parameter γ | 0.016 | 0.984 | ns | 0.701 | 0.697 | 0.705 |
+
+Same pattern as S1: only attacker hash power shows a significant level effect, with mean DSP rising from 0.148 (Low) to 1.000 (High).
+
+*See: `figures/oneway_anova_selfish_lead_stubborn.png`*
+
 #### Logistic Regression Results
 
-| Parameter | Coefficient | z | p-value | Odds Ratio | Significant? |
-|-----------|-------------|---|---------|------------|--------------|
-| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **Yes** |
-| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | No |
+| Parameter | Coefficient | z | p-value | Odds Ratio | 95% CI (OR) | Significant? |
+|-----------|-------------|---|---------|------------|-------------|--------------|
+| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **[1.42×10⁸, 2.05×10¹⁴]** | **Yes** |
+| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | includes 1 | No |
 
 **McFadden R² = 0.855  |  Deviance = 5.62**
 
@@ -244,12 +316,28 @@ Identical to S1 — same LHS configurations.
 
 *See: `figures/anova_selfish_trail_stubborn.png`*
 
+#### One-Way f-ANOVA per Parameter (Low / Medium / High Levels)
+
+| Parameter | F-statistic | p-value | Sig | Mean DSP (Low) | Mean DSP (Medium) | Mean DSP (High) |
+|-----------|-------------|---------|-----|-----------------|---------------------|-------------------|
+| **Attacker Hash Power** | **1,971.10** | **4.89×10⁻²³⁷** | **\*\*\*** | **0.148** | **0.957** | **1.000** |
+| Number of Nodes | 0.113 | 0.893 | ns | 0.709 | 0.689 | 0.706 |
+| Node Degree | 0.134 | 0.875 | ns | 0.703 | 0.688 | 0.712 |
+| Propagation Delay (ms) | 0.338 | 0.713 | ns | 0.691 | 0.723 | 0.689 |
+| Block Interval (s) | 0.065 | 0.937 | ns | 0.693 | 0.710 | 0.700 |
+| Max Block Size (MB) | 0.081 | 0.922 | ns | 0.698 | 0.713 | 0.695 |
+| Tie-Breaking Parameter γ | 0.016 | 0.984 | ns | 0.701 | 0.697 | 0.705 |
+
+Same pattern as S1: only attacker hash power shows a significant level effect, with mean DSP rising from 0.148 (Low) to 1.000 (High).
+
+*See: `figures/oneway_anova_selfish_trail_stubborn.png`*
+
 #### Logistic Regression Results
 
-| Parameter | Coefficient | z | p-value | Odds Ratio | Significant? |
-|-----------|-------------|---|---------|------------|--------------|
-| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **Yes** |
-| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | No |
+| Parameter | Coefficient | z | p-value | Odds Ratio | 95% CI (OR) | Significant? |
+|-----------|-------------|---|---------|------------|-------------|--------------|
+| **Attacker Hash Power** | **25.864** | **7.149** | **8.72×10⁻¹³** | **1.71×10¹¹** | **[1.42×10⁸, 2.05×10¹⁴]** | **Yes** |
+| All others | ≈ 0 | < 0.1 | > 0.96 | ≈ 1.000 | includes 1 | No |
 
 **McFadden R² = 0.855  |  Deviance = 5.62**
 
@@ -290,7 +378,23 @@ The variance decomposition is **identical across all five strategies**, confirmi
 
 *See: `figures/cross_strategy_anova_eta.png`*
 
-### 3.3 Pearson Correlation with DSP: Cross-Strategy
+### 3.3 One-Way f-ANOVA Level Effects: Cross-Strategy
+
+| Parameter | F-statistic (all S1–S5) | p-value | Sig | Mean DSP — Low / Medium / High |
+|-----------|--------------------------|---------|-----|----------------------------------|
+| **Attacker Hash Power** | **1,971.10** | **4.89×10⁻²³⁷** | **\*\*\*** | **0.148 / 0.957 / 1.000** |
+| Block Interval (s) | 0.065 | 0.937 | ns | 0.693 / 0.710 / 0.700 |
+| Propagation Delay (ms) | 0.338 | 0.713 | ns | 0.691 / 0.723 / 0.689 |
+| Max Block Size (MB) | 0.081 | 0.922 | ns | 0.698 / 0.713 / 0.695 |
+| Number of Nodes | 0.113 | 0.893 | ns | 0.709 / 0.689 / 0.706 |
+| Node Degree | 0.134 | 0.875 | ns | 0.703 / 0.688 / 0.712 |
+| Tie-Breaking Parameter γ | 0.016 | 0.984 | ns | 0.701 / 0.697 / 0.705 |
+
+These one-way ANOVA-by-level results are identical across all five strategies (same shared LHS sample). They confirm, at the level-comparison granularity, the same conclusion as the multi-parameter f-ANOVA: **only the attacker hash power level (Low vs. Medium vs. High) produces a statistically significant shift in mean attack success probability.** The jump from Low (0.148) to Medium (0.957) is especially striking — it indicates the transition to a near-certain successful attack happens early, around the lower-to-middle tertile boundary of α.
+
+*See: `figures/oneway_anova_<strategy>.png` (one panel per strategy, identical content)*
+
+### 3.4 Pearson Correlation with DSP: Cross-Strategy
 
 | Parameter | S1 r | S2 r | S3 r | S4 r | S5 r |
 |-----------|------|------|------|------|------|
@@ -304,7 +408,7 @@ The variance decomposition is **identical across all five strategies**, confirmi
 
 *See: `figures/cross_strategy_pearson_heatmap.png`*
 
-### 3.4 Attacker Hash Power vs. DSP
+### 3.5 Attacker Hash Power vs. DSP
 
 A threshold effect is clearly visible across all strategies: configurations with α below approximately 0.35–0.40 almost never succeed (DSP ≈ 0), while those with α above ~0.50 nearly always succeed (DSP ≈ 1). The transition is steep and consistent regardless of strategy.
 
@@ -367,7 +471,8 @@ All five mining strategies yield identical statistical results. The double-spend
 
 | Pattern | Description |
 |---------|-------------|
-| `anova_<strategy>.png` | f-ANOVA F-statistic bar chart |
+| `anova_<strategy>.png` | Multi-parameter f-ANOVA F-statistic bar chart |
+| `oneway_anova_<strategy>.png` | One-way f-ANOVA boxplots: DSP by parameter level (Low/Medium/High), one panel per parameter |
 | `logistic_forest_<strategy>.png` | Logistic regression forest plot (OR + 95% CI) |
 | `dsp_<strategy>.png` | DSP distribution histogram + success rate pie |
 | `scatter_<strategy>.png` | Scatter panel: all params vs DSP with trend |
@@ -390,8 +495,9 @@ All five mining strategies yield identical statistical results. The double-spend
 | Pattern | Description |
 |---------|-------------|
 | `desc_<strategy>.csv` | Descriptive statistics |
-| `anova_<strategy>.csv` | Full ANOVA table (F, p, η²) |
-| `logistic_<strategy>.csv` | Logistic regression (coef, OR, CI, p) |
+| `anova_<strategy>.csv` | Multi-parameter Type II ANOVA table (F, p, η²) |
+| `oneway_anova_<strategy>.csv` | One-way ANOVA per parameter (F, p, mean DSP by Low/Medium/High level, n per level) |
+| `logistic_<strategy>.csv` | Logistic regression (coef, OR, 95% CI, p) |
 
 **Cross-strategy tables:**
 
