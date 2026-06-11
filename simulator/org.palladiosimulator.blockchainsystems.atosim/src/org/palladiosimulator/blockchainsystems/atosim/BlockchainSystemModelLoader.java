@@ -1,5 +1,7 @@
 package org.palladiosimulator.blockchainsystems.atosim;
 
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackScenario;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackmodelPackage;
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystem;
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainsystemPackage;
 import org.palladiosimulator.blockchainsystems.bscm.nodeallocation.NodeallocationPackage;
@@ -22,6 +24,8 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 
 public class BlockchainSystemModelLoader {
 
+    private ResourceSet resourceSet;
+
     public BlockchainSystem load(String uri) {
         Path modelPath = Paths.get(uri).toAbsolutePath();
         Path folderPath = modelPath.getParent();
@@ -34,7 +38,7 @@ public class BlockchainSystemModelLoader {
 
         for (String ext : new String[]{
                 "blockchainsystem", "p2pnetwork", "bscmrepository",
-                "nodeallocation", "geographicalregions", "linkallocation", "transactions"}) {
+                "nodeallocation", "geographicalregions", "linkallocation", "transactions", "attackmodel"}) {
             resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(ext, xmiFactory);
         }
 
@@ -43,6 +47,7 @@ public class BlockchainSystemModelLoader {
         resourceSet.getPackageRegistry().put(NodeallocationPackage.eNS_URI, NodeallocationPackage.eINSTANCE);
         resourceSet.getPackageRegistry().put(BlockchainsystemComponentRepositoryPackage.eNS_URI,
                 BlockchainsystemComponentRepositoryPackage.eINSTANCE);
+        resourceSet.getPackageRegistry().put(AttackmodelPackage.eNS_URI, AttackmodelPackage.eINSTANCE);
 
         String[] relativeNames = {
                 fileName,
@@ -51,7 +56,8 @@ public class BlockchainSystemModelLoader {
                 baseName + ".bscmrepository",
                 baseName + ".geographicalregions",
                 baseName + ".linkallocation",
-                baseName + ".transactions"
+                baseName + ".transactions",
+                baseName + ".attackmodel"
         };
 
         for (String name : relativeNames) {
@@ -72,11 +78,28 @@ public class BlockchainSystemModelLoader {
             }
         } while (currentResources.size() != resourceSet.getResources().size());
 
+        this.resourceSet = resourceSet;
+
         return (BlockchainSystem) resourceSet.getResources().get(0).getContents().get(0);
     }
 
     public BlockchainSystem load(String uri, Map<String, String> configuration) {
         return load(uri);
+    }
+
+    /**
+     * Returns the {@link AttackScenario} loaded alongside the blockchain system, or
+     * {@code null} if the model folder does not contain an {@code .attackmodel} file.
+     * Must be called after {@link #load(String)}.
+     */
+    public AttackScenario getAttackScenario() {
+        for (Resource resource : resourceSet.getResources()) {
+            if (!resource.getURI().lastSegment().endsWith(".attackmodel")) continue;
+            if (resource.getContents().isEmpty()) continue;
+            Object root = resource.getContents().get(0);
+            if (root instanceof AttackScenario) return (AttackScenario) root;
+        }
+        return null;
     }
 
     private URI createPluginURI(String folder, String relativePath) {

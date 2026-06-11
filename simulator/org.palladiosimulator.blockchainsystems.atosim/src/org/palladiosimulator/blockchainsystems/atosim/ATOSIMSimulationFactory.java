@@ -2,12 +2,26 @@ package org.palladiosimulator.blockchainsystems.atosim;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.CoreException;
 
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.Attack;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackScenario;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.AttackerNode;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.EqualForkStubbornAttack;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.FinneyAttack;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.LeadStubbornAttack;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.MajorityAttack;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.RaceAttack;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.SelfishMiningAttack;
+import org.palladiosimulator.blockchainsystems.bscm.attackmodel.TrailStubbornAttack;
 import org.palladiosimulator.blockchainsystems.bscm.blockchainsystem.BlockchainSystem;
 import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.ConnectedSubgraphsNetworkTopology;
 import org.palladiosimulator.blockchainsystems.bscm.p2pnetwork.ExplicitNetworkTopology;
+import org.palladiosimulator.pcm.core.entity.Entity;
 
 import org.palladiosimulator.blockchainsystems.core.simulation.MonteCarloSimulationParameters;
 import org.palladiosimulator.blockchainsystems.core.simulation.SingleSimulationParameters;
@@ -34,11 +48,16 @@ public class ATOSIMSimulationFactory implements Simulation {
             SimulationParameters simulationParameters,
             Map<String, String> configuration) {
 
+        BlockchainSystemModelLoader loader = new BlockchainSystemModelLoader();
+
+        BlockchainSystem designBlockchainSystem =
+                loader.load(simulationParameters.getBlockchainSystemModelFilePath(), configuration);
+
         ThreesimSimulationParameters threesimSimulationParameters =
-                getThreesimSimulationParametersFromConfiguration(configuration);
+                getThreesimSimulationParametersFromConfiguration(configuration, loader.getAttackScenario());
 
         ThreesimBlockchainSystemFactory blockchainSystemFactory =
-                createBlockchainSystemFactory(simulationParameters, configuration);
+                createBlockchainSystemFactory(designBlockchainSystem);
 
         int maxAllowedBlockchainLength =
                 Math.toIntExact(simulationParameters.getMaxAllowedBlockchainLength());
@@ -81,7 +100,7 @@ public class ATOSIMSimulationFactory implements Simulation {
     }
 
     private ThreesimSimulationParameters getThreesimSimulationParametersFromConfiguration(
-            Map<String, String> configuration) {
+            Map<String, String> configuration, AttackScenario attackScenario) {
 
         double failureThroughputThreshold =
                 Double.parseDouble(configuration.getOrDefault("failureThroughputThreshold", "1.0"));
@@ -99,36 +118,62 @@ public class ATOSIMSimulationFactory implements Simulation {
                 Double.parseDouble(configuration.getOrDefault("propagation_delay", "0.0"));
         int nodeDegree =
                 Integer.parseInt(configuration.getOrDefault("node_degree", "8"));
-        double attackerHashPower =
-                Double.parseDouble(configuration.getOrDefault("attacker_hash_power", "0.0"));
-        double gamma =
-                Double.parseDouble(configuration.getOrDefault("tie_breaking_parameter", "0.0"));
-        long deltaA =
-                Long.parseLong(configuration.getOrDefault("transaction_delay", "0"));
-        long deltaB =
-                Long.parseLong(configuration.getOrDefault("transaction_acceleration", "0"));
-        int numberOfAttackers =
-                Integer.parseInt(configuration.getOrDefault("number_of_attackers", "0"));
-        String attackTypeName = configuration.getOrDefault("attack_type", "").strip();
 
         AttackType attackType;
-        if (!attackTypeName.isEmpty()) {
-            attackType = switch (attackTypeName) {
-                case "SELFISH_MINING"              -> AttackType.SELFISH_MINING;
-                case "LEAD_STUBBORN_MINING"        -> AttackType.LEAD_STUBBORN_MINING;
-                case "TRAIL_STUBBORN_MINING"       -> AttackType.TRAIL_STUBBORN_MINING;
-                case "EQUAL_FORK_STUBBORN_MINING"  -> AttackType.EQUAL_FORK_STUBBORN_MINING;
-                case "FINNEY"                      -> AttackType.FINNEY;
-                case "RACE"                        -> AttackType.RACE;
-                case "MAJORITY"                    -> AttackType.MAJORITY;
-                case "COMBINED_SELFISH_RACE"           -> AttackType.COMBINED_SELFISH_RACE;
-                case "COMBINED_SELFISH_FINNEY"         -> AttackType.COMBINED_SELFISH_FINNEY;
-                case "COMBINED_SELFISH_LEAD_STUBBORN"  -> AttackType.COMBINED_SELFISH_LEAD_STUBBORN;
-                case "COMBINED_SELFISH_TRAIL_STUBBORN" -> AttackType.COMBINED_SELFISH_TRAIL_STUBBORN;
-                default -> numberOfAttackers > 0 ? AttackType.SELFISH_MINING : AttackType.NONE;
-            };
+        Set<String> attackerNodeIds;
+        double attackerHashPower;
+        double gamma;
+        long deltaA;
+        long deltaB;
+
+        if (attackScenario != null) {
+            Attack attack = attackScenario.getAttack();
+            attackType = mapAttackType(attack);
+            attackerNodeIds = attackScenario.getAttackers().stream()
+                    .map(AttackerNode::getLinkedNodeSystem)
+                    .filter(Objects::nonNull)
+                    .map(Entity::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            attackerHashPower = Math.min(1.0, Math.max(0.0,
+                    attackScenario.getAttackers().stream().mapToDouble(AttackerNode::getPowerShare).sum()));
+            gamma = attack.getGamma();
+            if (attack instanceof RaceAttack raceAttack) {
+                deltaA = raceAttack.getTransactionADelay();
+                deltaB = raceAttack.getTransactionBAcceleration();
+            } else {
+                deltaA = 0L;
+                deltaB = 0L;
+            }
         } else {
-            attackType = numberOfAttackers > 0 ? AttackType.SELFISH_MINING : AttackType.NONE;
+            int numberOfAttackers =
+                    Integer.parseInt(configuration.getOrDefault("number_of_attackers", "0"));
+            String attackTypeName = configuration.getOrDefault("attack_type", "").strip();
+
+            if (!attackTypeName.isEmpty()) {
+                attackType = switch (attackTypeName) {
+                    case "SELFISH_MINING"              -> AttackType.SELFISH_MINING;
+                    case "LEAD_STUBBORN_MINING"        -> AttackType.LEAD_STUBBORN_MINING;
+                    case "TRAIL_STUBBORN_MINING"       -> AttackType.TRAIL_STUBBORN_MINING;
+                    case "EQUAL_FORK_STUBBORN_MINING"  -> AttackType.EQUAL_FORK_STUBBORN_MINING;
+                    case "FINNEY"                      -> AttackType.FINNEY;
+                    case "RACE"                        -> AttackType.RACE;
+                    case "MAJORITY"                    -> AttackType.MAJORITY;
+                    case "COMBINED_SELFISH_RACE"           -> AttackType.COMBINED_SELFISH_RACE;
+                    case "COMBINED_SELFISH_FINNEY"         -> AttackType.COMBINED_SELFISH_FINNEY;
+                    case "COMBINED_SELFISH_LEAD_STUBBORN"  -> AttackType.COMBINED_SELFISH_LEAD_STUBBORN;
+                    case "COMBINED_SELFISH_TRAIL_STUBBORN" -> AttackType.COMBINED_SELFISH_TRAIL_STUBBORN;
+                    default -> numberOfAttackers > 0 ? AttackType.SELFISH_MINING : AttackType.NONE;
+                };
+            } else {
+                attackType = numberOfAttackers > 0 ? AttackType.SELFISH_MINING : AttackType.NONE;
+            }
+
+            attackerNodeIds = Collections.emptySet();
+            attackerHashPower = Double.parseDouble(configuration.getOrDefault("attacker_hash_power", "0.0"));
+            gamma = Double.parseDouble(configuration.getOrDefault("tie_breaking_parameter", "0.0"));
+            deltaA = Long.parseLong(configuration.getOrDefault("transaction_delay", "0"));
+            deltaB = Long.parseLong(configuration.getOrDefault("transaction_acceleration", "0"));
         }
 
         boolean combinedAttackEnabled = switch (attackType) {
@@ -153,7 +198,7 @@ public class ATOSIMSimulationFactory implements Simulation {
                 attackType,
                 combinedAttackEnabled,
                 secondaryAttackType,
-                Collections.emptySet(),
+                attackerNodeIds,
                 attackerHashPower,
                 gamma,
                 deltaA,
@@ -167,17 +212,19 @@ public class ATOSIMSimulationFactory implements Simulation {
         );
     }
 
+    private static AttackType mapAttackType(Attack attack) {
+        if (attack instanceof SelfishMiningAttack) return AttackType.SELFISH_MINING;
+        if (attack instanceof LeadStubbornAttack) return AttackType.LEAD_STUBBORN_MINING;
+        if (attack instanceof EqualForkStubbornAttack) return AttackType.EQUAL_FORK_STUBBORN_MINING;
+        if (attack instanceof TrailStubbornAttack) return AttackType.TRAIL_STUBBORN_MINING;
+        if (attack instanceof FinneyAttack) return AttackType.FINNEY;
+        if (attack instanceof RaceAttack) return AttackType.RACE;
+        if (attack instanceof MajorityAttack) return AttackType.MAJORITY;
+        return AttackType.NONE;
+    }
+
     private ThreesimBlockchainSystemFactory createBlockchainSystemFactory(
-            SimulationParameters simulationParameters,
-            Map<String, String> configuration) {
-
-        BlockchainSystemModelLoader loader =
-                new BlockchainSystemModelLoader();
-
-        BlockchainSystem designBlockchainSystem =
-                loader.load(
-                        simulationParameters.getBlockchainSystemModelFilePath(),
-                        configuration);  
+            BlockchainSystem designBlockchainSystem) {
 
         var networkTopology =
                 designBlockchainSystem.getNetwork().getTopology();
