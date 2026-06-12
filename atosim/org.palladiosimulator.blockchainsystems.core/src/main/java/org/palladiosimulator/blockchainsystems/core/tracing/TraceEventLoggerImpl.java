@@ -4,21 +4,17 @@ import org.palladiosimulator.blockchainsystems.core.common.abstractions.TraceEve
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.TraceEventLogOrigin;
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.TraceEventLogger;
 
-import java.util.Comparator;
-import java.util.TreeSet;
 import java.util.function.BiConsumer;
 
 public class TraceEventLoggerImpl implements TraceEventLogger {
 
     private final TraceEventLogOrigin _logOrigin;
     private final TraceEventConfiguration _traceEventConfiguration;
-    private final TreeSet<TraceEvent> _events;
     private BiConsumer<TraceEvent, TraceEventLogOrigin> _traceEventCallback;
 
     public TraceEventLoggerImpl(TraceEventLogOrigin logOrigin, TraceEventConfiguration traceEventConfiguration) {
         _logOrigin = logOrigin;
         _traceEventConfiguration = traceEventConfiguration;
-        _events = new TreeSet<>(Comparator.comparingLong(TraceEvent::getOccurrenceTime));
     }
 
     @Override
@@ -28,7 +24,6 @@ public class TraceEventLoggerImpl implements TraceEventLogger {
 
     @Override
     public void logEvent(TraceEvent traceEvent) {
-        _events.add(traceEvent);
         notifyTraceEventOccurred(traceEvent);
     }
 
