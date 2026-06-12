@@ -146,8 +146,7 @@ public class ATOSIMSimulationFactory implements Simulation {
                 deltaB = 0L;
             }
         } else {
-            int numberOfAttackers =
-                    Integer.parseInt(configuration.getOrDefault("number_of_attackers", "0"));
+            attackerHashPower = Double.parseDouble(configuration.getOrDefault("attacker_hash_power", "0.0"));
             String attackTypeName = configuration.getOrDefault("attack_type", "").strip();
 
             if (!attackTypeName.isEmpty()) {
@@ -163,14 +162,13 @@ public class ATOSIMSimulationFactory implements Simulation {
                     case "COMBINED_SELFISH_FINNEY"         -> AttackType.COMBINED_SELFISH_FINNEY;
                     case "COMBINED_SELFISH_LEAD_STUBBORN"  -> AttackType.COMBINED_SELFISH_LEAD_STUBBORN;
                     case "COMBINED_SELFISH_TRAIL_STUBBORN" -> AttackType.COMBINED_SELFISH_TRAIL_STUBBORN;
-                    default -> numberOfAttackers > 0 ? AttackType.SELFISH_MINING : AttackType.NONE;
+                    default -> (attackerHashPower > 0.0) ? AttackType.SELFISH_MINING : AttackType.NONE;
                 };
             } else {
-                attackType = numberOfAttackers > 0 ? AttackType.SELFISH_MINING : AttackType.NONE;
+                attackType = (attackerHashPower > 0.0) ? AttackType.SELFISH_MINING : AttackType.NONE;
             }
 
             attackerNodeIds = Collections.emptySet();
-            attackerHashPower = Double.parseDouble(configuration.getOrDefault("attacker_hash_power", "0.0"));
             gamma = Double.parseDouble(configuration.getOrDefault("tie_breaking_parameter", "0.0"));
             deltaA = 0L;
             deltaB = 0L;

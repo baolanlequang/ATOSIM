@@ -3,7 +3,7 @@
   "config_id": "1",
   "inputParameters": {
     "simulationType": "Monte-Carlo",
-    "maxAllowedBlockchainLength": "25",
+    "maxAllowedBlockchainLength": "1",
     "numberOfMonteCarloRounds": "1",
     "blockchainSystemModelFilePath": "testmodels/atomsim-1/Net.blockchainsystem",
     "failureThroughputThreshold": "1.0",
@@ -12,19 +12,17 @@
     "reliabilityObservationTimespan": "24.0",
     "config_id": "1",
     "id": "1",
-    "validator_count": "1303",
-    "node_degree": "145",
-    "propagation_delay": "7581",
-    "block_creation_interval": "1120",
-    "max_block_size": "7",
-    "attacker_hash_power": "0.5094341287077085",
-    "tie_breaking_parameter": "0.18247772059601927",
-    "number_of_attackers": "638",
-    "attacker_hash_power_realized": "0.4896392939370683"
+    "validator_count": "106",
+    "node_degree": "105",
+    "propagation_delay": "35166",
+    "block_creation_interval": "1027608",
+    "max_block_size": "2862377",
+    "attacker_hash_power": "0.4490006865741189",
+    "tie_breaking_parameter": "0.8730065410016302"
   },
   "simulationResult": {
     "simulationParameters": {
-      "maxAllowedBlockchainLength": 25,
+      "maxAllowedBlockchainLength": 1,
       "numberOfMonteCarloRounds": 1,
       "blockchainSystemModelFilePath": "testmodels/atomsim-1/Net.blockchainsystem"
     },
@@ -34,26 +32,26 @@
       "nakamotoCoefficientThreshold": 50.0,
       "reliabilityObservationTimespan": 24.0,
       "attackType": "SELFISH_MINING",
-      "attackerHashPower": 0.5094341287077085,
-      "gamma": 0.18247772059601927,
+      "attackerHashPower": 0.4490006865741189,
+      "gamma": 0.0,
       "deltaA": 0,
       "deltaB": 0,
       "confirmationDepth": 6,
-      "blockInterval": 1120.0,
-      "propagationDelay": 7581.0,
-      "nodeDegree": 145,
-      "maxBlockSize": 7,
+      "blockInterval": 1027608.0,
+      "propagationDelay": 35166.0,
+      "nodeDegree": 105,
+      "maxBlockSize": 2862377,
       "networkBandwidth": 100.0
     },
     "generalResults": [
       {
         "name": "GeographicalDiversity",
-        "value": 0.7528779739063699,
+        "value": 0.7358490566037736,
         "unit": "%"
       },
       {
         "name": "NakamotoCoefficient",
-        "value": 496,
+        "value": 11,
         "unit": "validating nodes"
       }
     ],
@@ -81,12 +79,12 @@
         },
         {
           "name": "Consistency",
-          "value": 2449510.0,
+          "value": 0.0,
           "unit": "ms"
         },
         {
           "name": "DoubleSpendSuccessProbability",
-          "value": 1.0
+          "value": 0.7608719324582369
         },
         {
           "name": "FaultTolerance",
@@ -107,7 +105,7 @@
         },
         {
           "name": "ForkProbability",
-          "value": 0.9638658812157584
+          "value": 0.018679209226135196
         },
         {
           "name": "GiniCoefficient",
@@ -123,12 +121,12 @@
         },
         {
           "name": "Reliability",
-          "value": 9.060601534485314E-4,
+          "value": 1.0,
           "unit": "%"
         },
         {
           "name": "ShannonEntropy",
-          "value": 10.192405347422806,
+          "value": -0.0,
           "unit": "bits"
         },
         {
@@ -157,17 +155,15 @@
       },
       {
         "name": "Consistency",
-        "average": 2449510.0,
+        "average": 0.0,
         "unit": "ms",
-        "standardDeviation": 0.0,
-        "coefficientOfVariation": 0.0
+        "standardDeviation": 0.0
       },
       {
         "name": "ShannonEntropy",
-        "average": 10.192405347422806,
+        "average": 0.0,
         "unit": "bits",
-        "standardDeviation": 0.0,
-        "coefficientOfVariation": 0.0
+        "standardDeviation": 0.0
       },
       {
         "name": "FaultTolerance",
@@ -188,7 +184,7 @@
       },
       {
         "name": "DoubleSpendSuccessProbability",
-        "average": 1.0,
+        "average": 0.7608719324582369,
         "standardDeviation": 0.0,
         "coefficientOfVariation": 0.0
       },
@@ -218,7 +214,7 @@
       },
       {
         "name": "ForkProbability",
-        "average": 0.9638658812157584,
+        "average": 0.018679209226135196,
         "standardDeviation": 0.0,
         "coefficientOfVariation": 0.0
       },
@@ -246,15 +242,15 @@
       },
       {
         "name": "Reliability",
-        "average": 9.060601534485314E-4,
+        "average": 1.0,
         "unit": "%",
         "standardDeviation": 0.0,
         "coefficientOfVariation": 0.0
       }
     ]
   },
-  "startSimulationTime": 182636600066875,
-  "stopSimulationTime": 182688207479416,
-  "simulationTime": 51607412541,
-  "memoryUsed": 2792
+  "startSimulationTime": 502518733662250,
+  "stopSimulationTime": 502519843079750,
+  "simulationTime": 1109417500,
+  "memoryUsed": 53
 }

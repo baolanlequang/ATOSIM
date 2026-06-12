@@ -193,9 +193,7 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
     @Override
     public boolean shouldTerminate() {
-        boolean maxExceeded = _maxBlockchainLengthCondition.hasLengthExceeded(); // computed but not used (faithful migration)
-        
-//        System.out.println("maxExceeded: " + maxExceeded);
+        boolean maxExceeded = _maxBlockchainLengthCondition.hasLengthExceeded(); 
 
         if (_simulationParameters.getAttackType() == AttackType.RACE) {
             int confirmedBlocks = _confirmedBlocks.getNumberOfValidBlocks();
