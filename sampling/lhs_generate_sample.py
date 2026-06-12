@@ -19,7 +19,7 @@ param_ranges = {
     "validator_count":          (20,    1_000),
     "node_degree":              (1,     250),
     "propagation_delay":        (6_500, 40_000),
-    "block_creation_interval":  (60,    1_200),
+    "block_creation_interval":  (60_000, 1_200_000),
     "max_block_size":           (0.25,  8.0),
     "attacker_hash_power":      (0.2,   0.9),
     "tie_breaking_parameter":   (0.0,   1.0),
