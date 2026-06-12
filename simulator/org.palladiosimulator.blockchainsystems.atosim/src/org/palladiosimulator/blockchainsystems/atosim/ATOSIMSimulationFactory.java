@@ -176,6 +176,14 @@ public class ATOSIMSimulationFactory implements Simulation {
             deltaB = 0L;
         }
 
+        attackType = applyCombinedAttackMode(attackType, configuration);
+
+        if (deltaA == 0L && deltaB == 0L
+                && (attackType == AttackType.RACE || attackType == AttackType.COMBINED_SELFISH_RACE)) {
+            deltaA = Long.parseLong(configuration.getOrDefault("transaction_delay", "0"));
+            deltaB = Long.parseLong(configuration.getOrDefault("transaction_acceleration", "0"));
+        }
+
         boolean combinedAttackEnabled = switch (attackType) {
             case COMBINED_SELFISH_RACE, COMBINED_SELFISH_FINNEY,
                  COMBINED_SELFISH_LEAD_STUBBORN, COMBINED_SELFISH_TRAIL_STUBBORN -> true;
@@ -221,6 +229,22 @@ public class ATOSIMSimulationFactory implements Simulation {
         if (attack instanceof RaceAttack) return AttackType.RACE;
         if (attack instanceof MajorityAttack) return AttackType.MAJORITY;
         return AttackType.NONE;
+    }
+
+    private static AttackType applyCombinedAttackMode(AttackType attackType, Map<String, String> configuration) {
+        if (attackType != AttackType.SELFISH_MINING) {
+            return attackType;
+        }
+
+        String combinedAttackMode = configuration.getOrDefault("combined_attack_mode", "NONE").strip();
+
+        return switch (combinedAttackMode) {
+            case "SELFISH_RACE"           -> AttackType.COMBINED_SELFISH_RACE;
+            case "SELFISH_FINNEY"         -> AttackType.COMBINED_SELFISH_FINNEY;
+            case "SELFISH_LEAD_STUBBORN"  -> AttackType.COMBINED_SELFISH_LEAD_STUBBORN;
+            case "SELFISH_TRAIL_STUBBORN" -> AttackType.COMBINED_SELFISH_TRAIL_STUBBORN;
+            default -> attackType;
+        };
     }
 
     private ThreesimBlockchainSystemFactory createBlockchainSystemFactory(
