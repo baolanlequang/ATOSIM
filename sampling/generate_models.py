@@ -18,7 +18,6 @@ Mapping (CSV column -> base file -> attribute):
                                                  references its own freshly-cloned NodeAllocation
                                                  (round-robin over the 8 archetypes, new ids throughout).
   propagation_delay        Net.linkallocation    Latency                (all Values, both LinkAllocations)
-  transaction_delay        Net.transactions      MeanTransactionCreationInterval
   attacker_hash_power      Net.attackmodel       attackers.powerShare    (only if Net.attackmodel exists)
   number_of_attackers      Net.attackmodel       Rebuilds the <attackers> list with
                                                  min(number_of_attackers, available NodeSystems)
@@ -28,9 +27,9 @@ Mapping (CSV column -> base file -> attribute):
                                                  config_id) from the regenerated Net.nodeallocation;
                                                  the attack's monitoredNodes is updated to match.
 
-Other CSV columns (attacker_hash_power_realized, tie_breaking_parameter,
-transaction_acceleration) are not written into the model files; they belong to
-the runtime configuration.
+Other CSV columns (tie_breaking_parameter) are not written into the model
+files; they belong to the runtime configuration.
+Net.transactions is copied verbatim from the base.
 
 Usage:
     python generate_models.py
@@ -170,13 +169,6 @@ def patch_linkallocation(path: Path, propagation_delay: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def patch_transactions(path: Path, transaction_delay: str) -> None:
-    text = path.read_text(encoding="utf-8")
-    text, n = _replace_attr(text, "MeanTransactionCreationInterval", f"{float(transaction_delay)}")
-    _require(text, "MeanTransactionCreationInterval", n, path)
-    path.write_text(text, encoding="utf-8")
-
-
 _ATTACKERS_BLOCK = re.compile(r"<attackers\b.*?</attackers>", re.DOTALL)
 _NODE_SYSTEM_ID = re.compile(r'<NodeSystem\b[^>]*\bid="([^"]+)"')
 
@@ -262,11 +254,6 @@ def generate_one(base_dir: Path, out_dir: Path, row: dict) -> Path:
         target / "Net.linkallocation",
         row["propagation_delay"],
     )
-    if "transaction_delay" in row and row["transaction_delay"]:
-        patch_transactions(
-            target / "Net.transactions",
-            row["transaction_delay"],
-        )
 
     attackmodel_path = target / "Net.attackmodel"
     if attackmodel_path.exists() and row.get("attacker_hash_power"):
