@@ -22,7 +22,7 @@ java -Xmx310G \
      -jar atosim-selfish-stubborn-trail.jar \
      simulator/org.palladiosimulator.blockchainsystems.atosim/optimized_deterministic_lhs_configurations.csv \
      sampling/generated_models \
-     simulator/org.palladiosimulator.blockchainsystems.atosim/testmodels/configuration.json \
+     simulator/org.palladiosimulator.blockchainsystems.atosim/testmodels/configuration_selfish_stubborn_trail.json \
      --attack-type COMBINED_SELFISH_TRAIL_STUBBORN \
      --output-dir results_new/selfish_trail_stubborn
 
