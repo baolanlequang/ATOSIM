@@ -72,21 +72,9 @@ def build_dataframe(seed: int) -> tuple[pd.DataFrame, np.ndarray]:
     ]
     exact_25_idx = closest_to_25[:n_exact_25]
 
-    df["number_of_attackers"] = (
-        df["attacker_hash_power"] * df["validator_count"]
-    ).round().astype(int)
-    max_attackers = np.floor(0.49 * df["validator_count"]).astype(int)
-    df["number_of_attackers"] = np.minimum(df["number_of_attackers"], max_attackers)
-
-    df.loc[zero_idx, "attacker_hash_power"]  = 0.0
-    df.loc[zero_idx, "number_of_attackers"]  = 0
-
+    df.loc[zero_idx, "attacker_hash_power"]     = 0.0
     df.loc[exact_25_idx, "attacker_hash_power"] = 0.25
-    df.loc[exact_25_idx, "number_of_attackers"] = (
-        (0.25 * df.loc[exact_25_idx, "validator_count"]).round().astype(int)
-    )
 
-    df["number_of_attackers"] = np.minimum(df["number_of_attackers"], df["validator_count"])
     df["node_degree"]         = np.minimum(df["node_degree"], df["validator_count"] - 1)
     df["node_degree"]         = df["node_degree"].clip(lower=1).astype(int)
     df["tie_breaking_parameter"] = df["tie_breaking_parameter"].clip(0.0, 1.0)
@@ -98,8 +86,7 @@ def build_dataframe(seed: int) -> tuple[pd.DataFrame, np.ndarray]:
 def score_dataframe(df: pd.DataFrame) -> float:
     """Centered discrepancy of the post-processed design, with each LHS-sampled
     parameter rescaled to [0, 1] against its declared range. Lower is better
-    coverage. The derived number_of_attackers column is excluded; only the
-    sampled parameters drive the score.
+    coverage.
     """
     cols = list(param_ranges.keys())
     arr = df[cols].to_numpy(dtype=float)
@@ -136,17 +123,13 @@ SEED = best_seed
 # 5. Final checks
 # -----------------------------
 
-_realized = df["number_of_attackers"] / df["validator_count"]
-
-assert (df["number_of_attackers"] <= df["validator_count"]).all()
-assert (df["number_of_attackers"] >= 0).all()
 assert (df["node_degree"] >= 1).all()
 assert (df["node_degree"] <= df["validator_count"] - 1).all()
-assert (_realized < 0.5).all()
+assert (df["attacker_hash_power"] >= 0.0).all() and (df["attacker_hash_power"] < 0.5).all()
 assert (df["tie_breaking_parameter"] >= 0.0).all() and (df["tie_breaking_parameter"] <= 1.0).all()
-assert (df["number_of_attackers"] == 0).sum() == n_zero
+assert (df["attacker_hash_power"] == 0.0).sum() == n_zero
 assert np.isclose((df["attacker_hash_power"] == 0.25).sum(), n_exact_25)
-assert (_realized > 0.25).any()
+assert (df["attacker_hash_power"] > 0.25).any()
 
 # -----------------------------
 # 6. Cleanup + save
@@ -159,13 +142,12 @@ df.to_csv(outfile, index=False)
 print("LHS configurations generated.")
 print(f"Selected seed                  : {SEED}  (CD={best_score:.6f}, "
       f"swept {N_CANDIDATE_SEEDS} candidates)")
-print(f"Total zero-attacker contexts   : {(df['number_of_attackers'] == 0).sum()}")
+print(f"Total zero-attacker contexts   : {(df['attacker_hash_power'] == 0.0).sum()}")
 print(f"Exact 0.25 hash-power contexts : {(df['attacker_hash_power'] == 0.25).sum()}")
-print(f"Realized attacker fraction > 0.25 : {(_realized > 0.25).sum()}")
-print(f"Max realized attacker fraction : {_realized.max():.6f}")
+print(f"Hash-power > 0.25 contexts     : {(df['attacker_hash_power'] > 0.25).sum()}")
+print(f"Max attacker_hash_power        : {df['attacker_hash_power'].max():.6f}")
 print(df[[
     "config_id",
     "attacker_hash_power",
     "validator_count",
-    "number_of_attackers",
-]].assign(_realized=_realized).sort_values("_realized", ascending=False).drop(columns="_realized").head(10))
+]].sort_values("attacker_hash_power", ascending=False).head(10))

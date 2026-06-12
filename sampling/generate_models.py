@@ -257,7 +257,7 @@ def generate_one(base_dir: Path, out_dir: Path, row: dict) -> Path:
 
     attackmodel_path = target / "Net.attackmodel"
     if attackmodel_path.exists() and row.get("attacker_hash_power"):
-        number_of_attackers = int(row.get("number_of_attackers") or 1)
+        number_of_attackers = 1
         node_system_ids = _node_system_ids(target / "Net.nodeallocation")
         rng = random.Random(config_id)
         patch_attackmodel(
