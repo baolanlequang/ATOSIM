@@ -1,104 +1,407 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <attackmodel:AttackScenario xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:attackmodel="http://palladiosimulator.org/BlockchainSystemComponentModel/AttackModel/1.0" id="_6zKNIFkVEfGJnbTgRki9JA">
-  <attack xsi:type="attackmodel:SelfishMiningAttack" id="_7H2DsFkVEfGJnbTgRki9JA" monitoredNodes="_da9e15fed22442d888696b75f2b141d6 _8d571d01a8dc4876a89742347be9761e _2a4ceb80d4394721bf538c27894da72a _f81c4316cb0d4ec9a8f538f1e114e4df _3c90b897ce2e475abaea8445e7f9a757 _28d6317fd920499687ed199d350aca5a _5afe774102404a56a2933286b37a9683 _c4933244091a4c3dbeb162b066aeda88 _ea8283ac190d433fa1c63b44f3d2d877 _ef9942bf9a21405b8dbe0c58319193ba _faa7486bd3974a3fad75fd48ddf78ee4 _9ad83cd67dc140609f355be2ad5a2be2 _32cd639547444c85bfdbc9ebdf3282ac _0fd357e762394e06b002069bd635f722 _48ff4faa48c44579b1320f193277820e _4ec375050b9444e8903c479c20dd3b6d _6ef74e4028904edb8f0b9c86445a7ca6 _9bdfa9c6188d49b28b58f4dbdb3175a1 _ae07dd7d22194b569eb694f869417405 _2bfc3150d10542b8bc57a12e9d7c0787 _63e59245ed014570bfa135d2a254266b _e9ea179789a94efda191b5934bed5593 _db2b7a17a165405994291843a3e7af7c _f2681ed6816445f386f6a56e876f7711 _ec35d470d75749cbbcc5635e2589e2fd _f479b6d0a76749ef91095555872be0de _2f0766e78a704c83b37f0ea3c32984b5 _5694de1e3ca84e62a4ec0461f36f091d _b6adf377629f4909b52bc8b856c7c7e5 _9bf5f8f783de474b853386270a1dde72 _879240145f5c4221ac01df5cafcadf7e _c115f99f43f94a988e9313c8608fbf99 _a0328f40fee94de2907426f11589651a"/>
-  <attackers id="_da9e15fed22442d888696b75f2b141d6" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_3965283e063d4c9e8d95df8aa511c917"/>
+  <attack xsi:type="attackmodel:SelfishMiningAttack" id="_7H2DsFkVEfGJnbTgRki9JA" monitoredNodes="_596ebcb0c3af4061aa2186857b5ae5c8 _b699dd36354041bf928b81faf16236b4 _fbe5e74fc27449949a7b0e6418433daf _18a8e9e1526248ccbe369e588e53ec50 _2dfa72ecd6ff4598a4023067d8ac47a5 _3903a970c2d6427b946c9faa2ba5c836 _f32b09def4d44126b67fa3c9b6d4e1e2 _944595e04779487e85f7fe547279c4e8 _a7e3918ed7a74f468e45f38d97ab714c _fb65a92a4b2a46c1841383ea13089c18 _c618fe17faf9428589bd616fff92b4ef _de9c150c7c534f41bf9060141affb53e _68792813ccae4a2187d7e84d4bd51ccb _dddf4e2d84174028ac6e787e27697a6e _8b907064f06640fba2aa5a93d5630546 _2be5b2cd459a47d390051c73a23d1be4 _a41c49dfdc364a899d0b9b83264723e0 _c07ee3a81f234f70a006e4042dbb913e _6743e4b68b2c4e88972e6bcaef74c6df _e14d45dabaef47f2994582d93a0e8be2 _b4f716dc86834ddd8e20bdcf054d6f70 _b2b5b684fd2f487284f279253e116cc3 _85557849f2714275a6b0518a3f47fe7e _1273b08f523a44de9d25be3d97de45f9 _63bc09bab627443da83b9025f7926299 _5370df73b21748db91dd133a2e516d9e _1142e8dfc3f243759fd21f71ba81d1cd _f00d5c4afa884f5f9b4f1ba244c2a910 _e6e55bfe2bdb4307b8f01d0dff0fb3ac _a712b585434f4bd1b41262cc9661af82 _ef4a22e2d63f47dc9cf3c1e55e719f73 _a0d18e0fa7a740b880d8ccfdce98523a _f510163635ea44afbd37ffe971f1b48c _ce188c46c5174df4aa96703c64c5d655 _db50d6130c554aa397c0e097a45a7f06 _ca965c3e4edd415f821cecf5d8d5f48f _3e9fa5e6d93a4c83bacd0fb1ca59c1d7 _161cf3f5903241ae8fa0382831e39a04 _79c944b30a69495b9fdcdc4f55693026 _3c04a5dcca734ec99fb7c39ff3d26d1a _59b0b178a426497f907402752e5e7b11 _cb36a1509c924fcc8d276761699f64e4 _c19e44a920ca456cae80d010a7e487e5 _a873e45265964f7eb9f8f72a9ee69f8c _d56c9aa8253148dd8e976f8436a2c8c5 _65fb417b71714e869cca2e999f398236 _0c1a044db62043fcb2fd24ab57f2b105 _26ece9c1d9f04a6f9913b4be81b9b852 _cbfe1c3760db4240ba6dfa18444093eb _e8d3a791907b4279b455748974a1362a _34062638c0c84e7d979c21f5d8cc83ad _44c3eb9c624a4f8e82f364798b71293e _04e52e4155a647fca9f4b368eb284a11 _adb979438be049858cc7cea65ffc5d50 _68ce28a394ee4ddc9d45f1ca31abe2f6 _df08521a1f3e4446b2f60778ba0d2aec _07184d19d2794453aa2953ef6312a3f9 _cc9df93d8a7f4fd1bd6db7efd47fe6a4 _acc2c3907e1342d4a0a448c87079ea77 _be39a40044134f68b23c4f96c1644f6a _af6d505cd30d44a5968ad3537b145f46 _91987ef185ff42a2b1c49c88d6dcafda _a3630ec7a2c141e7a502444479fbd978 _3423a4306b724539884f1fa12bde0c17 _065482e2ee8347dfa3f8125e5d9a1f8b _1f322a03686d4747b0452f355fd19006 _46f1efb53bd149998f0d02ec5f8fae22 _d06c680e012541f29f19284efb7cc260 _c5e1de2282c04f67ab91e172f13789dc _f8b984ca38664791a068d5a5128069eb _1811bc0f342140bf803b600b786d33c5 _99c579fc0c714c6f937b0d2dfbacc9c6 _2337bf2f45a1496888282c25de09a31d _122c8ebd17a44542a1ef477bf6f94d62 _87856a6e55f4481ba13bee56348b652b _6602edcda96e4a54a9425983fc6599b8 _352c9cba6caf44609314411d1d88c409 _01f89e44e9264ddbbfb592fbd61c09c5 _4b01a6b8301a4b719080f5492956855d _4cdb6538eae54c549b1d314b18cdc333 _340d616974a14ffa861c6de264c4ba28 _0a1fa022c370492eb57874beaf422563 _6a6557f735fc40eba5c60d3cfad1da82 _181eccf45819410081a38660bc712355 _5324344b9ce949269ef3f13069a11931 _14af831da08742f98106fff7cc5d2d92 _a089c1c98c3548d19467bc4b91677dc4 _03563b8f33a2463e90962476ba961b3e _adc6eb1271b84491bef515de25fedc96 _4f7e9a92f7e34aa88b8dbf6ff7591828 _787db1b83e0a41d7aff64b9add0f9f92 _7b68c761f4bc4d86b3fb4f471bf8975d _033717b776334ce8a2fb9bab2f0d031b _6c8586493ad34b09bb2958fa1e3c0126 _83bf4ff18fc84db69020a86cd9453bb3 _718631f221a24eb3b11c2f90e8b01a95 _ffd5e3e911c042458f73c78a7824f831 _2aac9b0c2ba8492cb5e9b8e09574aa6e _46b95b252b0b4e2e82a01d8a6af03ebc _9d8da9c4211b48db825f74601a8a4979 _0c59889c7da647eca59f79cd1719046a _cdf171dd32794568ade14c15898a6101 _bcb17baabb304bd4a6b7a7a2a4d995ec _a305c7d73fe74900915424beb547b50e _b4d6fec78c9d4ecf9c9c47a5c1a995ec _8ee4133248764a5c93ec52fe61404072 _293fce1996694b6abd72d8a8d5c22019 _b1a36dace8e347a3a86cde10527e3419 _a80ff91f507640e48a0c5475f3261b33 _4040f48b8c104fa08eba3a723fa59ade _496955efc6464f838ef9cac4c5685719 _3f0a2498edff4c5aaf48dd04649c3337 _1657dbef21e5499593747d52aaa886b9 _3e9d8934e5e142a9ba1efcf8a1b7d6ca _98309e4350eb4be1916f1ca317f98876 _71dbad1763d84f2db989c4632c93389b _eac437d7ab814edc80dce67e0bdb9f91 _24d13ed1576f452f9607aca5d2e0a897 _c08870f50b6d48b49e532b4826b9a6d8 _50b4c4da75b74c1e8d132f5920c8c6bc _352b4a41540c424782b65c4904624ab1 _f0df1e6a19ce413288b0d3147e996a36 _da985d3175484863911f67821f78b089 _616ea90288284292841c31ba9cca842d _e489b233a5f14d358e8bcb7474b6d4af _ff0eba778470438d89904a1a9cf7f101 _29eaa4934b104346a10732da39f4b948 _9bbd2bdda2fa43b8b7d21a8fdc020cf5 _b2fd49a584d04c81b6ecd9498f83cd8f _252be082a0ba4d328d03a5539cf4ca84 _879608b7463d45efa7a92736dfc66893 _b7f3c23acb3b4d9888b071e7a7e6e10d _dee2276a6421470c8e04479c5712be17 _a97973a64dee4e5cb8f1bd81d83e324f"/>
+  <attackers id="_596ebcb0c3af4061aa2186857b5ae5c8" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8f2fa715dbbb4fd1916eb93fa0c15047"/>
   </attackers>
-  <attackers id="_8d571d01a8dc4876a89742347be9761e" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_f6238b608a114307973c261820f3273b"/>
+  <attackers id="_b699dd36354041bf928b81faf16236b4" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_406e892eb7ce499394ac97c26da2b475"/>
   </attackers>
-  <attackers id="_2a4ceb80d4394721bf538c27894da72a" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_c0e34bae4cbf4c02aee62b62fe9df333"/>
+  <attackers id="_fbe5e74fc27449949a7b0e6418433daf" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_d3495492f2544b9baf0a3ddb26643ac2"/>
   </attackers>
-  <attackers id="_f81c4316cb0d4ec9a8f538f1e114e4df" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_97a6b18a1b9540d186a63004b186298a"/>
+  <attackers id="_18a8e9e1526248ccbe369e588e53ec50" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8098c87a295e4b109aa10d36cf9c6b72"/>
   </attackers>
-  <attackers id="_3c90b897ce2e475abaea8445e7f9a757" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_cb978c151cd44f1aaad0c49393eb2738"/>
+  <attackers id="_2dfa72ecd6ff4598a4023067d8ac47a5" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_24798ce807fe42fa880353c75664e76d"/>
   </attackers>
-  <attackers id="_28d6317fd920499687ed199d350aca5a" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_d6ce6c7257cf4697850edb54cea725fa"/>
+  <attackers id="_3903a970c2d6427b946c9faa2ba5c836" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_99afcb3b89cd4027b02f5274fcf4f191"/>
   </attackers>
-  <attackers id="_5afe774102404a56a2933286b37a9683" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_a5796388b4334f159fb4ddc5f592b059"/>
+  <attackers id="_f32b09def4d44126b67fa3c9b6d4e1e2" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_e7c57351e2e1466e93894175f3dea771"/>
   </attackers>
-  <attackers id="_c4933244091a4c3dbeb162b066aeda88" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_00e564fc61e34e9abb53bdae33d1a94e"/>
+  <attackers id="_944595e04779487e85f7fe547279c4e8" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_533ffe58afd44bb39bb1c58f3dbb0c00"/>
   </attackers>
-  <attackers id="_ea8283ac190d433fa1c63b44f3d2d877" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_9c3e8fe0222f4fb89a6c0e183b7bb95d"/>
+  <attackers id="_a7e3918ed7a74f468e45f38d97ab714c" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_5ae8635a41504e91901d8feebd054677"/>
   </attackers>
-  <attackers id="_ef9942bf9a21405b8dbe0c58319193ba" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_6600b683396d4b3dafc83c66db815cc0"/>
+  <attackers id="_fb65a92a4b2a46c1841383ea13089c18" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_911a9668a8434d2594952fcff5893d21"/>
   </attackers>
-  <attackers id="_faa7486bd3974a3fad75fd48ddf78ee4" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_8cfd40a1e18548aeb2a555646ea425cf"/>
+  <attackers id="_c618fe17faf9428589bd616fff92b4ef" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_a06e3a0d8bae453cb2900fabf66ac650"/>
   </attackers>
-  <attackers id="_9ad83cd67dc140609f355be2ad5a2be2" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_b9695eb1b7554b14b13513e99aeeb5db"/>
+  <attackers id="_de9c150c7c534f41bf9060141affb53e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_b347cab946bd40ada83979d75172cd7c"/>
   </attackers>
-  <attackers id="_32cd639547444c85bfdbc9ebdf3282ac" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_74166c2143b348a984ee2d47f582bf09"/>
+  <attackers id="_68792813ccae4a2187d7e84d4bd51ccb" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_59fd2cc329ff4480a3250731edd03ee9"/>
   </attackers>
-  <attackers id="_0fd357e762394e06b002069bd635f722" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_88c5b9dd4dc941d7a4c0de7436a3a316"/>
+  <attackers id="_dddf4e2d84174028ac6e787e27697a6e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_e496bfa091ed494a8d702f1ea4b50b8e"/>
   </attackers>
-  <attackers id="_48ff4faa48c44579b1320f193277820e" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_aef75d698d794134b2dfdbe9487071a6"/>
+  <attackers id="_8b907064f06640fba2aa5a93d5630546" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_51f5c49d86c7491b912b30b88c748248"/>
   </attackers>
-  <attackers id="_4ec375050b9444e8903c479c20dd3b6d" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_edc20305bfa64c7dbfd59a713a777cb9"/>
+  <attackers id="_2be5b2cd459a47d390051c73a23d1be4" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_58278166408f46d5b53802bdd19543ca"/>
   </attackers>
-  <attackers id="_6ef74e4028904edb8f0b9c86445a7ca6" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_11d94976cbdf4cd8928fe643995d6303"/>
+  <attackers id="_a41c49dfdc364a899d0b9b83264723e0" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_18fec04fb9f842178167b4e175de2095"/>
   </attackers>
-  <attackers id="_9bdfa9c6188d49b28b58f4dbdb3175a1" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_e79d9a5931c14a1799c904665b913b91"/>
+  <attackers id="_c07ee3a81f234f70a006e4042dbb913e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_5bac615be5794c6592cc2cfdd3cf4e13"/>
   </attackers>
-  <attackers id="_ae07dd7d22194b569eb694f869417405" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_741283b6c53d4926870b589ed3e20c6a"/>
+  <attackers id="_6743e4b68b2c4e88972e6bcaef74c6df" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_901b0af593534bc386bcc6b79d46e7f3"/>
   </attackers>
-  <attackers id="_2bfc3150d10542b8bc57a12e9d7c0787" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_4c99e3dd3905433ca053a17fe0f90801"/>
+  <attackers id="_e14d45dabaef47f2994582d93a0e8be2" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_47f8be65041a43e1a9abf63234bd64bc"/>
   </attackers>
-  <attackers id="_63e59245ed014570bfa135d2a254266b" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_7a590618336048eea1e7dac5b2f5d470"/>
+  <attackers id="_b4f716dc86834ddd8e20bdcf054d6f70" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_789003e5e5424cc49e21350076b8dbbd"/>
   </attackers>
-  <attackers id="_e9ea179789a94efda191b5934bed5593" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_d38fd31ccc20410aa5cbfd6e60849eed"/>
+  <attackers id="_b2b5b684fd2f487284f279253e116cc3" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_211f4088e41c419b9cce1e095b62a643"/>
   </attackers>
-  <attackers id="_db2b7a17a165405994291843a3e7af7c" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_7ec60943c3f04a9fb5ff5d57a67ffb39"/>
+  <attackers id="_85557849f2714275a6b0518a3f47fe7e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_34adea75c8e14adc9180c05d733eaca7"/>
   </attackers>
-  <attackers id="_f2681ed6816445f386f6a56e876f7711" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_10b73adc2d6848929b72070b2b6bf384"/>
+  <attackers id="_1273b08f523a44de9d25be3d97de45f9" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_18cfc510dd9343b4ad8768b49942aae8"/>
   </attackers>
-  <attackers id="_ec35d470d75749cbbcc5635e2589e2fd" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_9ec7f8742c3243fd965581d8a35a9334"/>
+  <attackers id="_63bc09bab627443da83b9025f7926299" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_919d49ed9f514f909d4054b5a78a9833"/>
   </attackers>
-  <attackers id="_f479b6d0a76749ef91095555872be0de" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_a0061b33a6d94c019fe8579d2a433be5"/>
+  <attackers id="_5370df73b21748db91dd133a2e516d9e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_c71cd6d4a5144e46ab08eac385e820b7"/>
   </attackers>
-  <attackers id="_2f0766e78a704c83b37f0ea3c32984b5" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_c61961098e7c46a3aa672b4416934a53"/>
+  <attackers id="_1142e8dfc3f243759fd21f71ba81d1cd" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_75e02a927d7b4deda639199b73d8f17b"/>
   </attackers>
-  <attackers id="_5694de1e3ca84e62a4ec0461f36f091d" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_4cc8ba0afdff4ce280fe8011c0151b0a"/>
+  <attackers id="_f00d5c4afa884f5f9b4f1ba244c2a910" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_bfe8d3f64702402895d98d8520c959d5"/>
   </attackers>
-  <attackers id="_b6adf377629f4909b52bc8b856c7c7e5" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_c2566f68732146079f46f9d0ec7a7f77"/>
+  <attackers id="_e6e55bfe2bdb4307b8f01d0dff0fb3ac" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_2c5a8a05f6c34c8893404ecd4fe3fab0"/>
   </attackers>
-  <attackers id="_9bf5f8f783de474b853386270a1dde72" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_9886d2ba25bd4c1ab35181d8d51b9651"/>
+  <attackers id="_a712b585434f4bd1b41262cc9661af82" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_37dd9121221c427395c728fdfbf6e6cd"/>
   </attackers>
-  <attackers id="_879240145f5c4221ac01df5cafcadf7e" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_7ae48464426945f08c597bd5128c2e8e"/>
+  <attackers id="_ef4a22e2d63f47dc9cf3c1e55e719f73" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_461dfd2ef3924c7f82ebcf16a5582504"/>
   </attackers>
-  <attackers id="_c115f99f43f94a988e9313c8608fbf99" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_0c519d1603da41af8dd285e26e3f2c12"/>
+  <attackers id="_a0d18e0fa7a740b880d8ccfdce98523a" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_14628c43e57d4e969e8287ba86ac5eb9"/>
   </attackers>
-  <attackers id="_a0328f40fee94de2907426f11589651a" powerShare="0.5971359359468772">
-    <linkedNodeSystem href="Net.nodeallocation#_54d3093a632d49edb937b6fee4e7b01b"/>
+  <attackers id="_f510163635ea44afbd37ffe971f1b48c" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f6766e8a58f64af19a582ee960bcf457"/>
+  </attackers>
+  <attackers id="_ce188c46c5174df4aa96703c64c5d655" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_3fa44527bfda4f56911a8b30568a85ac"/>
+  </attackers>
+  <attackers id="_db50d6130c554aa397c0e097a45a7f06" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_43c568d8159f41babb1eb833d76cdae2"/>
+  </attackers>
+  <attackers id="_ca965c3e4edd415f821cecf5d8d5f48f" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_ceddf7eed7c64e64b6fe3fe4c02f0961"/>
+  </attackers>
+  <attackers id="_3e9fa5e6d93a4c83bacd0fb1ca59c1d7" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_671e44c7741b4b88a5564a605f6bfde7"/>
+  </attackers>
+  <attackers id="_161cf3f5903241ae8fa0382831e39a04" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_841c538c4c0948ed828aade64e4ba607"/>
+  </attackers>
+  <attackers id="_79c944b30a69495b9fdcdc4f55693026" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_5fae4c92247a4d07a90c6418589b9b6a"/>
+  </attackers>
+  <attackers id="_3c04a5dcca734ec99fb7c39ff3d26d1a" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_c75cab9a3d43456d8cce7fdf716e1021"/>
+  </attackers>
+  <attackers id="_59b0b178a426497f907402752e5e7b11" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f150373711e345188f834553559ae06e"/>
+  </attackers>
+  <attackers id="_cb36a1509c924fcc8d276761699f64e4" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_a2b1885d6b0a48d4af6fd54095ede78e"/>
+  </attackers>
+  <attackers id="_c19e44a920ca456cae80d010a7e487e5" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_2cc028fab2b84867a8060d225fbbea9b"/>
+  </attackers>
+  <attackers id="_a873e45265964f7eb9f8f72a9ee69f8c" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_5dd6f87e819e4d9f9545b02c690bc99b"/>
+  </attackers>
+  <attackers id="_d56c9aa8253148dd8e976f8436a2c8c5" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_963dd9c9aae04db493ac1066fee2c1da"/>
+  </attackers>
+  <attackers id="_65fb417b71714e869cca2e999f398236" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_0015f5b576d543499797711bc8f42c91"/>
+  </attackers>
+  <attackers id="_0c1a044db62043fcb2fd24ab57f2b105" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_a43db8497c60449d8a8aa556bdb51c3f"/>
+  </attackers>
+  <attackers id="_26ece9c1d9f04a6f9913b4be81b9b852" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_7d0c1578afdf4c3db7d5dde848a5d32e"/>
+  </attackers>
+  <attackers id="_cbfe1c3760db4240ba6dfa18444093eb" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_596543d4465f4d5cb727254b128cd145"/>
+  </attackers>
+  <attackers id="_e8d3a791907b4279b455748974a1362a" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_d2812450ddc7436a91a1ee706ebc6649"/>
+  </attackers>
+  <attackers id="_34062638c0c84e7d979c21f5d8cc83ad" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f796441b2ef142a4bcf6b19580b16974"/>
+  </attackers>
+  <attackers id="_44c3eb9c624a4f8e82f364798b71293e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_d4757d0682c94b4ca49143a480e6eb0a"/>
+  </attackers>
+  <attackers id="_04e52e4155a647fca9f4b368eb284a11" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_03e200b67a9a42cd931b59686c55205d"/>
+  </attackers>
+  <attackers id="_adb979438be049858cc7cea65ffc5d50" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_555dcf97b3fd44b6840f6059052268ca"/>
+  </attackers>
+  <attackers id="_68ce28a394ee4ddc9d45f1ca31abe2f6" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_bc5d1c8350a0489fac512b03fe716c9e"/>
+  </attackers>
+  <attackers id="_df08521a1f3e4446b2f60778ba0d2aec" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_fb101b4184d2424995ac7f9d6514899f"/>
+  </attackers>
+  <attackers id="_07184d19d2794453aa2953ef6312a3f9" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_dfa68dd295d94994bc52def99cf4a024"/>
+  </attackers>
+  <attackers id="_cc9df93d8a7f4fd1bd6db7efd47fe6a4" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_618d4516d9ec43279e3142c45617af89"/>
+  </attackers>
+  <attackers id="_acc2c3907e1342d4a0a448c87079ea77" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_28af81d805964da3b078c3a72ac509d4"/>
+  </attackers>
+  <attackers id="_be39a40044134f68b23c4f96c1644f6a" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_4ccb4d2c4c4945b8b14a517fefae2d48"/>
+  </attackers>
+  <attackers id="_af6d505cd30d44a5968ad3537b145f46" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8975d3c2ae364a76aeb1850d4d7d2c28"/>
+  </attackers>
+  <attackers id="_91987ef185ff42a2b1c49c88d6dcafda" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_3e896636b2af4d37b284239d5ccbaf15"/>
+  </attackers>
+  <attackers id="_a3630ec7a2c141e7a502444479fbd978" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f292f9f59ace4594afeae216fc7ad1b7"/>
+  </attackers>
+  <attackers id="_3423a4306b724539884f1fa12bde0c17" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_dfe382d995eb4e61b199112b972cbccb"/>
+  </attackers>
+  <attackers id="_065482e2ee8347dfa3f8125e5d9a1f8b" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_ef7478f19fe54c58a542e98742853509"/>
+  </attackers>
+  <attackers id="_1f322a03686d4747b0452f355fd19006" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_15992738744d47039148ee709adbe1f2"/>
+  </attackers>
+  <attackers id="_46f1efb53bd149998f0d02ec5f8fae22" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_68df9edb5187487ba8606e2c7cfb8334"/>
+  </attackers>
+  <attackers id="_d06c680e012541f29f19284efb7cc260" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_894faf237f914a339b3bee438a85a65a"/>
+  </attackers>
+  <attackers id="_c5e1de2282c04f67ab91e172f13789dc" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_92d3ea655710460091a439a02e223b12"/>
+  </attackers>
+  <attackers id="_f8b984ca38664791a068d5a5128069eb" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f77e748918d046f99d9fa191c1b480ce"/>
+  </attackers>
+  <attackers id="_1811bc0f342140bf803b600b786d33c5" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_11904384febc4718bd372cddcdc8e587"/>
+  </attackers>
+  <attackers id="_99c579fc0c714c6f937b0d2dfbacc9c6" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_86be88a3aa7640a6ae9c561f3214ef5f"/>
+  </attackers>
+  <attackers id="_2337bf2f45a1496888282c25de09a31d" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_eb56f77c66ea45caaf39caf79bd30f97"/>
+  </attackers>
+  <attackers id="_122c8ebd17a44542a1ef477bf6f94d62" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_d2195eea7fdc407fadcf996ae7c48df2"/>
+  </attackers>
+  <attackers id="_87856a6e55f4481ba13bee56348b652b" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8c0041b72bdf4a3eb20d3551d7dce1e0"/>
+  </attackers>
+  <attackers id="_6602edcda96e4a54a9425983fc6599b8" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8817b44883934c2ba92cda9ea297b4e7"/>
+  </attackers>
+  <attackers id="_352c9cba6caf44609314411d1d88c409" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_4b3ae12cf20848fca0f2aa6ec7276d40"/>
+  </attackers>
+  <attackers id="_01f89e44e9264ddbbfb592fbd61c09c5" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_54b6cbf433ce41db8e7555ea88af88bf"/>
+  </attackers>
+  <attackers id="_4b01a6b8301a4b719080f5492956855d" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f9b92ee45f55418eb2926f902047959a"/>
+  </attackers>
+  <attackers id="_4cdb6538eae54c549b1d314b18cdc333" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_368696027b3f46439f33ea9a7f3e09f6"/>
+  </attackers>
+  <attackers id="_340d616974a14ffa861c6de264c4ba28" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_bcb0a9c62ed441de8d72a3596241f09c"/>
+  </attackers>
+  <attackers id="_0a1fa022c370492eb57874beaf422563" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_11fa95d2ad5c4a81aa9109fed0f506c9"/>
+  </attackers>
+  <attackers id="_6a6557f735fc40eba5c60d3cfad1da82" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_7e8bc95842a94ee89c6cb05aa518c04e"/>
+  </attackers>
+  <attackers id="_181eccf45819410081a38660bc712355" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_5ae54069224048689d833bbe92e1b8ef"/>
+  </attackers>
+  <attackers id="_5324344b9ce949269ef3f13069a11931" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_a91657b83c1c4a5da79807a0b9adb48b"/>
+  </attackers>
+  <attackers id="_14af831da08742f98106fff7cc5d2d92" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_91f73b850b7f48989b82c681dd14affa"/>
+  </attackers>
+  <attackers id="_a089c1c98c3548d19467bc4b91677dc4" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_74ae5f0e6a9b4763847fb3201fb4f62c"/>
+  </attackers>
+  <attackers id="_03563b8f33a2463e90962476ba961b3e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_6d9679d04655416aaf91d4916989b800"/>
+  </attackers>
+  <attackers id="_adc6eb1271b84491bef515de25fedc96" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_36910d694d594733a5e7de016f2f88f2"/>
+  </attackers>
+  <attackers id="_4f7e9a92f7e34aa88b8dbf6ff7591828" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_dd96dbae25f14abc901fe8152eda0283"/>
+  </attackers>
+  <attackers id="_787db1b83e0a41d7aff64b9add0f9f92" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_539dc73ebec94d999fd318d7145bdecb"/>
+  </attackers>
+  <attackers id="_7b68c761f4bc4d86b3fb4f471bf8975d" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_9a43c59ccfc64ab19fd89e965fc91e2f"/>
+  </attackers>
+  <attackers id="_033717b776334ce8a2fb9bab2f0d031b" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_456db38b939a4d598f05c543e489eceb"/>
+  </attackers>
+  <attackers id="_6c8586493ad34b09bb2958fa1e3c0126" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_3fcfe6d1eb254107b4cf47f78fae9c5f"/>
+  </attackers>
+  <attackers id="_83bf4ff18fc84db69020a86cd9453bb3" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_80a5dd7b9cce4ade984d99c846b689a7"/>
+  </attackers>
+  <attackers id="_718631f221a24eb3b11c2f90e8b01a95" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_1bfa4b03eb1b4c7f92fab082c7533561"/>
+  </attackers>
+  <attackers id="_ffd5e3e911c042458f73c78a7824f831" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_84aae907c0ea458994bc4925272132a4"/>
+  </attackers>
+  <attackers id="_2aac9b0c2ba8492cb5e9b8e09574aa6e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8cb7b9f99703430785981ca4a14702bc"/>
+  </attackers>
+  <attackers id="_46b95b252b0b4e2e82a01d8a6af03ebc" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_363ef654237e47f29847e89b93648312"/>
+  </attackers>
+  <attackers id="_9d8da9c4211b48db825f74601a8a4979" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_cb26765b979e478d9c30434f51639932"/>
+  </attackers>
+  <attackers id="_0c59889c7da647eca59f79cd1719046a" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_9862c9e01d424c1e9b6f4256deeb9248"/>
+  </attackers>
+  <attackers id="_cdf171dd32794568ade14c15898a6101" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_0e038038519b45899befe6b0ab153019"/>
+  </attackers>
+  <attackers id="_bcb17baabb304bd4a6b7a7a2a4d995ec" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_00d2cab73c56433a9e73e3926c3faf4a"/>
+  </attackers>
+  <attackers id="_a305c7d73fe74900915424beb547b50e" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_114897ee45e84b1ab7b203d8a7866946"/>
+  </attackers>
+  <attackers id="_b4d6fec78c9d4ecf9c9c47a5c1a995ec" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_482a4ffdfe254861846a77c3ca2c9c9b"/>
+  </attackers>
+  <attackers id="_8ee4133248764a5c93ec52fe61404072" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_610dd19ca9f441d087460c30f7b537ea"/>
+  </attackers>
+  <attackers id="_293fce1996694b6abd72d8a8d5c22019" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_47cbf253c1614908900a3afe60a8bc34"/>
+  </attackers>
+  <attackers id="_b1a36dace8e347a3a86cde10527e3419" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_cac498a814de4c4fb1cda924ba8f6ab3"/>
+  </attackers>
+  <attackers id="_a80ff91f507640e48a0c5475f3261b33" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_e81c87e878e24eda9c16b80ec964eb62"/>
+  </attackers>
+  <attackers id="_4040f48b8c104fa08eba3a723fa59ade" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_00c31d303e43473cb22321187ac18189"/>
+  </attackers>
+  <attackers id="_496955efc6464f838ef9cac4c5685719" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_0ed0262a5acf4dad8ac3e92aa0e056f0"/>
+  </attackers>
+  <attackers id="_3f0a2498edff4c5aaf48dd04649c3337" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_3abbac4b504e4b6988bb75dd9c5c94d8"/>
+  </attackers>
+  <attackers id="_1657dbef21e5499593747d52aaa886b9" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8f98b6647a83410e99bcfeee6277aa10"/>
+  </attackers>
+  <attackers id="_3e9d8934e5e142a9ba1efcf8a1b7d6ca" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_a81033a281064deaa98ae8ff57d8957f"/>
+  </attackers>
+  <attackers id="_98309e4350eb4be1916f1ca317f98876" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_d004bd53ceaf4eb49db6708c7f3dae82"/>
+  </attackers>
+  <attackers id="_71dbad1763d84f2db989c4632c93389b" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_e6e12c9964c64d5e9025cd59c56c04a7"/>
+  </attackers>
+  <attackers id="_eac437d7ab814edc80dce67e0bdb9f91" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_3ee5062d517143b9b364971e6da4815e"/>
+  </attackers>
+  <attackers id="_24d13ed1576f452f9607aca5d2e0a897" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_6c6da8d929b54793a401b9ab2b62988a"/>
+  </attackers>
+  <attackers id="_c08870f50b6d48b49e532b4826b9a6d8" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_d8cd79240ba04aaba48a32807a2707b3"/>
+  </attackers>
+  <attackers id="_50b4c4da75b74c1e8d132f5920c8c6bc" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_49bee4b7416043989ca4757377ff8697"/>
+  </attackers>
+  <attackers id="_352b4a41540c424782b65c4904624ab1" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f78f5f5450084aaf993faaaeb36f61ba"/>
+  </attackers>
+  <attackers id="_f0df1e6a19ce413288b0d3147e996a36" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_9c0c2242292d49048ab5fb42cd6405e3"/>
+  </attackers>
+  <attackers id="_da985d3175484863911f67821f78b089" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_b5bec504d07a48c1bfb179dd8283f9a3"/>
+  </attackers>
+  <attackers id="_616ea90288284292841c31ba9cca842d" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_8eb18eb0bcc347bd9f01545af623225f"/>
+  </attackers>
+  <attackers id="_e489b233a5f14d358e8bcb7474b6d4af" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_5905ceef22ca4e9c9ba6d98bd86d85ef"/>
+  </attackers>
+  <attackers id="_ff0eba778470438d89904a1a9cf7f101" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_54dd13169dab45148e1a703f5857a467"/>
+  </attackers>
+  <attackers id="_29eaa4934b104346a10732da39f4b948" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_2da09aafc1d7490b991ab73527314231"/>
+  </attackers>
+  <attackers id="_9bbd2bdda2fa43b8b7d21a8fdc020cf5" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_7c44bda886834022a586abee1ff9cf61"/>
+  </attackers>
+  <attackers id="_b2fd49a584d04c81b6ecd9498f83cd8f" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_0aa97067471347fe97fc2dbd39c386e0"/>
+  </attackers>
+  <attackers id="_252be082a0ba4d328d03a5539cf4ca84" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_9f7b12ecb11e47e6844c804673778e2e"/>
+  </attackers>
+  <attackers id="_879608b7463d45efa7a92736dfc66893" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_f0bf23729dac4373a2b0fefd89a99e32"/>
+  </attackers>
+  <attackers id="_b7f3c23acb3b4d9888b071e7a7e6e10d" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_351e694c31b9404687e8f0ba9cb5c09b"/>
+  </attackers>
+  <attackers id="_dee2276a6421470c8e04479c5712be17" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_cb1b74e1bbb748ebaf559991b6be9006"/>
+  </attackers>
+  <attackers id="_a97973a64dee4e5cb8f1bd81d83e324f" powerShare="0.7873946556342435">
+    <linkedNodeSystem href="Net.nodeallocation#_dd4b9a26119445d68a84ed38cccb4faf"/>
   </attackers>
   <blockchainSystem href="Net.blockchainsystem#_a9e37b6f541b4527ade7f985845f49f0"/>
 </attackmodel:AttackScenario>
