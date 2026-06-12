@@ -21,7 +21,7 @@ java -Xmx310G \
      -XX:HeapDumpPath=heapdump_${SLURM_JOB_ID}.hprof \
      -jar atosim.jar \
      simulator/org.palladiosimulator.blockchainsystems.atosim/optimized_deterministic_lhs_configurations.csv \
-     simulator/org.palladiosimulator.blockchainsystems.atosim/testmodels \
+     sampling/generated_models \
      simulator/org.palladiosimulator.blockchainsystems.atosim/testmodels/configuration.json \
      --output-dir results_new/selfish
 
