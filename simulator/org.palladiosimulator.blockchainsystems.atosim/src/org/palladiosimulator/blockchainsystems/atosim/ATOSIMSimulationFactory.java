@@ -172,8 +172,8 @@ public class ATOSIMSimulationFactory implements Simulation {
             attackerNodeIds = Collections.emptySet();
             attackerHashPower = Double.parseDouble(configuration.getOrDefault("attacker_hash_power", "0.0"));
             gamma = Double.parseDouble(configuration.getOrDefault("tie_breaking_parameter", "0.0"));
-            deltaA = Long.parseLong(configuration.getOrDefault("transaction_delay", "0"));
-            deltaB = Long.parseLong(configuration.getOrDefault("transaction_acceleration", "0"));
+            deltaA = 0L;
+            deltaB = 0L;
         }
 
         boolean combinedAttackEnabled = switch (attackType) {

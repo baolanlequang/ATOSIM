@@ -197,8 +197,7 @@ public class ATOSIMSimulator {
                 "max_block_size",
                 "attacker_hash_power",
                 "tie_breaking_parameter",
-                "number_of_attackers",
-                "attacker_hash_power_realized"
+                "number_of_attackers"
         );
 
         for (String key : required) {
