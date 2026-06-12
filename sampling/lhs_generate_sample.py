@@ -21,7 +21,7 @@ param_ranges = {
     "propagation_delay":        (6_500, 40_000),
     "block_creation_interval":  (60_000, 1_200_000),
     "max_block_size":           (0.25,  8.0),
-    "attacker_hash_power":      (0.2,   0.9),
+    "attacker_hash_power":      (0.2,   0.5),
     "tie_breaking_parameter":   (0.0,   1.0),
 }
 
