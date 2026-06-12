@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=48
 #SBATCH --mem=350gb
 #SBATCH --time=72:00:00
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=baolan2005@gmail.com
 
 # Targets the 80-node standard partition instead of the congested highmem queue.
