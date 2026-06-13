@@ -6,14 +6,14 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
-#SBATCH --mem=600gb
+#SBATCH --mem-per-cpu=12090mb
 #SBATCH --time=72:00:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=baolan2005@gmail.com
 
 # Targets the highmem partition (~2.3 TB/node) since the full 471-config run
 # OOM'd at ~382 GB on a 390 GB standard node — needs more headroom.
-# Capped at --mem=350gb to fit inside a single 384 GB Standard node safely.
+# Capped at --mem-per-cpu=12090mb to fit inside a single 600 GB Standard node safely.
 
 java -Xmx550G \
      -XX:+UseG1GC \

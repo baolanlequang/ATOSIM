@@ -5,17 +5,16 @@ import org.palladiosimulator.blockchainsystems.core.common.abstractions.EventCoo
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.EventDispatchable;
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.SystemClockControl;
 
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 public class EventCoordinatorImpl implements EventCoordinator {
 
     private final SystemClockControl _clock;
     private final TerminationCondition _terminationCondition;
     private final TreeMap<Long, EffectsTimeSlice> _eventTimeSlices = new TreeMap<>();
-    private final HashMap<EventDispatchable, TreeSet<Event>> _eventsPerOrigin = new HashMap<>();
+    private final HashMap<EventDispatchable, LinkedHashSet<Event>> _eventsPerOrigin = new HashMap<>();
 
     public EventCoordinatorImpl(SystemClockControl clock, TerminationCondition terminationCondition) {
         _clock = clock;
@@ -49,7 +48,7 @@ public class EventCoordinatorImpl implements EventCoordinator {
         EffectsTimeSlice eventTimeSlice = _eventTimeSlices.get(timestamp);
         if (eventTimeSlice != null) {
             for (Event event : eventTimeSlice.getEvents()) {
-                TreeSet<Event> events = _eventsPerOrigin.get(event.getOrigin());
+                LinkedHashSet<Event> events = _eventsPerOrigin.get(event.getOrigin());
                 if (events != null) events.remove(event);
             }
             _eventTimeSlices.remove(_clock.getCurrentTime());
@@ -87,14 +86,13 @@ public class EventCoordinatorImpl implements EventCoordinator {
                 eventOccurrenceTime, EffectsTimeSlice::new);
         timeSlice.addEvent(event);
 
-        _eventsPerOrigin.computeIfAbsent(event.getOrigin(),
-                k -> new TreeSet<>(Comparator.comparingLong(Event::getOccurrenceTime))
-        ).add(event);
+        _eventsPerOrigin.computeIfAbsent(event.getOrigin(), k -> new LinkedHashSet<>())
+                .add(event);
     }
 
     @Override
     public void cancelEventsFor(EventDispatchable eventOrigin) {
-        TreeSet<Event> events = _eventsPerOrigin.get(eventOrigin);
+        LinkedHashSet<Event> events = _eventsPerOrigin.get(eventOrigin);
         if (events != null && !events.isEmpty()) {
             for (Event event : events) {
                 if (event.getOccurrenceTime() <= _clock.getCurrentTime()) continue;
