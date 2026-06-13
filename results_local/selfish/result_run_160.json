@@ -1,0 +1,261 @@
+{
+  "runId": 160,
+  "config_id": "160",
+  "inputParameters": {
+    "simulationType": "Monte-Carlo",
+    "maxAllowedBlockchainLength": "25",
+    "numberOfMonteCarloRounds": "1",
+    "blockchainSystemModelFilePath": "sampling/generated_models/atomsim-160/Net.blockchainsystem",
+    "failureThroughputThreshold": "1.0",
+    "shannonEntropyK": "1.0",
+    "nakamotoCoefficientThreshold": "50.0",
+    "reliabilityObservationTimespan": "24.0",
+    "config_id": "160",
+    "id": "160",
+    "validator_count": "853",
+    "node_degree": "6",
+    "propagation_delay": "26651",
+    "block_creation_interval": "550721",
+    "max_block_size": "4747963",
+    "attacker_hash_power": "0.40994451524971043",
+    "tie_breaking_parameter": "0.5686914116227983"
+  },
+  "simulationResult": {
+    "simulationParameters": {
+      "maxAllowedBlockchainLength": 25,
+      "numberOfMonteCarloRounds": 1,
+      "blockchainSystemModelFilePath": "sampling/generated_models/atomsim-160/Net.blockchainsystem"
+    },
+    "threesimSimulationParameters": {
+      "failureThroughputThreshold": 1.0,
+      "shannonEntropyK": 1.0,
+      "nakamotoCoefficientThreshold": 50.0,
+      "reliabilityObservationTimespan": 24.0,
+      "attackType": "SELFISH_MINING",
+      "attackerHashPower": 0.40994451524971043,
+      "gamma": 0.0,
+      "deltaA": 0,
+      "deltaB": 0,
+      "confirmationDepth": 6,
+      "blockInterval": 550721.0,
+      "propagationDelay": 26651.0,
+      "nodeDegree": 6,
+      "maxBlockSize": 4747963,
+      "networkBandwidth": 100.0
+    },
+    "generalResults": [
+      {
+        "name": "GeographicalDiversity",
+        "value": 0.7491207502930833,
+        "unit": "%"
+      },
+      {
+        "name": "NakamotoCoefficient",
+        "value": 88,
+        "unit": "validating nodes"
+      }
+    ],
+    "simulationRoundResults": [
+      [
+        {
+          "name": "AttackSuccessTime",
+          "value": -1.0,
+          "unit": "ms"
+        },
+        {
+          "name": "Attacker Revenue Share",
+          "value": 72.44897959183673,
+          "unit": "%"
+        },
+        {
+          "name": "AvailabilityScalability",
+          "value": 0.0,
+          "unit": "%"
+        },
+        {
+          "name": "AvailabilitySecurity",
+          "value": 0.8588431027800337,
+          "unit": "%"
+        },
+        {
+          "name": "Consistency",
+          "value": 2.35236416E8,
+          "unit": "ms"
+        },
+        {
+          "name": "DoubleSpendSuccessProbability",
+          "value": 0.5546380886429192
+        },
+        {
+          "name": "FaultTolerance",
+          "value": {
+            "throughputDelta": {
+              "value": 83874.68752405082,
+              "unit": "transactions/min"
+            },
+            "confirmationLatencyDelta": {
+              "value": 1763596.242753625,
+              "unit": "ms"
+            }
+          }
+        },
+        {
+          "name": "Finney Attack Success",
+          "value": 0
+        },
+        {
+          "name": "ForkProbability",
+          "value": 0.02815068354936756
+        },
+        {
+          "name": "GiniCoefficient",
+          "value": 0.0
+        },
+        {
+          "name": "HerfindahlHirschmanIndex",
+          "value": 0.0
+        },
+        {
+          "name": "Race Attack Success",
+          "value": 0
+        },
+        {
+          "name": "Reliability",
+          "value": 0.14859737820503016,
+          "unit": "%"
+        },
+        {
+          "name": "ShannonEntropy",
+          "value": 6.474279031134098,
+          "unit": "bits"
+        },
+        {
+          "name": "StaleBlockRate",
+          "value": 0.0,
+          "unit": "ratio"
+        },
+        {
+          "name": "TransactionThroughput",
+          "value": 0.0,
+          "unit": "transactions/min"
+        }
+      ]
+    ],
+    "averageSimulationRoundResult": [
+      {
+        "name": "HerfindahlHirschmanIndex",
+        "average": 0.0,
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "AttackSuccessTime",
+        "average": -1.0,
+        "unit": "ms",
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "Consistency",
+        "average": 2.35236416E8,
+        "unit": "ms",
+        "standardDeviation": 0.0,
+        "coefficientOfVariation": 0.0
+      },
+      {
+        "name": "ShannonEntropy",
+        "average": 6.474279031134098,
+        "unit": "bits",
+        "standardDeviation": 0.0,
+        "coefficientOfVariation": 0.0
+      },
+      {
+        "name": "FaultTolerance",
+        "average": {
+          "throughputDelta": {
+            "name": "throughputDelta",
+            "average": 83874.68752405082,
+            "unit": "transactions/min",
+            "standardDeviation": 0.0,
+            "coefficientOfVariation": 0.0
+          },
+          "confirmationLatencyDelta": {
+            "name": "confirmationLatencyDelta",
+            "average": 1763596.242753625,
+            "unit": "ms",
+            "standardDeviation": 0.0,
+            "coefficientOfVariation": 0.0
+          }
+        }
+      },
+      {
+        "name": "DoubleSpendSuccessProbability",
+        "average": 0.5546380886429192,
+        "standardDeviation": 0.0,
+        "coefficientOfVariation": 0.0
+      },
+      {
+        "name": "StaleBlockRate",
+        "average": 0.0,
+        "unit": "ratio",
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "AvailabilityScalability",
+        "average": 0.0,
+        "unit": "%",
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "GiniCoefficient",
+        "average": 0.0,
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "AvailabilitySecurity",
+        "average": 0.8588431027800337,
+        "unit": "%",
+        "standardDeviation": 0.0,
+        "coefficientOfVariation": 0.0
+      },
+      {
+        "name": "ForkProbability",
+        "average": 0.02815068354936756,
+        "standardDeviation": 0.0,
+        "coefficientOfVariation": 0.0
+      },
+      {
+        "name": "TransactionThroughput",
+        "average": 0.0,
+        "unit": "transactions/min",
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "Finney Attack Success",
+        "average": 0.0,
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "Attacker Revenue Share",
+        "average": 72.44897959183673,
+        "unit": "%",
+        "standardDeviation": 0.0,
+        "coefficientOfVariation": 0.0
+      },
+      {
+        "name": "Race Attack Success",
+        "average": 0.0,
+        "standardDeviation": 0.0
+      },
+      {
+        "name": "Reliability",
+        "average": 0.14859737820503016,
+        "unit": "%",
+        "standardDeviation": 0.0,
+        "coefficientOfVariation": 0.0
+      }
+    ]
+  },
+  "startSimulationTime": 561591628334291,
+  "stopSimulationTime": 561650554195458,
+  "simulationTime": 58925861167,
+  "memoryUsed": 3106
+}

@@ -6,7 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
-#SBATCH --mem=600gb
+#SBATCH --mem-per-cpu=12090mb
 #SBATCH --time=72:00:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=baolan2005@gmail.com
