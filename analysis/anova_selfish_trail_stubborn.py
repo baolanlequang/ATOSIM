@@ -1,7 +1,7 @@
 """
 F-ANOVA Pipeline: Selfish + Trail Stubborn Mining Simulation
 ============================================
-Biến phụ thuộc : p_success = mean(DoubleSpendSuccessProbability) per run
+Biến phụ thuộc : p_success = (rounds attacker won) / (rounds system won) per run
 Independent    : 7 simulation parameters
 Pipeline       : load → transform (logit) → bin → ANOVA → post-hoc (Tukey)
 """
@@ -49,17 +49,19 @@ for fpath in files:
         d = json.load(f)
     config_id = int(d["inputParameters"]["config_id"])
     rounds = d["simulationResult"]["simulationRoundResults"]
-    dsps = [
-        next((x["value"] for x in r if x["name"] == "DoubleSpendSuccessProbability"), None)
-        for r in rounds
-    ]
-    dsps = [v for v in dsps if v is not None]
-    rows.append({"config_id": config_id, "p_success": float(np.mean(dsps))})
+    wins = sum(
+        1 for r in rounds
+        if next((x["value"] for x in r if x["name"] == "Selfish Mining Attack Success"), 0) == 1
+    )
+    losses = len(rounds) - wins
+    p_success = wins / losses if losses > 0 else float("inf")
+    rows.append({"config_id": config_id, "p_success": p_success})
 
 results = pd.DataFrame(rows)
 
 # 1c. Join theo config_id
 df = cfg.merge(results, on="config_id")
+df = df[np.isfinite(df["p_success"])]
 
 print(f"  Loaded: {len(df)} runs")
 print(f"  p_success: mean={df.p_success.mean():.3f}, "

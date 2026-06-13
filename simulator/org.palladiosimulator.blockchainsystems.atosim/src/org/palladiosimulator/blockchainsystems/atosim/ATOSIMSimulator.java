@@ -24,7 +24,7 @@ public class ATOSIMSimulator {
             DEFAULT_TESTMODELS_DIR.resolve("configuration.json");
 
     private static final Path DEFAULT_CSV =
-            Paths.get("optimized_deterministic_lhs_configurations.csv");
+            Paths.get("run_configurations_selfish.csv");
 
     private static final Path DEFAULT_OUTPUT_DIR =
             Paths.get("indiv_json");
@@ -34,12 +34,18 @@ public class ATOSIMSimulator {
         // Parse named flags from any position; remaining args are positional.
         String cliAttackType = null;
         Path outputDir = DEFAULT_OUTPUT_DIR;
+        Integer rowIndex = null;
         List<String> positional = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             if ("--attack-type".equals(args[i]) && i + 1 < args.length) {
                 cliAttackType = args[++i];
             } else if ("--output-dir".equals(args[i]) && i + 1 < args.length) {
                 outputDir = Paths.get(args[++i]);
+            } else if ("--row-index".equals(args[i]) && i + 1 < args.length) {
+                // 0-indexed into the CSV's data rows; runs only that single row.
+                // Lets a Slurm job array fan a CSV out across separate jobs via
+                // --array=0-N-1 and --row-index $SLURM_ARRAY_TASK_ID.
+                rowIndex = Integer.parseInt(args[++i]);
             } else {
                 positional.add(args[i]);
             }
@@ -71,11 +77,24 @@ public class ATOSIMSimulator {
 
         try {
             Map<String, String> baseConfig = loadJsonConfig(baseConfigJson);
-            List<Map<String, String>> rows = loadCsv(csvPath);
+            List<Map<String, String>> allRows = loadCsv(csvPath);
 
-            int runId = 1;
+            List<Map<String, String>> rows;
+            if (rowIndex != null) {
+                if (rowIndex < 0 || rowIndex >= allRows.size()) {
+                    throw new IllegalArgumentException(
+                            "--row-index " + rowIndex + " out of bounds (CSV has " + allRows.size() + " row(s))");
+                }
+                rows = List.of(allRows.get(rowIndex));
+                System.out.println("Row filter: --row-index " + rowIndex + " (of " + allRows.size() + " rows)");
+            } else {
+                rows = allRows;
+            }
+
+            int rowCounter = 0;
 
             for (Map<String, String> row : rows) {
+                rowCounter++;
 
                 // Validate CSV row BEFORE running anything
                 validateCsvColumns(row);
@@ -83,8 +102,8 @@ public class ATOSIMSimulator {
                 // Start from base configuration.json
                 Map<String, String> config = new LinkedHashMap<>(baseConfig);
 
-                // Preserve config_id from CSV if present, else use run counter
-                String configId = row.getOrDefault("config_id", String.valueOf(runId));
+                // Preserve config_id from CSV if present, else use row counter
+                String configId = row.getOrDefault("config_id", String.valueOf(rowCounter));
                 config.put("config_id", configId);
                 config.put("id", configId);
 
@@ -96,17 +115,25 @@ public class ATOSIMSimulator {
                     config.put("attack_type", cliAttackType);
                 }
 
-                Path modelPath = pickModelPath(testmodelsDir, configId);
-                config.put("blockchainSystemModelFilePath", modelPath.toString());
+                Path systemModelPath = pickSystemModelPath(testmodelsDir, row.get("system_config_id"));
+                config.put("blockchainSystemModelFilePath", systemModelPath.toString());
+
+                Path attackModelPath = pickAttackModelPath(
+                        testmodelsDir, row.get("attack_strategy"), row.get("attacker_config_id"));
+                config.put("attackModelFilePath", attackModelPath.toString());
+
+                // runId == config_id (not a sequential counter) so that separate
+                // Slurm array tasks each writing result_run_<runId>.json never collide.
+                int runId = toRunId(configId, rowCounter);
 
                 System.out.println("\n▶ Run " + runId + " | config_id=" + configId);
-                System.out.println("   Using model: " + modelPath.toAbsolutePath());
+                System.out.println("   System model: " + systemModelPath.toAbsolutePath());
+                System.out.println("   Attack model: " + attackModelPath.toAbsolutePath());
                 System.out.println("   Attack type  = " + config.getOrDefault("attack_type", "SELFISH_MINING (default)"));
                 System.out.println("   Monte-Carlo rounds = "
                         + config.getOrDefault("numberOfMonteCarloRounds", "?"));
 
                 simulator.runSimulation(config, runId);
-                runId++;
             }
 
             System.out.println("\n✔ All runs completed");
@@ -190,13 +217,14 @@ public class ATOSIMSimulator {
 
         List<String> required = List.of(
                 "config_id",
+                "system_config_id",
                 "validator_count",
                 "node_degree",
                 "propagation_delay",
                 "block_creation_interval",
                 "max_block_size",
-                "attacker_hash_power",
-                "tie_breaking_parameter"
+                "attacker_config_id",
+                "attack_strategy"
         );
 
         for (String key : required) {
@@ -208,16 +236,52 @@ public class ATOSIMSimulator {
         }
     }
 
-    private static Path pickModelPath(Path testmodelsDir, String configId) {
+    private static int toRunId(String configId, int fallback) {
+        try {
+            return Integer.parseInt(configId.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    // ----------------------------------------------------
+    // Two-stage model resolution
+    // ----------------------------------------------------
+    // generate_models_two_stage.py lays models out as:
+    //   <testmodelsDir>/system_models/sys-<system_config_id>/Net.blockchainsystem (+ siblings)
+    //   <testmodelsDir>/attack_models/<attack_strategy>/atk-<attacker_config_id>/Net.attackmodel
+    // The two are combined at load time (see BlockchainSystemModelLoader); attack models
+    // generated against one reference system model's NodeSystem ids are repaired there too,
+    // so any system_config_id may be paired with any attacker_config_id/attack_strategy.
+
+    private static Path pickSystemModelPath(Path testmodelsDir, String systemConfigId) {
         Path modelPath =
                 testmodelsDir
-                        .resolve("atomsim-" + configId)
+                        .resolve("system_models")
+                        .resolve("sys-" + systemConfigId)
                         .resolve("Net.blockchainsystem");
 
         if (!Files.exists(modelPath)) {
             throw new IllegalArgumentException(
-                    "❌ Model not found for config_id=" + configId +
+                    "❌ System model not found for system_config_id=" + systemConfigId +
                     " at " + modelPath.toAbsolutePath());
+        }
+
+        return modelPath;
+    }
+
+    private static Path pickAttackModelPath(Path testmodelsDir, String attackStrategy, String attackerConfigId) {
+        Path modelPath =
+                testmodelsDir
+                        .resolve("attack_models")
+                        .resolve(attackStrategy)
+                        .resolve("atk-" + attackerConfigId)
+                        .resolve("Net.attackmodel");
+
+        if (!Files.exists(modelPath)) {
+            throw new IllegalArgumentException(
+                    "❌ Attack model not found for attack_strategy=" + attackStrategy +
+                    ", attacker_config_id=" + attackerConfigId + " at " + modelPath.toAbsolutePath());
         }
 
         return modelPath;

@@ -42,16 +42,18 @@ for fpath in glob.glob(os.path.join(JSON_FOLDER, "result_run_*.json")):
     if not d:
         continue
     rounds = d["simulationResult"]["simulationRoundResults"]
-    dsps = [
-        next((x["value"] for x in r if x["name"] == "DoubleSpendSuccessProbability"), None)
-        for r in rounds
-    ]
+    wins = sum(
+        1 for r in rounds
+        if next((x["value"] for x in r if x["name"] == "Selfish Mining Attack Success"), 0) == 1
+    )
+    losses = len(rounds) - wins
     rows.append({
         "config_id": int(d["inputParameters"]["config_id"]),
-        "p_success": float(np.mean([v for v in dsps if v is not None])),
+        "p_success": wins / losses if losses > 0 else float("inf"),
     })
 
 df = cfg.merge(pd.DataFrame(rows), on="config_id")
+df = df[np.isfinite(df["p_success"])]
 print(f"Loaded: {len(df)} runs | p_success mean={df.p_success.mean():.3f} "
       f"| zero={(df.p_success==0).sum()} | one={(df.p_success==1).sum()}")
 

@@ -62,6 +62,12 @@ public class ThreesimAverageSimulationRoundResult {
                         (List<FinneyAttackSuccess>) (List<?>) entry.getValue());
                 case RaceAttackSuccess.NAME -> RaceAttackSuccessCalculator.calculateAverage(
                         (List<RaceAttackSuccess>) (List<?>) entry.getValue());
+                case SelfishMiningAttackSuccess.NAME -> SelfishMiningAttackSuccessCalculator.calculateAverage(
+                        (List<SelfishMiningAttackSuccess>) (List<?>) entry.getValue());
+                case AttackerBlockRewards.NAME -> AttackerBlockRewardsCalculator.calculateAverage(
+                        (List<AttackerBlockRewards>) (List<?>) entry.getValue());
+                case TotalBlockRewards.NAME -> TotalBlockRewardsCalculator.calculateAverage(
+                        (List<TotalBlockRewards>) (List<?>) entry.getValue());
                 case ForkProbability.NAME -> ForkProbabilityCalculator.calculateAverage(
                         (List<ForkProbability>) (List<?>) entry.getValue());
                 case DoubleSpendSuccessProbability.NAME -> DoubleSpendSuccessProbabilityCalculator.calculateAverage(

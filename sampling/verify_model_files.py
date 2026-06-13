@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -24,6 +25,14 @@ MODEL_DIRS = [
 ]
 
 
+def sha256sum(path: Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def build_manifest(root: Path) -> dict:
     manifest = {}
     for model_dir in MODEL_DIRS:
@@ -33,7 +42,10 @@ def build_manifest(root: Path) -> dict:
         for path in sorted(base.rglob("*")):
             if path.is_file():
                 rel = path.relative_to(root)
-                manifest[str(rel)] = path.stat().st_size
+                manifest[str(rel)] = {
+                    "size": path.stat().st_size,
+                    "sha256": sha256sum(path),
+                }
     return manifest
 
 
@@ -53,16 +65,21 @@ def cmd_check(args) -> int:
     copy_root = Path(args.copy_root)
     missing = []
     size_mismatch = []
+    checksum_mismatch = []
     checked = 0
 
-    for rel, expected_size in manifest.items():
+    for rel, expected in manifest.items():
         target = copy_root / rel
         if not target.is_file():
             missing.append(rel)
             continue
         actual_size = target.stat().st_size
-        if actual_size != expected_size:
-            size_mismatch.append((rel, expected_size, actual_size))
+        if actual_size != expected["size"]:
+            size_mismatch.append((rel, expected["size"], actual_size))
+            continue
+        actual_sha256 = sha256sum(target)
+        if actual_sha256 != expected["sha256"]:
+            checksum_mismatch.append((rel, expected["sha256"], actual_sha256))
         checked += 1
 
     print(f"Checked {checked}/{len(manifest)} files against {copy_root}")
@@ -74,11 +91,16 @@ def cmd_check(args) -> int:
 
     if size_mismatch:
         print(f"\nSize mismatch ({len(size_mismatch)}):")
-        for rel, expected, actual in size_mismatch:
-            print(f"  {rel}: expected {expected} bytes, found {actual} bytes")
+        for rel, expected_size, actual_size in size_mismatch:
+            print(f"  {rel}: expected {expected_size} bytes, found {actual_size} bytes")
 
-    if not missing and not size_mismatch:
-        print("\nAll files present with matching sizes.")
+    if checksum_mismatch:
+        print(f"\nChecksum mismatch ({len(checksum_mismatch)}):")
+        for rel, expected_sha256, actual_sha256 in checksum_mismatch:
+            print(f"  {rel}: expected {expected_sha256}, found {actual_sha256}")
+
+    if not missing and not size_mismatch and not checksum_mismatch:
+        print("\nAll files present with matching size and checksum.")
         return 0
     return 1
 

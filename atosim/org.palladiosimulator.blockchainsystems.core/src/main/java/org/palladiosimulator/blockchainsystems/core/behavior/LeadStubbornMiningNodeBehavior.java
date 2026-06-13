@@ -13,24 +13,21 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Stronger lead-stubborn mining behavior with explicit private-branch and contest-state tracking.
+ * Lead-stubborn mining, a.k.a. "L-stubborn" (Nayak et al., "Stubborn Mining", Section 3.1).
  *
- * Main idea:
- * - the attacker prefers to preserve a one-block private advantage instead of reacting as aggressively
- *   as the selfish miner in every case
- * - when honest progress arrives and the attacker has exactly one hidden block, the attacker stays stubborn
- *   and keeps mining privately rather than immediately revealing
- * - when the attacker has larger hidden advantage, it reveals only enough to maintain pressure
+ * L-stubborn's entire deviation from selfish mining is a single rule: whenever the public
+ * chain catches up to any hidden lead of 1 or more, reveal exactly ONE block (matching the
+ * public chain's new length) instead of selfish mining's behavior of revealing everything at
+ * lead=2 or nothing at lead&gt;2. This keeps a tied fork alive with whatever hidden material
+ * remains, rather than winning outright or silently conceding ground. Every other transition
+ * (lead=0 adopt; own-mining behavior; the lead=0' win-on-own-block case) is unchanged from
+ * selfish mining.
  *
  * State:
  * - privateChain: attacker-mined blocks that are still hidden / unpublished
- * - inContestState: true when the attacker has already revealed some private branch material and is now
- *   in an active public contest
- * - publishedInCurrentContest: number of attacker blocks already revealed in the current public contest
- *
- * Notes:
- * - It is intentionally conservative about transaction removal:
- *   only remove transactions after INCLUDED or FORKING append outcomes.
+ * - ownTipHash: hash of the attacker's own most recently authored block, published or not
+ * - inContestState: true when the attacker has revealed part of its private branch and is
+ *   currently in a tied public contest
  */
 public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
 
@@ -41,6 +38,14 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
      * Index 0 is the next hidden block that would be published first.
      */
     private final List<Block> privateChain = new ArrayList<>();
+
+    /**
+     * Hash of the attacker's own most recently authored block, published or not.
+     * Kept separate from privateChain because privateChain empties out the moment a
+     * block is published, even though the attacker must keep mining on top of that same
+     * block rather than falling back to an ambiguous public tip.
+     */
+    private String ownTipHash = null;
 
     /**
      * True when the attacker has already revealed part of its private branch and is currently
@@ -82,41 +87,17 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
             return;
         }
 
-        if (inContestState) {
-            handleBlockWhileInContest(block, context);
-            return;
-        }
-
         int hiddenLead = hiddenLead();
 
-        // No hidden advantage left -> behave honestly and reset.
+        // No hidden advantage -> behave honestly and reset.
         if (hiddenLead == 0) {
             adoptPublicBlockAndAbandonPrivateState(block, context);
             return;
         }
 
-        // Lead-stubborn behavior:
-        // with exactly one hidden block, do NOT reveal immediately.
-        // Stay private and keep mining to try to extend the lead.
-        if (hiddenLead == 1) {
-            // Intentionally do nothing here: keep mining privately.
-            return;
-        }
-
-        // With exactly two hidden blocks:
-        // reveal one block to begin/continue controlling the public contest,
-        // but preserve a one-block hidden advantage.
-        if (hiddenLead == 2) {
-            boolean published = publishOneHiddenBlock(context);
-            if (published) {
-                inContestState = true;
-                publishedInCurrentContest = 1;
-            }
-            return;
-        }
-
-        // With more than two hidden blocks:
-        // reveal one block to maintain pressure, but keep the remaining advantage private.
+        // L-stubborn's defining rule: for ANY hidden lead >= 1, reveal exactly one block to
+        // match the public chain's new length and keep the tied contest alive, instead of
+        // selfish mining's reveal-all-at-2 / reveal-nothing-beyond-2 behavior.
         boolean published = publishOneHiddenBlock(context);
         if (published) {
             inContestState = true;
@@ -126,12 +107,15 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
 
     @Override
     public void onBlockMined(Block block, BlockchainSystemNodeContext context) {
-        privateChain.add(block);
+        // Selfish mining's own-mining rule is unchanged by L-stubborn: only the special case of
+        // winning an already-tied race outright (state 0', no remaining hidden material) reveals;
+        // otherwise Alice always keeps mining privately without revealing.
+        boolean wasWinningRace = inContestState && privateChain.isEmpty();
 
-        // If the attacker mines during an active contest, it can strengthen its position.
-        // For lead-stubborn behavior, do not always dump everything immediately;
-        // only publish all if the hidden branch has grown beyond a minimal preserved lead.
-        if (inContestState && hiddenLead() > 1) {
+        privateChain.add(block);
+        ownTipHash = block.getHash();
+
+        if (wasWinningRace) {
             publishAllHiddenBlocks(context);
             clearContestStateOnly();
         }
@@ -154,39 +138,14 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
     @NotNull
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
-        if (!privateChain.isEmpty()) {
-            return privateChain.get(privateChain.size() - 1).getHash();
+        // Always continue mining on top of my own last-authored block, published or not.
+        // Falling back to the generic public-tip lookup here would pick arbitrarily between
+        // my own tip and a tied honest tip during a contest.
+        if (ownTipHash != null) {
+            return ownTipHash;
         }
 
         return honest.onPreviousBlockSelection(context);
-    }
-
-    /**
-     * Contest-state handler.
-     *
-     * Lead-stubborn interpretation:
-     * - if the attacker still has more than one hidden block, reveal one more block and keep contest pressure
-     * - if the attacker has exactly one hidden block left, stay stubborn and keep it private
-     * - if the attacker has no hidden blocks left, the contest is treated as lost locally and public progress is adopted
-     */
-    private void handleBlockWhileInContest(Block block, BlockchainSystemNodeContext context) {
-        int hiddenLead = hiddenLead();
-
-        if (hiddenLead > 1) {
-            boolean published = publishOneHiddenBlock(context);
-            if (published) {
-                publishedInCurrentContest++;
-            }
-            return;
-        }
-
-        if (hiddenLead == 1) {
-            // Preserve a one-block hidden advantage and keep mining privately.
-            // This is the core stubborn behavior.
-            return;
-        }
-
-        adoptPublicBlockAndAbandonPrivateState(block, context);
     }
 
     /**
@@ -253,6 +212,7 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
 
     private void resetPrivateState() {
         privateChain.clear();
+        ownTipHash = null;
         clearContestStateOnly();
     }
 

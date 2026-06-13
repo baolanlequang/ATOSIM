@@ -50,8 +50,10 @@ public class ATOSIMSimulationFactory implements Simulation {
 
         BlockchainSystemModelLoader loader = new BlockchainSystemModelLoader();
 
+        String attackModelFilePath = configuration.getOrDefault("attackModelFilePath", "");
+
         BlockchainSystem designBlockchainSystem =
-                loader.load(simulationParameters.getBlockchainSystemModelFilePath(), configuration);
+                loader.load(simulationParameters.getBlockchainSystemModelFilePath(), attackModelFilePath);
 
         ThreesimSimulationParameters threesimSimulationParameters =
                 getThreesimSimulationParametersFromConfiguration(configuration, loader.getAttackScenario());

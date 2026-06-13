@@ -44,6 +44,7 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     private Long _finneyCandidateMinedTime = null;
     private String _finneyCandidateBlockHash = null;
     private boolean _raceAttackSucceeded = false;
+    private boolean _selfishMiningAttackSucceeded = false;
 
     private final Map<String, Set<String>> _confirmedByPrevHash = new HashMap<>();
     private final Map<String, Set<String>> _staleByPrevHash = new HashMap<>();
@@ -252,8 +253,21 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
         _lastThroughputCheckTimestamp = occurrenceTime;
     }
 
+    private static final Set<AttackType> FORK_MERGE_ATTACK_TYPES = Set.of(
+            AttackType.RACE,
+            AttackType.SELFISH_MINING,
+            AttackType.LEAD_STUBBORN_MINING,
+            AttackType.EQUAL_FORK_STUBBORN_MINING,
+            AttackType.TRAIL_STUBBORN_MINING,
+            AttackType.COMBINED_SELFISH_RACE,
+            AttackType.COMBINED_SELFISH_FINNEY,
+            AttackType.COMBINED_SELFISH_LEAD_STUBBORN,
+            AttackType.COMBINED_SELFISH_TRAIL_STUBBORN);
+
     private void updateRaceOutcomeIfRelevant(Block block, BlockType newType, long occurrenceTime) {
-        if (_raceAttackSucceeded || _simulationParameters.getAttackType() != AttackType.RACE) return;
+        AttackType attackType = _simulationParameters.getAttackType();
+        boolean alreadySucceeded = attackType == AttackType.RACE ? _raceAttackSucceeded : _selfishMiningAttackSucceeded;
+        if (alreadySucceeded || !FORK_MERGE_ATTACK_TYPES.contains(attackType)) return;
         String hash = block.getHash(), prev = block.getPreviousHash();
         boolean attacker = isAttacker(block.getOriginId());
 
@@ -278,7 +292,11 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
         String winningHash = _raceWinningAttackerBlockHash;
         if (winningHash == null) return;
         if (countConfirmedDepthFrom(winningHash) >= _simulationParameters.getConfirmationDepth()) {
-            _raceAttackSucceeded = true;
+            if (attackType == AttackType.RACE) {
+                _raceAttackSucceeded = true;
+            } else {
+                _selfishMiningAttackSucceeded = true;
+            }
             if (_attackSuccessTime == null) _attackSuccessTime = _raceProvisionalSuccessTime != null ? _raceProvisionalSuccessTime : occurrenceTime;
         }
     }
@@ -350,5 +368,6 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     public int getBlockRewardsForNode(String nodeId) { return _blockRewardMonitor.getRewardsForNode(nodeId); }
     public boolean hasFinneyAttackSucceeded() { return _finneyAttackSucceeded; }
     public boolean hasRaceAttackSucceeded() { return _raceAttackSucceeded; }
+    public boolean hasSelfishMiningAttackSucceeded() { return _selfishMiningAttackSucceeded; }
     public Long getAttackSuccessTime() { return _attackSuccessTime; }
 }

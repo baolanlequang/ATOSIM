@@ -13,23 +13,20 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Stronger Equal-Fork Stubborn Mining behavior with explicit contest-state tracking.
+ * Equal-fork stubborn mining, a.k.a. "F-stubborn" (Nayak et al., "Stubborn Mining", Section 3.2).
  *
- * Main idea:
- * - if the attacker has no hidden advantage, behave honestly
- * - if the attacker has hidden blocks and honest progress appears, reveal just enough
- *   to keep parity with the public branch instead of aggressively dumping everything
- * - once in an equal-fork contest, continue releasing one block at a time while hidden
- *   inventory remains, trying to sustain the parity contest
+ * F-stubborn's entire deviation from selfish mining is a single rule: when Alice wins a tied
+ * race (state lead=0', i.e. she has no remaining hidden material and then mines the next block
+ * herself), instead of revealing that block to win outright, she CONCEALS it and keeps mining
+ * on it privately, landing back at a plain hidden lead of 1. Every other transition (lead=0
+ * adopt; lead=1 reveal-one-to-tie; lead=2 reveal-all-to-win; lead&gt;2 reveal-one-to-pressure) is
+ * unchanged from selfish mining.
  *
  * State:
  * - privateChain: attacker-mined blocks that are still hidden / unpublished
- * - inEqualForkContest: true when the attacker has already revealed blocks to maintain
- *   parity with the public branch
- * - publishedInCurrentContest: number of attacker blocks revealed in the current contest
- *
- * Notes:
- * - It intentionally removes transactions only after INCLUDED or FORKING outcomes.
+ * - ownTipHash: hash of the attacker's own most recently authored block, published or not
+ * - inEqualForkContest: true when the attacker has revealed part of its private branch and is
+ *   currently in a tied public contest
  */
 public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
 
@@ -42,12 +39,20 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
     private final List<Block> privateChain = new ArrayList<>();
 
     /**
-     * True when the attacker is currently engaged in an equal-fork public contest.
+     * Hash of the attacker's own most recently authored block, published or not.
+     * Kept separate from privateChain because privateChain empties out the moment a
+     * block is published, even though the attacker must keep mining on top of that same
+     * block rather than falling back to an ambiguous public tip.
+     */
+    private String ownTipHash = null;
+
+    /**
+     * True when the attacker is currently engaged in a tied public contest.
      */
     private boolean inEqualForkContest = false;
 
     /**
-     * Number of attacker blocks already revealed in the current equal-fork contest.
+     * Number of attacker blocks already revealed in the current contest.
      */
     private int publishedInCurrentContest = 0;
 
@@ -92,23 +97,43 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
             return;
         }
 
-        // Equal-fork behavior:
-        // whenever honest progress arrives and we have hidden blocks,
-        // reveal exactly one block to try to match public progress.
+        // lead=1: reveal one block to force a tie (unchanged from selfish mining).
+        if (hiddenLead == 1) {
+            boolean published = publishOneHiddenBlock(context);
+            if (published) {
+                inEqualForkContest = true;
+                publishedInCurrentContest = 1;
+            }
+            return;
+        }
+
+        // lead=2: reveal everything and win outright (unchanged from selfish mining).
+        if (hiddenLead == 2) {
+            publishAllHiddenBlocks(context);
+            clearContestStateOnly();
+            return;
+        }
+
+        // lead>2: reveal one block to keep pressure while preserving the rest (unchanged).
         boolean published = publishOneHiddenBlock(context);
         if (published) {
-            inEqualForkContest = true;
-            publishedInCurrentContest = 1;
+            clearContestStateOnly();
         }
     }
 
     @Override
     public void onBlockMined(Block block, BlockchainSystemNodeContext context) {
-        privateChain.add(block);
+        // F-stubborn's defining rule: winning an already-tied race outright (state 0', no
+        // remaining hidden material) is NOT revealed. Conceal the new block and keep mining
+        // on it privately instead, landing at a plain hidden lead of 1.
+        boolean wasWinningRace = inEqualForkContest && privateChain.isEmpty();
 
-        // In equal-fork stubborn mining, mining during an active contest does not immediately
-        // imply dumping the whole hidden branch. The attacker prefers to keep controlled parity.
-        // So we do not auto-publish-all here.
+        privateChain.add(block);
+        ownTipHash = block.getHash();
+
+        if (wasWinningRace) {
+            clearContestStateOnly();
+        }
     }
 
     @Override
@@ -128,25 +153,24 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
     @NotNull
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
-        if (!privateChain.isEmpty()) {
-            return privateChain.get(privateChain.size() - 1).getHash();
+        // Always continue mining on top of my own last-authored block, published or not.
+        // Falling back to the generic public-tip lookup here would pick arbitrarily between
+        // my own tip and a tied honest tip during a contest.
+        if (ownTipHash != null) {
+            return ownTipHash;
         }
 
         return honest.onPreviousBlockSelection(context);
     }
 
     /**
-     * In an equal-fork contest, keep revealing one block at a time while hidden inventory exists,
-     * attempting to preserve parity with the public branch.
-     *
-     * If no hidden blocks remain, the contest is treated as lost locally and the public block is adopted.
+     * Contest-state handler (unchanged from selfish mining's tie handling): reveal everything
+     * and win once any hidden material remains; otherwise the contest is lost, adopt.
      */
     private void handleBlockWhileInEqualForkContest(Block block, BlockchainSystemNodeContext context) {
         if (hiddenLead() > 0) {
-            boolean published = publishOneHiddenBlock(context);
-            if (published) {
-                publishedInCurrentContest++;
-            }
+            publishAllHiddenBlocks(context);
+            clearContestStateOnly();
             return;
         }
 
@@ -192,6 +216,20 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
         return false;
     }
 
+    /**
+     * Publish all remaining hidden attacker blocks in order.
+     */
+    private void publishAllHiddenBlocks(BlockchainSystemNodeContext context) {
+        while (!privateChain.isEmpty()) {
+            int sizeBefore = privateChain.size();
+            boolean published = publishOneHiddenBlock(context);
+
+            if (!published || privateChain.size() == sizeBefore) {
+                break;
+            }
+        }
+    }
+
     private int hiddenLead() {
         return privateChain.size();
     }
@@ -203,6 +241,7 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
 
     private void resetPrivateState() {
         privateChain.clear();
+        ownTipHash = null;
         clearContestStateOnly();
     }
 

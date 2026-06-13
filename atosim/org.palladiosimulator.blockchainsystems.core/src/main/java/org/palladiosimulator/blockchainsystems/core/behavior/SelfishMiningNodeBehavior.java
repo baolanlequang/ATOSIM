@@ -46,6 +46,14 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
     private final List<Block> privateChain = new ArrayList<>();
 
     /**
+     * Hash of the attacker's own most recently authored block, published or not.
+     * Kept separate from privateChain because privateChain empties out the moment a
+     * block is published (e.g. to force a tie), even though the pool must keep mining
+     * on top of that same block rather than falling back to an ambiguous public tip.
+     */
+    private String ownTipHash = null;
+
+    /**
      * Number of attacker blocks from the current private branch that were already
      * revealed to the public during the current tie/race episode.
      *
@@ -135,6 +143,7 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
     @Override
     public void onBlockMined(Block block, BlockchainSystemNodeContext context) {
         privateChain.add(block);
+        ownTipHash = block.getHash();
 
         // If the attacker mines during a tie, that usually means the selfish miner can
         // immediately reveal remaining hidden blocks and try to secure the win.
@@ -161,12 +170,14 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
     @NotNull
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
-        // Mine on top of the newest hidden attacker block if any exist.
-        if (!privateChain.isEmpty()) {
-            return privateChain.get(privateChain.size() - 1).getHash();
+        // Always continue mining on top of my own last-authored block, published or not
+        // (Algorithm 1's "mine at the head of the private chain"). Falling back to the
+        // generic public-tip lookup here would pick arbitrarily between my own tip and a
+        // tied honest tip during a race.
+        if (ownTipHash != null) {
+            return ownTipHash;
         }
 
-        // Otherwise mine on the public tip according to the honest behavior.
         return honest.onPreviousBlockSelection(context);
     }
 
@@ -258,6 +269,7 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
 
     private void resetPrivateState() {
         privateChain.clear();
+        ownTipHash = null;
         clearTieStateOnly();
     }
 

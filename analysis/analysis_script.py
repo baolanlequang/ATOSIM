@@ -116,15 +116,27 @@ def load_strategy(folder_name: str) -> pd.DataFrame:
             with open(os.path.join(folder, fname)) as fh:
                 d = json.load(fh)
             p   = d["inputParameters"]
-            avg = d["simulationResult"]["averageSimulationRoundResult"]
-            dsp = next(
-                (float(m["average"]) for m in avg
-                 if m.get("name") == "DoubleSpendSuccessProbability"
-                 and isinstance(m.get("average"), (int, float))),
-                None,
-            )
-            if dsp is None:
-                continue
+            if folder_name in ("selfish", "lead_stubborn", "trail_stubborn"):
+                rounds = d["simulationResult"]["simulationRoundResults"]
+                wins = sum(
+                    1 for r in rounds
+                    if next((x["value"] for x in r if x["name"] == "Selfish Mining Attack Success"), 0) == 1
+                )
+                losses = len(rounds) - wins
+                if losses == 0:
+                    continue
+                success_prob = wins / losses
+            else:
+                avg = d["simulationResult"]["averageSimulationRoundResult"]
+                dsp = next(
+                    (float(m["average"]) for m in avg
+                     if m.get("name") == "DoubleSpendSuccessProbability"
+                     and isinstance(m.get("average"), (int, float))),
+                    None,
+                )
+                if dsp is None:
+                    continue
+                success_prob = dsp
             records.append({
                 "run_id":         int(d["runId"]),
                 "strategy":       folder_name,
@@ -135,8 +147,8 @@ def load_strategy(folder_name: str) -> pd.DataFrame:
                 "max_block_size": float(p["max_block_size"]),
                 "attacker_hp":    float(p["attacker_hash_power"]),
                 "tie_breaking":   float(p["tie_breaking_parameter"]),
-                "success_prob":   dsp,
-                "attack_success": int(dsp > 0),
+                "success_prob":   success_prob,
+                "attack_success": int(success_prob > 0),
             })
         except Exception as e:
             print(f"  [WARN] {fname}: {e}")
