@@ -30,7 +30,8 @@ public class ThreesimMonteCarloSimulation
             long maxAllowedBlockchainLength,
             MonteCarloSimulationParameters simulationParameters,
             ThreesimSimulationParameters threesimSimulationParameters) {
-        super(simulationParameters.getNumberOfMonteCarloRounds(), progressMonitor);
+        super(simulationParameters.getNumberOfMonteCarloRounds(),
+                simulationParameters.getMonteCarloParallelism(), progressMonitor);
         _blockchainSystemFactory = blockchainSystemFactory;
         _logOutputProvider = logOutputProvider;
         _maxAllowedBlockchainLength = maxAllowedBlockchainLength;
