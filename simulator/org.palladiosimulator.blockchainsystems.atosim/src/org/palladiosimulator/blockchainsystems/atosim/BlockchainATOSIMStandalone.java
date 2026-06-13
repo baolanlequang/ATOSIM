@@ -169,6 +169,11 @@ public class BlockchainATOSIMStandalone {
                         configuration.getOrDefault(
                                 "numberOfMonteCarloRounds", "1"));
 
+        int monteCarloParallelism =
+                Integer.parseInt(
+                        configuration.getOrDefault(
+                                "monteCarloParallelism", "0"));
+
         String blockchainSystemModelFilePath =
                 configuration.getOrDefault(
                         "blockchainSystemModelFilePath", "");
@@ -177,6 +182,7 @@ public class BlockchainATOSIMStandalone {
                 ? new MonteCarloSimulationParameters(
                 maxAllowedBlockchainLength,
                 numberOfMonteCarloRounds,
+                monteCarloParallelism,
                 blockchainSystemModelFilePath)
                 : new SingleSimulationParameters(
                 maxAllowedBlockchainLength,

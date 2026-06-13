@@ -10,10 +10,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class MonteCarloSimulation<R extends SimulationRoundResult> implements Simulation {
 
     protected final int numberOfRounds;
+    protected final int parallelism;
     protected final MonteCarloSimulationProgressMonitor progressMonitor;
 
-    public MonteCarloSimulation(int numberOfRounds, MonteCarloSimulationProgressMonitor progressMonitor) {
+    /**
+     * @param parallelism Maximum number of rounds executed concurrently. {@code 0} or less
+     *                     falls back to {@link ForkJoinPool#commonPool()}.
+     */
+    public MonteCarloSimulation(int numberOfRounds, int parallelism, MonteCarloSimulationProgressMonitor progressMonitor) {
         this.numberOfRounds = numberOfRounds;
+        this.parallelism = parallelism;
         this.progressMonitor = progressMonitor;
     }
 
@@ -22,7 +28,7 @@ public abstract class MonteCarloSimulation<R extends SimulationRoundResult> impl
         progressMonitor.onSimulationStarted(numberOfRounds);
 
         AtomicInteger roundCounter = new AtomicInteger(0);
-        ForkJoinPool executor = ForkJoinPool.commonPool();
+        ForkJoinPool executor = parallelism > 0 ? new ForkJoinPool(parallelism) : ForkJoinPool.commonPool();
         List<Callable<R>> tasks = new ArrayList<>();
         for (int i = 0; i < numberOfRounds; i++) {
             tasks.add(() -> {
@@ -42,6 +48,10 @@ public abstract class MonteCarloSimulation<R extends SimulationRoundResult> impl
             }
         } catch (Exception e) {
             throw new RuntimeException("Monte Carlo simulation failed", e);
+        } finally {
+            if (parallelism > 0) {
+                executor.shutdown();
+            }
         }
 
         progressMonitor.onSimulationFinished();
