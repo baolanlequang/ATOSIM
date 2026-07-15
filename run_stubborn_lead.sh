@@ -3,7 +3,7 @@
 #SBATCH --output=logs/atosim-stubborn-lead-%A_%a.out
 #SBATCH --error=logs/atosim-stubborn-lead-%A_%a.err
 #SBATCH --partition=cpu
-#SBATCH --array=0-999
+#SBATCH --array=0-499
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -20,7 +20,7 @@
 # so single-row array tasks were finishing in well under a minute - a highly
 # inefficient number of tiny scheduled units on bwUniCluster 3.0.
 #
-# Batching ROWS_PER_TASK=500 rows/task -> 500000/500=1000 array tasks total
+# Batching ROWS_PER_TASK=500 rows/task -> 250000/500=500 array tasks total
 # for the full CSV, each running ~2.6h on average (500 * ~19s), comfortably
 # inside --time=12:00:00 with ample headroom for slower rows.
 #
@@ -33,11 +33,11 @@ ROWS_PER_TASK=${ROWS_PER_TASK:-500}
 ROW_START=$(( ${ROW_OFFSET:-0} + SLURM_ARRAY_TASK_ID * ROWS_PER_TASK ))
 ROW_END=$(( ROW_START + ROWS_PER_TASK - 1 ))
 
-# The #SBATCH --array=0-999 above is the default for direct `sbatch
-# run_stubborn_lead.sh` runs, covering the full 500,000-row CSV at
+# The #SBATCH --array=0-499 above is the default for direct `sbatch
+# run_stubborn_lead.sh` runs, covering the full 250,000-row CSV at
 # ROWS_PER_TASK=500. To use a different ROWS_PER_TASK, or to stay under a
-# cluster MaxArraySize below 1000, submit via:
-#   ./submit_chunked_array.sh run_stubborn_lead.sh 500000 [chunk_size] [sleep_between] [start_offset] [rows_per_task]
+# cluster MaxArraySize below 500, submit via:
+#   ./submit_chunked_array.sh run_stubborn_lead.sh 250000 [chunk_size] [sleep_between] [start_offset] [rows_per_task]
 # Rows past the end of the CSV are skipped by ATOSIMSimulator itself (it logs
 # an out-of-bounds error for that --row-index and moves on), so a
 # ROWS_PER_TASK that doesn't evenly divide the remaining rows in the last

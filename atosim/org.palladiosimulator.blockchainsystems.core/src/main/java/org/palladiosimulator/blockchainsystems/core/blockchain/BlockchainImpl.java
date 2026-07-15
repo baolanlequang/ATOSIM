@@ -25,6 +25,7 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
     private final HashSet<BlockchainElement> _longestChainsLastBlocks;
     private final HashMap<String, BlockchainElement> _blockchainElementsMap;
     private long _length;
+    private ChainReorganizedTraceEvent _lastChainReorganization;
 
     public BlockchainImpl(BlockchainElement genesisBlock, int numberOfRequiredSecurityConfirmations) {
         _genesisBlock = genesisBlock;
@@ -92,6 +93,13 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
 
         logBlockAppended(block, pos, prev.getBlock(), BlockType.IncludedBlock);
 
+        if (!stale.isEmpty()) {
+            HashSet<BlockchainElement> replacedBranches = new HashSet<>(stale);
+            replacedBranches.add(prev);
+            BlockchainElement commonAncestor = commonAncestor(replacedBranches);
+            logChainReorganized(el, commonAncestor, stale);
+        }
+
         for (BlockchainElement be : stale) {
             traverseAndChangeTypes(be, BlockchainElementType.Forking, BlockchainElementType.Stale);
         }
@@ -137,10 +145,14 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
     }
 
     private BlockchainElement getForkOrigin() {
-        HashSet<BlockchainElement> elements = new HashSet<>();
-        long min = _longestChainsLastBlocks.stream().mapToLong(BlockchainElement::getPosition).min().orElse(0);
+        return commonAncestor(_longestChainsLastBlocks);
+    }
 
-        for (BlockchainElement be : _longestChainsLastBlocks) {
+    private BlockchainElement commonAncestor(Set<BlockchainElement> tips) {
+        HashSet<BlockchainElement> elements = new HashSet<>();
+        long min = tips.stream().mapToLong(BlockchainElement::getPosition).min().orElse(0);
+
+        for (BlockchainElement be : tips) {
             BlockchainElement cur = be;
             while (cur != null && cur.getPosition() > min) cur = cur.getPreviousBlockchainElement();
             if (cur != null) elements.add(cur);
@@ -184,6 +196,30 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
                 getSimulationContext().getSystemClock().getCurrentTime(), block, pos, prev, type));
     }
 
+    private void logChainReorganized(BlockchainElement newTip, BlockchainElement commonAncestor, Set<BlockchainElement> oldTips) {
+        List<ChainReorganizedTraceEvent.ChainBlock> replacingChainBlocks = new ArrayList<>();
+        BlockchainElement cur = newTip;
+        while (cur != null && cur != commonAncestor) {
+            replacingChainBlocks.add(new ChainReorganizedTraceEvent.ChainBlock(cur.getBlock(), cur.getPosition()));
+            cur = cur.getPreviousBlockchainElement();
+        }
+        Collections.reverse(replacingChainBlocks);
+
+        _lastChainReorganization = new ChainReorganizedTraceEvent(
+                getSimulationContext().getSystemClock().getCurrentTime(),
+                newTip.getBlock(),
+                newTip.getPosition(),
+                commonAncestor.getBlock(),
+                commonAncestor.getPosition(),
+                oldTips.stream()
+                        .map(be -> new ChainReorganizedTraceEvent.OldCanonicalTip(be.getBlock(), be.getPosition()))
+                        .collect(Collectors.toSet()),
+                replacingChainBlocks);
+
+        if (!getTraceEventLogger().isEventTypeEnabled(ChainReorganizedTraceEvent.EVENT_TYPE)) return;
+        getTraceEventLogger().logEvent(_lastChainReorganization);
+    }
+
     @Override
     public Set<Block> getBlocksAtPosition(long position) {
         if (position < INITIAL_BLOCKCHAIN_LENGTH) return Collections.emptySet();
@@ -193,6 +229,9 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
 
     @Override
     public long getLength() { return _length; }
+
+    @Override
+    public ChainReorganizedTraceEvent getLastChainReorganization() { return _lastChainReorganization; }
 
     @Override
     public Set<Block> getBlocks() {

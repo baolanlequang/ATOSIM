@@ -83,7 +83,17 @@ public class BlockchainATOSIMStandalone {
 
         var serializer = new ThreesimSimulationResultSerializer();
 
-        String simulationJson = serializer.serialize(result);
+        boolean writeChainReorganizationsAsCsv = Boolean.parseBoolean(
+                configuration.getOrDefault("writeChainReorganizationsAsCsv", "false"));
+
+        String simulationJson;
+        String chainReorganizationsCsv = null;
+        if (writeChainReorganizationsAsCsv) {
+            simulationJson = serializer.serialize(result, false);
+            chainReorganizationsCsv = serializer.serializeChainReorganizationsCsv(result);
+        } else {
+            simulationJson = serializer.serialize(result);
+        }
 
         var stopTime = System.nanoTime();
 
@@ -102,7 +112,6 @@ public class BlockchainATOSIMStandalone {
         finalResult.put("memoryUsed", memoryUsed);
 
         String jsonResult = new GsonBuilder()
-                .setPrettyPrinting()
                 .create()
                 .toJson(finalResult);
 
@@ -112,6 +121,13 @@ public class BlockchainATOSIMStandalone {
 
             try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
                 writer.write(jsonResult);
+            }
+
+            if (chainReorganizationsCsv != null) {
+                Path chainReorganizationsFile = createChainReorganizationsCsvPath(runId);
+                try (BufferedWriter writer = Files.newBufferedWriter(chainReorganizationsFile)) {
+                    writer.write(chainReorganizationsCsv);
+                }
             }
 
             System.out.println("✔ Result saved: " + outputFile.toAbsolutePath());
@@ -128,6 +144,19 @@ public class BlockchainATOSIMStandalone {
 
     private Path createOutputPath(int runId) {
         return outputDir.resolve("result_run_" + runId + ".json");
+    }
+
+/**
+ * By default, chainReorganizations is embedded directly in result_run_<runId>.json (see
+ * ThreesimJsonSerializer). Only when the writeChainReorganizationsAsCsv config.json flag is set
+ * to "true" is it written as this sibling CSV file instead (see
+ * ThreesimChainReorganizationsCsvSerializer) -- useful at production scale, where the embedded
+ * form dominates JSON file size. result_run_<runId>.json always carries the cheap per-round
+ * chainReorganizationDepths summary either way.
+ */
+
+    private Path createChainReorganizationsCsvPath(int runId) {
+        return outputDir.resolve("result_run_" + runId + ".chainReorganizations.csv");
     }
 
     private boolean initStandalone() {

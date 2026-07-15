@@ -117,6 +117,6 @@ public class ThreesimSimulationRoundResultFactory {
                 new AttackSuccessTimeCalculator(_monitor.getAttackSuccessTime()).calculate(),
 
                 new ForkProbabilityCalculator(lambdaH, _parameters.getPropagationDelay()).calculate()
-        ));
+        ), _monitor.getChainReorganizations());
     }
 }

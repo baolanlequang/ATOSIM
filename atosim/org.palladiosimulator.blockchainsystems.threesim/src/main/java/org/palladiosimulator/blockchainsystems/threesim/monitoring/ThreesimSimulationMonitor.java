@@ -4,6 +4,7 @@ import org.palladiosimulator.blockchainsystems.core.block.abstractions.Block;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.BlockType;
 import org.palladiosimulator.blockchainsystems.core.blockchain.BlockAppendedTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.blockchain.BlockTypeChangedTraceEvent;
+import org.palladiosimulator.blockchainsystems.core.blockchain.ChainReorganizedTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.TraceEvent;
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.TraceEventLogOrigin;
 import org.palladiosimulator.blockchainsystems.core.geography.GeographicalRegions;
@@ -16,6 +17,7 @@ import org.palladiosimulator.blockchainsystems.threesim.behavior.BlockUtils;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.calculators.TransactionThroughputCalculator;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ChainReorganizationOccurrence;
 import org.palladiosimulator.blockchainsystems.threesim.utils.BlockchainSystemFailureLog;
 import org.palladiosimulator.blockchainsystems.threesim.utils.BlocksMap;
 import org.palladiosimulator.blockchainsystems.core.system.BlockchainSystem;
@@ -77,6 +79,8 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
     private final Set<String> _throughputAccountedHashes = new HashSet<>();
     private final Set<String> _rewardAccountedHashes = new HashSet<>();
+
+    private final List<ChainReorganizationOccurrence> _chainReorganizations = new ArrayList<>();
 
     public ThreesimSimulationMonitor(
             LongestChainExceededMaxLengthCondition maxBlockchainLengthCondition,
@@ -189,6 +193,9 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
         } else if (TransactionSubmittedTraceEvent.EVENT_TYPE.equals(event.getEventType())) {
             _numberOfSubmittedTransactions++;
+
+        } else if (ChainReorganizedTraceEvent.EVENT_TYPE.equals(event.getEventType())) {
+            _chainReorganizations.add(new ChainReorganizationOccurrence(logOrigin.getId(), (ChainReorganizedTraceEvent) event));
         }
     }
 
@@ -370,4 +377,5 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     public boolean hasRaceAttackSucceeded() { return _raceAttackSucceeded; }
     public boolean hasSelfishMiningAttackSucceeded() { return _selfishMiningAttackSucceeded; }
     public Long getAttackSuccessTime() { return _attackSuccessTime; }
+    public List<ChainReorganizationOccurrence> getChainReorganizations() { return _chainReorganizations; }
 }

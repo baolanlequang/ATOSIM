@@ -56,13 +56,15 @@ public class ThreesimMonteCarloSimulation
         ThreesimSimulationRoundResult generalResults = new ThreesimSimulationRoundResult(
                 results.get(0).getOutputMetrics().stream()
                         .filter(m -> m instanceof NakamotoCoefficient || m instanceof GeographicalDiversity)
-                        .collect(Collectors.toCollection(OutputMetricsSet::new)));
+                        .collect(Collectors.toCollection(OutputMetricsSet::new)),
+                List.of());
 
         List<ThreesimSimulationRoundResult> roundResults = results.stream()
                 .map(r -> new ThreesimSimulationRoundResult(
                         r.getOutputMetrics().stream()
                                 .filter(m -> !(m instanceof NakamotoCoefficient) && !(m instanceof GeographicalDiversity))
-                                .collect(Collectors.toCollection(OutputMetricsSet::new))))
+                                .collect(Collectors.toCollection(OutputMetricsSet::new)),
+                        r.getChainReorganizations()))
                 .collect(Collectors.toList());
 
         return new ThreesimMonteCarloSimulationResult(

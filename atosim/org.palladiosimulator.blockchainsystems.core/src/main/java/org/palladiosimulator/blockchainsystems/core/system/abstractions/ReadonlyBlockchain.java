@@ -1,6 +1,7 @@
 package org.palladiosimulator.blockchainsystems.core.system.abstractions;
 
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.Block;
+import org.palladiosimulator.blockchainsystems.core.blockchain.ChainReorganizedTraceEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,4 +19,10 @@ public interface ReadonlyBlockchain {
     Set<Block> getSuccessorBlocks(String hash);
     long getLongestSuccessorChainLength(String hash);
     List<ArrayList<Block>> getLongestChains();
+
+    /**
+     * Returns the most recent chain reorganization (the canonical chain being replaced by a
+     * strictly longer competing branch), or {@code null} if none has occurred yet.
+     */
+    ChainReorganizedTraceEvent getLastChainReorganization();
 }

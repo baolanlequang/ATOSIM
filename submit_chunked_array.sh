@@ -1,7 +1,7 @@
 #!/bin/bash
 # Submits a SLURM array job in chunks, since clusters commonly cap a single
 # job's array size (MaxArraySize) well below the number of array tasks needed
-# to cover the 500,000 rows in sampling/run_configurations_*.csv. Run
+# to cover the 250,000 rows in sampling/run_configurations_*.csv. Run
 # `scontrol show config | grep MaxArraySize` to find your cluster's real
 # limit and pass it as CHUNK_SIZE if it differs from the default used here.
 #
@@ -35,10 +35,10 @@
 #   ./submit_chunked_array.sh <job_script> <total_rows> [chunk_size] [sleep_between] [start_offset] [rows_per_task]
 #
 # Examples:
-#   ./submit_chunked_array.sh run_selfish.sh 500000
-#   ./submit_chunked_array.sh run_stubborn_lead.sh 500000 100 2
+#   ./submit_chunked_array.sh run_selfish.sh 250000
+#   ./submit_chunked_array.sh run_stubborn_lead.sh 250000 100 2
 #   # resume from offset 12000 onward, 250 rows/task:
-#   ./submit_chunked_array.sh run_selfish.sh 500000 100 8 12000 250
+#   ./submit_chunked_array.sh run_selfish.sh 250000 100 8 12000 250
 #
 # Ctrl-C (or `kill` if backgrounded) stops it between attempts/chunks - it
 # will not stop itself, since every chunk is expected to eventually succeed.
