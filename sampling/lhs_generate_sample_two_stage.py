@@ -6,7 +6,7 @@ from scipy.stats import qmc
 # 1. Experimental setup
 # -----------------------------
 
-N_SYSTEM_SAMPLES   = 500   # number of core system configurations C_i
+N_SYSTEM_SAMPLES   = 250   # number of core system configurations C_i
 N_PD_VARIANTS      = 10    # propagation_delay variants applied to every core config
 N_ATTACKER_SAMPLES = 100   # number of attacker-capability configurations A_ij per S_i
 N_CANDIDATE_SEEDS  = 1000  # seeds to evaluate; best is picked at runtime

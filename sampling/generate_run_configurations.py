@@ -6,12 +6,12 @@ attacker_configurations.csv).
 
 Pairing scheme
 --------------
-Full Cartesian product: every one of the 5,000 system configs (500 core configs x
+Full Cartesian product: every one of the 2,500 system configs (250 core configs x
 10 propagation_delay variants each) is paired with every one of the 100 attacker
-configs, for 5,000 * 100 = 500,000 rows per strategy.
+configs, for 2,500 * 100 = 250,000 rows per strategy.
 Row order is system-major (all 100 attacker configs for system_config_id=1, then
 all 100 for system_config_id=2, ...), and config_id is the 1-based row number, so
---row-index (0-indexed) maps directly to a SLURM_ARRAY_TASK_ID in --array=0-499999.
+--row-index (0-indexed) maps directly to a SLURM_ARRAY_TASK_ID in --array=0-249999.
 
 Output
 ------
