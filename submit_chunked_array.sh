@@ -74,7 +74,7 @@ while [ "$start" -lt "$TOTAL_ROWS" ]; do
     attempt=1
     while true; do
         echo "Submitting --array=0-${end} (ROW_OFFSET=${start}, ROWS_PER_TASK=${ROWS_PER_TASK}, ~${rows_this_chunk} rows) for ${JOB_SCRIPT} [attempt ${attempt}]"
-        if sbatch --array="0-${end}" --export="ALL,ROW_OFFSET=${start},ROWS_PER_TASK=${ROWS_PER_TASK}" "${JOB_SCRIPT}"; then
+        if ROW_OFFSET="${start}" ROWS_PER_TASK="${ROWS_PER_TASK}" sbatch --array="0-${end}" "${JOB_SCRIPT}"; then
             break
         fi
         backoff=$(( attempt * 10 ))

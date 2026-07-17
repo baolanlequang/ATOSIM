@@ -59,7 +59,7 @@ for (( ROW_INDEX=ROW_START; ROW_INDEX<=ROW_END; ROW_INDEX++ )); do
          -jar atosim-stubborn-trail.jar \
          sampling/run_configurations_trail_stubborn.csv \
          sampling/generated_models \
-         simulator/org.palladiosimulator.blockchainsystems.atosim/testmodels/configuration.json \
+         sampling/configuration.json \
          --row-index ${ROW_INDEX} \
          --output-dir results_new/trail_stubborn
 done

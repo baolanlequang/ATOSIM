@@ -59,7 +59,7 @@ for (( ROW_INDEX=ROW_START; ROW_INDEX<=ROW_END; ROW_INDEX++ )); do
          -jar atosim-stubborn-lead.jar \
          sampling/run_configurations_lead_stubborn.csv \
          sampling/generated_models \
-         simulator/org.palladiosimulator.blockchainsystems.atosim/testmodels/configuration.json \
+         sampling/configuration.json \
          --row-index ${ROW_INDEX} \
          --output-dir results_new/lead_stubborn
 done
