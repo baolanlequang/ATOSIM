@@ -20,6 +20,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -119,15 +120,11 @@ public class BlockchainATOSIMStandalone {
             Path outputFile = createOutputPath(runId);
             Files.createDirectories(outputFile.getParent());
 
-            try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
-                writer.write(jsonResult);
-            }
+            writeAtomically(outputFile, jsonResult);
 
             if (chainReorganizationsCsv != null) {
                 Path chainReorganizationsFile = createChainReorganizationsCsvPath(runId);
-                try (BufferedWriter writer = Files.newBufferedWriter(chainReorganizationsFile)) {
-                    writer.write(chainReorganizationsCsv);
-                }
+                writeAtomically(chainReorganizationsFile, chainReorganizationsCsv);
             }
 
             System.out.println("✔ Result saved: " + outputFile.toAbsolutePath());
@@ -135,6 +132,21 @@ public class BlockchainATOSIMStandalone {
         } catch (IOException e) {
             logger.error("Failed to write simulation result", e);
         }
+    }
+
+/**
+ * Writes content to a temp file in the same directory, flushes and closes it, then
+ * atomically renames it into place. A process kill mid-write (e.g. a SLURM OOM or
+ * time-limit SIGKILL, which bypasses try-with-resources entirely) then leaves at worst a
+ * stray ".tmp" file -- never a truncated result_run_*.json -- since ATOMIC_MOVE is
+ * guaranteed all-or-nothing by the filesystem, unlike writing straight to the final path.
+ */
+    private void writeAtomically(Path targetFile, String content) throws IOException {
+        Path tmpFile = targetFile.resolveSibling(targetFile.getFileName() + ".tmp");
+        try (BufferedWriter writer = Files.newBufferedWriter(tmpFile)) {
+            writer.write(content);
+        }
+        Files.move(tmpFile, targetFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
 /**
