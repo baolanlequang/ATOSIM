@@ -50,16 +50,23 @@ ROW_END=$(( ROW_START + ROWS_PER_TASK - 1 ))
 
 mkdir -p results_new/selfish logs
 
+# Write to local SSD during job to avoid hammering HOME with small I/O ops,
+# then bulk-copy to HOME once at the end of the task.
+TMP_OUT="${TMPDIR}/selfish_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+mkdir -p "${TMP_OUT}"
+
 for (( ROW_INDEX=ROW_START; ROW_INDEX<=ROW_END; ROW_INDEX++ )); do
     java -Xmx48G \
          -XX:+UseG1GC \
          -XX:ParallelGCThreads=8 \
          -XX:+HeapDumpOnOutOfMemoryError \
-         -XX:HeapDumpPath=heapdump_${SLURM_JOB_ID}_row${ROW_INDEX}.hprof \
+         -XX:HeapDumpPath="${TMP_OUT}/heapdump_row${ROW_INDEX}.hprof" \
          -jar atosim.jar \
          sampling/run_configurations_selfish.csv \
          sampling/generated_models \
          sampling/configuration.json \
          --row-index ${ROW_INDEX} \
-         --output-dir results_new/selfish
+         --output-dir "${TMP_OUT}"
 done
+
+cp "${TMP_OUT}"/result_run_*.json results_new/selfish/ 2>/dev/null || true

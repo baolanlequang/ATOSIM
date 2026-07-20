@@ -50,16 +50,21 @@ ROW_END=$(( ROW_START + ROWS_PER_TASK - 1 ))
 
 mkdir -p results_new/lead_stubborn logs
 
+TMP_OUT="${TMPDIR}/lead_stubborn_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+mkdir -p "${TMP_OUT}"
+
 for (( ROW_INDEX=ROW_START; ROW_INDEX<=ROW_END; ROW_INDEX++ )); do
     java -Xmx48G \
          -XX:+UseG1GC \
          -XX:ParallelGCThreads=8 \
          -XX:+HeapDumpOnOutOfMemoryError \
-         -XX:HeapDumpPath=heapdump_${SLURM_JOB_ID}_row${ROW_INDEX}.hprof \
+         -XX:HeapDumpPath="${TMP_OUT}/heapdump_row${ROW_INDEX}.hprof" \
          -jar atosim-stubborn-lead.jar \
          sampling/run_configurations_lead_stubborn.csv \
          sampling/generated_models \
          sampling/configuration.json \
          --row-index ${ROW_INDEX} \
-         --output-dir results_new/lead_stubborn
+         --output-dir "${TMP_OUT}"
 done
+
+cp "${TMP_OUT}"/result_run_*.json results_new/lead_stubborn/ 2>/dev/null || true
