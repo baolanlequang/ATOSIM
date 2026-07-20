@@ -48,10 +48,24 @@ ROW_END=$(( ROW_START + ROWS_PER_TASK - 1 ))
 # Per-user fair-share cap is ~1920 cores (20 nodes) -> up to 240 of these
 # 8-core tasks can run concurrently; the rest queue.
 
-mkdir -p results_new/selfish logs
+# Final output (result_run_*.json across up to 250,000 rows) must NOT land
+# under $HOME - it's on Lustre with a small quota, backed up to tape, and
+# meant for source/config files, not bulk data (this previously hit "Disk
+# quota exceeded" writing results_new/selfish there). bwUniCluster 3.0
+# workspaces give 40 TiB / 20M inodes per user instead - allocate one before
+# submitting this job:
+#   ws_allocate atosim_results 60
+RESULTS_WORKSPACE="${RESULTS_WORKSPACE:-atosim_results}"
+WORKSPACE_PATH="$(ws_find "${RESULTS_WORKSPACE}")"
+if [ -z "${WORKSPACE_PATH}" ]; then
+    echo "ERROR: workspace '${RESULTS_WORKSPACE}' not found. Allocate it first: ws_allocate ${RESULTS_WORKSPACE} <days>" >&2
+    exit 1
+fi
+RESULTS_DIR="${WORKSPACE_PATH}/selfish"
+mkdir -p "${RESULTS_DIR}" logs
 
-# Write to local SSD during job to avoid hammering HOME with small I/O ops,
-# then bulk-copy to HOME once at the end of the task.
+# Write to local SSD during job to avoid hammering the workspace filesystem
+# with small I/O ops, then bulk-copy to the workspace once at the end of the task.
 TMP_OUT="${TMPDIR}/selfish_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 mkdir -p "${TMP_OUT}"
 
@@ -69,4 +83,4 @@ for (( ROW_INDEX=ROW_START; ROW_INDEX<=ROW_END; ROW_INDEX++ )); do
          --output-dir "${TMP_OUT}"
 done
 
-cp "${TMP_OUT}"/result_run_*.json results_new/selfish/ 2>/dev/null || true
+cp "${TMP_OUT}"/result_run_*.json "${RESULTS_DIR}/" 2>/dev/null || true
