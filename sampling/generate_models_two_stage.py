@@ -6,14 +6,14 @@ LHS CSVs (output of lhs_generate_sample_two_stage.py).
 Two-stage design
 ----------------
 Stage 1 — System models (system_configurations.csv, 5,000 rows = 500 core
-configs × 10 propagation_delay variants each). Topology and block params are
+configs × 10 bandwidth variants each). Topology and block params are
 identical within a core_config_id group, so they are generated once and
-reused; only propagation_delay is repatched per system_config_id:
+reused; only bandwidth is repatched per system_config_id:
     block_creation_interval  → Net.blockchainsystem  MeanBlockTime      (per core_config_id)
     max_block_size           → Net.blockchainsystem  MaxBlockSize       (per core_config_id)
     node_degree               → Net.p2pnetwork        Subgraphs.Connectivity  (per core_config_id)
     validator_count           → Net.p2pnetwork + Net.nodeallocation  (NodeTemplates rebuild, per core_config_id)
-    propagation_delay         → Net.linkallocation    Latency        (per system_config_id)
+    bandwidth (Mbit/s)        → Net.linkallocation    Throughput (bps)  (per system_config_id)
 
 Stage 2 — Attack models (attacker_configurations.csv, 100 rows):
   Two attacker parameters are patched per attacker_config_id × 3 strategies:
@@ -25,7 +25,7 @@ Folder layout
   <out>/
     system_models/
       sys-1/ ... sys-5000/         ← 5,000 folders, no Net.attackmodel
-                                      (500 unique topologies × 10 propagation_delay variants)
+                                      (500 unique topologies × 10 bandwidth variants)
     attack_models/
       selfish/
         atk-1/ ... atk-100/        ← 100 folders, Net.attackmodel only
@@ -175,10 +175,16 @@ def patch_topology(target: Path, node_degree: str, validator_count: str) -> None
     p2p_path.write_text(new_p2p, encoding="utf-8")
 
 
-def patch_linkallocation(path: Path, propagation_delay: str) -> None:
+def patch_linkallocation(path: Path, bandwidth_mbps: str) -> None:
+    """Patch Throughput (bps) from a bandwidth value given in Mbit/s.
+
+    Net.linkallocation's Throughput field is bps; P2PLink divides it by 8000
+    to get bytes/ms, so the conversion here must match: Mbit/s * 1_000_000.
+    """
+    bps = int(round(float(bandwidth_mbps) * 1_000_000))
     text = path.read_text(encoding="utf-8")
-    text, n = _replace_attr(text, "Latency", str(int(propagation_delay)))
-    _require(text, "Latency", n, path, expected_min=1)
+    text, n = _replace_attr(text, "Throughput", str(bps))
+    _require(text, "Throughput", n, path, expected_min=1)
     path.write_text(text, encoding="utf-8")
 
 
@@ -309,19 +315,19 @@ def generate_system_model(
         row["max_block_size"],
     )
     patch_topology(sys_dir, row["node_degree"], row["validator_count"])
-    patch_linkallocation(sys_dir / "Net.linkallocation", row["propagation_delay"])
+    patch_linkallocation(sys_dir / "Net.linkallocation", row["bandwidth"])
 
 
 def generate_system_model_variant(
     core_dir: Path,
     sys_dir: Path,
-    propagation_delay: str,
+    bandwidth_mbps: str,
 ) -> None:
     """Stage 1, repeat variant: reuse an already-patched core topology (same
-    core_config_id) and only repatch the propagation_delay-varying file.
+    core_config_id) and only repatch the bandwidth-varying file.
 
     Avoids repeating the expensive random NodeAllocation cloning in
-    patch_topology for every one of the 10 propagation_delay variants that
+    patch_topology for every one of the 10 bandwidth variants that
     share an identical topology.
     """
     sys_dir.mkdir(parents=True, exist_ok=True)
@@ -334,7 +340,7 @@ def generate_system_model_variant(
             continue
         shutil.copy2(src, sys_dir / name)
 
-    patch_linkallocation(sys_dir / "Net.linkallocation", propagation_delay)
+    patch_linkallocation(sys_dir / "Net.linkallocation", bandwidth_mbps)
 
 
 def generate_pair_model(
@@ -392,7 +398,7 @@ def main() -> int:
         "--system-csv",
         type=Path,
         default=script_dir / "system_configurations.csv",
-        help="Path to the system configurations CSV (Stage 1, 5,000 rows = 500 core configs x 10 propagation_delay variants).",
+        help="Path to the system configurations CSV (Stage 1, 5,000 rows = 500 core configs x 10 bandwidth variants).",
     )
     parser.add_argument(
         "--attacker-csv",
@@ -436,7 +442,7 @@ def main() -> int:
     # ── Stage 1: generate system models ───────────────────────────────────
     required_sys = {
         "system_config_id", "validator_count", "node_degree",
-        "propagation_delay", "block_creation_interval", "max_block_size",
+        "bandwidth", "block_creation_interval", "max_block_size",
     }
     sys_rows: list[dict] = []
     with args.system_csv.open(newline="", encoding="utf-8") as f:
@@ -452,7 +458,7 @@ def main() -> int:
     # sys_id -> list of NodeSystem IDs (cached for Stage 2)
     sys_ns_ids: dict[str, list[str]] = {}
     # core_config_id -> reference sys_dir whose topology has already been patched;
-    # reused (copied, not regenerated) by every other propagation_delay variant
+    # reused (copied, not regenerated) by every other bandwidth variant
     # sharing that core config.
     core_dirs: dict[str, Path] = {}
     n_topologies = 0
@@ -467,7 +473,7 @@ def main() -> int:
             core_dirs[core_id] = sys_dir
             n_topologies += 1
         else:
-            generate_system_model_variant(core_dir, sys_dir, row["propagation_delay"])
+            generate_system_model_variant(core_dir, sys_dir, row["bandwidth"])
 
         sys_ns_ids[sys_id] = _node_system_ids(sys_dir / "Net.nodeallocation")
         if i % 100 == 0 or i <= 3:

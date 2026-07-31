@@ -39,6 +39,7 @@ import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimMonteCarloSimulation;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSingleSimulation;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.TransactionGenerationMode;
 
 public class ATOSIMSimulationFactory implements Simulation {
 
@@ -116,10 +117,15 @@ public class ATOSIMSimulationFactory implements Simulation {
                 Double.parseDouble(configuration.getOrDefault("block_creation_interval", "600.0"));
         int maxBlockSize =
                 Integer.parseInt(configuration.getOrDefault("max_block_size", "1000000"));
-        double propagationDelay =
-                Double.parseDouble(configuration.getOrDefault("propagation_delay", "0.0"));
+        double networkBandwidth =
+                Double.parseDouble(configuration.getOrDefault("bandwidth", "100.0"));
         int nodeDegree =
                 Integer.parseInt(configuration.getOrDefault("node_degree", "8"));
+        TransactionGenerationMode transactionGenerationMode =
+                "deterministicFullBlock".equalsIgnoreCase(
+                        configuration.getOrDefault("transactionGenerationMode", "mempool").strip())
+                        ? TransactionGenerationMode.DETERMINISTIC_FULL_BLOCK
+                        : TransactionGenerationMode.MEMPOOL;
 
         AttackType attackType;
         Set<String> attackerNodeIds;
@@ -213,10 +219,10 @@ public class ATOSIMSimulationFactory implements Simulation {
                 deltaB,
                 6,
                 blockInterval,
-                propagationDelay,
                 nodeDegree,
                 maxBlockSize,
-                100.0
+                networkBandwidth,
+                transactionGenerationMode
         );
     }
 

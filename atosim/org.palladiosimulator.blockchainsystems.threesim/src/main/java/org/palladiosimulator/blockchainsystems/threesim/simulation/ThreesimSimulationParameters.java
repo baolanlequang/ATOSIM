@@ -19,10 +19,10 @@ public class ThreesimSimulationParameters {
     private final long deltaB;
     private final int confirmationDepth;
     private final double blockInterval;
-    private final double propagationDelay;
     private final int nodeDegree;
     private final int maxBlockSize;
     private final double networkBandwidth;
+    private final TransactionGenerationMode transactionGenerationMode;
 
     public ThreesimSimulationParameters(
             double failureThroughputThreshold,
@@ -39,10 +39,10 @@ public class ThreesimSimulationParameters {
             long deltaB,
             int confirmationDepth,
             double blockInterval,
-            double propagationDelay,
             int nodeDegree,
             int maxBlockSize,
-            double networkBandwidth
+            double networkBandwidth,
+            TransactionGenerationMode transactionGenerationMode
     ) {
         this.failureThroughputThreshold = failureThroughputThreshold;
         this.shannonEntropyK = shannonEntropyK;
@@ -58,10 +58,11 @@ public class ThreesimSimulationParameters {
         this.deltaB = deltaB;
         this.confirmationDepth = confirmationDepth;
         this.blockInterval = blockInterval;
-        this.propagationDelay = propagationDelay;
         this.nodeDegree = nodeDegree;
         this.maxBlockSize = maxBlockSize;
         this.networkBandwidth = networkBandwidth;
+        this.transactionGenerationMode =
+                transactionGenerationMode != null ? transactionGenerationMode : TransactionGenerationMode.MEMPOOL;
     }
 
     public double getFailureThroughputThreshold() { return failureThroughputThreshold; }
@@ -78,8 +79,8 @@ public class ThreesimSimulationParameters {
     public long getDeltaB() { return deltaB; }
     public int getConfirmationDepth() { return confirmationDepth; }
     public double getBlockInterval() { return blockInterval; }
-    public double getPropagationDelay() { return propagationDelay; }
     public int getNodeDegree() { return nodeDegree; }
     public int getMaxBlockSize() { return maxBlockSize; }
     public double getNetworkBandwidth() { return networkBandwidth; }
+    public TransactionGenerationMode getTransactionGenerationMode() { return transactionGenerationMode; }
 }

@@ -201,7 +201,13 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
     @Override
     public boolean shouldTerminate() {
-        boolean maxExceeded = _maxBlockchainLengthCondition.hasLengthExceeded(); 
+        // Episode-style termination: a reorg ends the round immediately (attacker "wins",
+        // D_r = the recorded depth) rather than continuing to accumulate further reorgs up to
+        // the length cap. Reaching maxAllowedBlockchainLength with this list still empty is the
+        // "attacker loses" case, D_r = 0 -- no separate abandonment signal needed.
+        if (!_chainReorganizations.isEmpty()) return true;
+
+        boolean maxExceeded = _maxBlockchainLengthCondition.hasLengthExceeded();
 
         if (_simulationParameters.getAttackType() == AttackType.RACE) {
             int confirmedBlocks = _confirmedBlocks.getNumberOfValidBlocks();

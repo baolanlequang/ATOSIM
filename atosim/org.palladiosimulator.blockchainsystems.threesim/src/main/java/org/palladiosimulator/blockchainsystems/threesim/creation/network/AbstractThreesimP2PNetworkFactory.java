@@ -26,9 +26,6 @@ public abstract class AbstractThreesimP2PNetworkFactory implements P2PNetworkFac
 
     protected SimulationLifecycleAwareValueProvider<Long> createLatencyValueProvider(
             LinkLatencySpecification latencySpecification) {
-        if (simulationParameters.getPropagationDelay() > 0) {
-            return new StaticLatencyValueProvider((long) simulationParameters.getPropagationDelay());
-        }
         if (latencySpecification instanceof StaticLinkLatencySpecification s) {
             return new StaticLatencyValueProvider(s.getLatency());
         }

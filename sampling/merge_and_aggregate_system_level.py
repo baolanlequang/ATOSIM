@@ -135,7 +135,7 @@ def check_completeness(merged, expected_i, expected_j, logger):
 SYSTEM_PARAM_COLS = [
     "validator_count",
     "node_degree",
-    "propagation_delay",
+    "bandwidth",
     "block_creation_interval",
     "max_block_size",
 ]

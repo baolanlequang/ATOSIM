@@ -19,9 +19,6 @@ public final class ThreesimAttributes {
     public static final String BLOCK_INTERVAL = "BlockInterval";
     public static final String BLOCK_INTERVAL_DEFAULT = "600.0";
 
-    public static final String PROPAGATION_DELAY = "PropagationDelay";
-    public static final String PROPAGATION_DELAY_DEFAULT = "0.0";
-
     public static final String NODE_DEGREE = "NodeDegree";
     public static final String NODE_DEGREE_DEFAULT = "8";
 
@@ -44,4 +41,7 @@ public final class ThreesimAttributes {
 
     public static final String TRANSACTION_B_ACCELERATION = "TransactionBAcceleration";
     public static final String TRANSACTION_B_ACCELERATION_DEFAULT = "0";
+
+    public static final String TRANSACTION_GENERATION_MODE = "TransactionGenerationMode";
+    public static final String TRANSACTION_GENERATION_MODE_DEFAULT = "MEMPOOL";
 }

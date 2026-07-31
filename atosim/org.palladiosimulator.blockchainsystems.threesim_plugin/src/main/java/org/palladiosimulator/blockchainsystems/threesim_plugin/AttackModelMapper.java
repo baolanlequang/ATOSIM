@@ -97,10 +97,10 @@ public class AttackModelMapper {
                 deltaB,
                 base.getConfirmationDepth(),
                 base.getBlockInterval(),
-                base.getPropagationDelay(),
                 base.getNodeDegree(),
                 base.getMaxBlockSize(),
-                base.getNetworkBandwidth()
+                base.getNetworkBandwidth(),
+                base.getTransactionGenerationMode()
         );
     }
 

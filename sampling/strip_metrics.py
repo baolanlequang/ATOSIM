@@ -135,7 +135,7 @@ def run_strip(args):
 PARAMS = [
     ("Number of nodes",        "validator_count"),
     ("Node degree",            "node_degree"),
-    ("Propagation delay",      "propagation_delay"),
+    ("Bandwidth",              "bandwidth"),
     ("Block interval",         "block_creation_interval"),
     ("Max block size",         "max_block_size"),
     ("Attacker hash power",    "attacker_hash_power"),

@@ -132,7 +132,6 @@ public class ThreesimJsonSerializer {
         sb.append(indent).append("  \"deltaB\": ").append(p.getDeltaB()).append(",\n");
         sb.append(indent).append("  \"confirmationDepth\": ").append(p.getConfirmationDepth()).append(",\n");
         sb.append(indent).append("  \"blockInterval\": ").append(p.getBlockInterval()).append(",\n");
-        sb.append(indent).append("  \"propagationDelay\": ").append(p.getPropagationDelay()).append(",\n");
         sb.append(indent).append("  \"nodeDegree\": ").append(p.getNodeDegree()).append(",\n");
         sb.append(indent).append("  \"maxBlockSize\": ").append(p.getMaxBlockSize()).append(",\n");
         sb.append(indent).append("  \"networkBandwidth\": ").append(p.getNetworkBandwidth()).append("\n");

@@ -29,7 +29,6 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
     private TextField nakamotoCoefficientThresholdField;
     private TextField reliabilityObservationTimespanField;
     private TextField blockIntervalField;
-    private TextField propagationDelayField;
     private TextField nodeDegreeField;
     private TextField maxBlockSizeField;
     private TextField networkBandwidthField;
@@ -83,13 +82,6 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
                 ThreesimAttributes.BLOCK_INTERVAL_DEFAULT,
                 s -> parseDouble(s, v -> v > 0));
 
-        propagationDelayField = new TextField(group,
-                "Propagation Delay:", " ms",
-                DoubleVerifier.INSTANCE,
-                ThreesimAttributes.PROPAGATION_DELAY,
-                ThreesimAttributes.PROPAGATION_DELAY_DEFAULT,
-                s -> parseDouble(s, v -> v >= 0));
-
         nodeDegreeField = new TextField(group,
                 "Node Degree:", "",
                 LongVerifier.INSTANCE,
@@ -105,7 +97,7 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
                 s -> parseLong(s, v -> v > 0));
 
         networkBandwidthField = new TextField(group,
-                "Network Bandwidth:", " bytes/s",
+                "Network Bandwidth:", " Mbit/s",
                 DoubleVerifier.INSTANCE,
                 ThreesimAttributes.NETWORK_BANDWIDTH,
                 ThreesimAttributes.NETWORK_BANDWIDTH_DEFAULT,
@@ -155,7 +147,6 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
             nakamotoCoefficientThresholdField.initializeFrom(configuration);
             reliabilityObservationTimespanField.initializeFrom(configuration);
             blockIntervalField.initializeFrom(configuration);
-            propagationDelayField.initializeFrom(configuration);
             nodeDegreeField.initializeFrom(configuration);
             maxBlockSizeField.initializeFrom(configuration);
             networkBandwidthField.initializeFrom(configuration);
@@ -188,7 +179,6 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
         nakamotoCoefficientThresholdField.performApply(configuration);
         reliabilityObservationTimespanField.performApply(configuration);
         blockIntervalField.performApply(configuration);
-        propagationDelayField.performApply(configuration);
         nodeDegreeField.performApply(configuration);
         maxBlockSizeField.performApply(configuration);
         networkBandwidthField.performApply(configuration);
@@ -213,7 +203,6 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
         nakamotoCoefficientThresholdField.setDefaults(configuration);
         reliabilityObservationTimespanField.setDefaults(configuration);
         blockIntervalField.setDefaults(configuration);
-        propagationDelayField.setDefaults(configuration);
         nodeDegreeField.setDefaults(configuration);
         maxBlockSizeField.setDefaults(configuration);
         networkBandwidthField.setDefaults(configuration);
@@ -237,7 +226,6 @@ public class ThreesimTab extends AbstractLaunchConfigurationTab {
                 && nakamotoCoefficientThresholdField.isValid()
                 && reliabilityObservationTimespanField.isValid()
                 && blockIntervalField.isValid()
-                && propagationDelayField.isValid()
                 && nodeDegreeField.isValid()
                 && maxBlockSizeField.isValid()
                 && networkBandwidthField.isValid()

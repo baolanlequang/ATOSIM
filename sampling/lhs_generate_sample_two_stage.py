@@ -6,10 +6,10 @@ from scipy.stats import qmc
 # 1. Experimental setup
 # -----------------------------
 
-N_SYSTEM_SAMPLES   = 250   # number of core system configurations C_i
-N_PD_VARIANTS      = 10    # propagation_delay variants applied to every core config
-N_ATTACKER_SAMPLES = 100   # number of attacker-capability configurations A_ij per S_i
-N_CANDIDATE_SEEDS  = 1000  # seeds to evaluate; best is picked at runtime
+N_SYSTEM_SAMPLES     = 250   # number of core system configurations C_i
+N_BANDWIDTH_VARIANTS = 10    # bandwidth variants applied to every core config
+N_ATTACKER_SAMPLES   = 100   # number of attacker-capability configurations A_ij per S_i
+N_CANDIDATE_SEEDS    = 1000  # seeds to evaluate; best is picked at runtime
 
 
 # -----------------------------
@@ -23,7 +23,10 @@ system_core_param_ranges = {
     "max_block_size":           (250_000, 8_000_000),
 }
 
-propagation_delay_range = (6_500, 40_000)
+# Homogeneous-link bandwidth (Mbit/s). Net.linkallocation's Throughput field is
+# bps, so generate_models_two_stage.py converts via *1_000_000 (matching
+# P2PLink's bps/8000 -> bytes/ms usage).
+bandwidth_range_mbps = (5.0, 125.0)
 
 attacker_param_ranges = {
     "attacker_hash_power":      (0.2, 0.5),
@@ -61,15 +64,14 @@ def build_system_core_df(seed: int) -> pd.DataFrame:
     return df
 
 
-def build_propagation_delay_df(seed: int) -> pd.DataFrame:
-    """Stage 1b: LHS over propagation_delay, shared across every core config."""
-    lhs_unit = qmc.LatinHypercube(d=1, seed=seed).random(n=N_PD_VARIANTS)
+def build_bandwidth_df(seed: int) -> pd.DataFrame:
+    """Stage 1b: LHS over bandwidth (Mbit/s), shared across every core config."""
+    lhs_unit = qmc.LatinHypercube(d=1, seed=seed).random(n=N_BANDWIDTH_VARIANTS)
 
-    low, high = propagation_delay_range
+    low, high = bandwidth_range_mbps
     scaled = low + lhs_unit[:, 0] * (high - low)
 
-    df = pd.DataFrame({"propagation_delay": scaled})
-    df["propagation_delay"] = df["propagation_delay"].round().astype(int)
+    df = pd.DataFrame({"bandwidth": scaled})
 
     return df
 
@@ -103,10 +105,10 @@ def score_system_core_df(df: pd.DataFrame) -> float:
     return qmc.discrepancy(arr, method="CD")
 
 
-def score_propagation_delay_df(df: pd.DataFrame) -> float:
-    """Centered discrepancy of the propagation_delay design (lower = better coverage)."""
-    low, high = propagation_delay_range
-    arr = df[["propagation_delay"]].to_numpy(dtype=float)
+def score_bandwidth_df(df: pd.DataFrame) -> float:
+    """Centered discrepancy of the bandwidth design (lower = better coverage)."""
+    low, high = bandwidth_range_mbps
+    arr = df[["bandwidth"]].to_numpy(dtype=float)
     arr[:, 0] = np.clip((arr[:, 0] - low) / (high - low), 0.0, 1.0)
     return qmc.discrepancy(arr, method="CD")
 
@@ -139,27 +141,27 @@ core_df   = best_core_df
 CORE_SEED = best_core_seed
 
 # -----------------------------
-# 6. Seed selection — Stage 1b (propagation_delay)
+# 6. Seed selection — Stage 1b (bandwidth)
 # -----------------------------
-# One shared propagation_delay LHS design is selected (lowest CD).
+# One shared bandwidth LHS design is selected (lowest CD).
 # The same design is reused for every core config, preserving a
 # matched/paired structure: every core config gets the identical
-# set of propagation_delay variants.
+# set of bandwidth variants.
 
-best_pd_seed  = -1
-best_pd_df    = None
-best_pd_score = float("inf")
+best_bw_seed  = -1
+best_bw_df    = None
+best_bw_score = float("inf")
 
 # Offset seed range to avoid overlap with core seeds
 for s in range(N_CANDIDATE_SEEDS, 2 * N_CANDIDATE_SEEDS):
-    df_candidate = build_propagation_delay_df(s)
-    score = score_propagation_delay_df(df_candidate)
-    if score < best_pd_score:
-        best_pd_seed, best_pd_df, best_pd_score = s, df_candidate, score
+    df_candidate = build_bandwidth_df(s)
+    score = score_bandwidth_df(df_candidate)
+    if score < best_bw_score:
+        best_bw_seed, best_bw_df, best_bw_score = s, df_candidate, score
 
-assert best_pd_df is not None
-pd_df   = best_pd_df
-PD_SEED = best_pd_seed
+assert best_bw_df is not None
+bandwidth_df = best_bw_df
+BANDWIDTH_SEED = best_bw_seed
 
 # -----------------------------
 # 7. Seed selection — Stage 2 (attacker)
@@ -173,7 +175,7 @@ best_attacker_seed  = -1
 best_attacker_df    = None
 best_attacker_score = float("inf")
 
-# Offset seed range to avoid overlap with core/propagation_delay seeds
+# Offset seed range to avoid overlap with core/bandwidth seeds
 for s in range(2 * N_CANDIDATE_SEEDS, 3 * N_CANDIDATE_SEEDS):
     df_candidate = build_attacker_df(s)
     score = score_attacker_df(df_candidate)
@@ -185,19 +187,19 @@ attacker_df   = best_attacker_df
 ATTACKER_SEED = best_attacker_seed
 
 # -----------------------------
-# 8. Assign IDs and combine core x propagation_delay
+# 8. Assign IDs and combine core x bandwidth
 # -----------------------------
 
 core_df.insert(0, "core_config_id", range(1, N_SYSTEM_SAMPLES + 1))
-pd_df.insert(0, "pd_variant_id", range(1, N_PD_VARIANTS + 1))
+bandwidth_df.insert(0, "bandwidth_variant_id", range(1, N_BANDWIDTH_VARIANTS + 1))
 attacker_df.insert(0, "attacker_config_id", range(1, N_ATTACKER_SAMPLES + 1))
 
-# Cartesian product: every core config paired with every propagation_delay variant
-system_df = core_df.merge(pd_df, how="cross")
+# Cartesian product: every core config paired with every bandwidth variant
+system_df = core_df.merge(bandwidth_df, how="cross")
 system_df.insert(0, "system_config_id", range(1, len(system_df) + 1))
 system_df = system_df[[
-    "system_config_id", "core_config_id", "pd_variant_id",
-    "validator_count", "node_degree", "propagation_delay",
+    "system_config_id", "core_config_id", "bandwidth_variant_id",
+    "validator_count", "node_degree", "bandwidth",
     "block_creation_interval", "max_block_size",
 ]]
 
@@ -208,10 +210,10 @@ system_df = system_df[[
 assert (system_df["node_degree"] >= 1).all()
 assert (system_df["node_degree"] <= system_df["validator_count"] - 1).all()
 
-assert (system_df["propagation_delay"] >= propagation_delay_range[0]).all()
-assert (system_df["propagation_delay"] <= propagation_delay_range[1]).all()
+assert (system_df["bandwidth"] >= bandwidth_range_mbps[0]).all()
+assert (system_df["bandwidth"] <= bandwidth_range_mbps[1]).all()
 
-assert len(system_df) == N_SYSTEM_SAMPLES * N_PD_VARIANTS
+assert len(system_df) == N_SYSTEM_SAMPLES * N_BANDWIDTH_VARIANTS
 
 assert (attacker_df["attacker_hash_power"] >= 0.2).all()
 assert (attacker_df["attacker_hash_power"] <  0.5).all()
@@ -233,10 +235,10 @@ print("=" * 60)
 print("TWO-STAGE LHS — CONFIGURATIONS GENERATED")
 print("=" * 60)
 print(f"  Core seed              : {CORE_SEED}   (CD={best_core_score:.6f})")
-print(f"  Propagation-delay seed : {PD_SEED}   (CD={best_pd_score:.6f})")
+print(f"  Bandwidth seed         : {BANDWIDTH_SEED}   (CD={best_bw_score:.6f})")
 print(f"  Attacker seed          : {ATTACKER_SEED}   (CD={best_attacker_score:.6f})")
 print(f"  Core configurations     : {N_SYSTEM_SAMPLES}")
-print(f"  Propagation-delay variants per core config: {N_PD_VARIANTS}")
+print(f"  Bandwidth variants per core config: {N_BANDWIDTH_VARIANTS}")
 print(f"  System configurations   : {len(system_df)}")
 print(f"  Attacker configurations : {N_ATTACKER_SAMPLES}")
 print()
@@ -246,8 +248,8 @@ print(f"  attacker_configurations.csv — Stage 2 LHS ({N_ATTACKER_SAMPLES} rows
 print()
 print("Sample — system_configurations.csv:")
 print(system_df[[
-    "system_config_id", "core_config_id", "pd_variant_id", "validator_count", "node_degree",
-    "propagation_delay", "block_creation_interval", "max_block_size"
+    "system_config_id", "core_config_id", "bandwidth_variant_id", "validator_count", "node_degree",
+    "bandwidth", "block_creation_interval", "max_block_size"
 ]].head(5).to_string(index=False))
 print()
 print("Sample — attacker_configurations.csv:")

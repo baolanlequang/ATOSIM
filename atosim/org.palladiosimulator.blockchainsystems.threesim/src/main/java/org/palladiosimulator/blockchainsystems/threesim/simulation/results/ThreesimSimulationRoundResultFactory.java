@@ -45,7 +45,6 @@ public class ThreesimSimulationRoundResultFactory {
         double attackerRewards = _parameters.getAttackerNodeIds().stream()
                 .mapToInt(_monitor::getBlockRewardsForNode).sum();
         double totalRewards = _monitor.getTotalBlockRewards();
-        double lambdaH = (1.0 - _parameters.getAttackerHashPower()) / _parameters.getBlockInterval();
 
         double attackerRevenueShareFraction = totalRewards == 0.0 ? 0.0 : attackerRewards / totalRewards;
         boolean selfishMiningAttackSucceeded = REVENUE_SHARE_SUCCESS_ATTACK_TYPES.contains(_parameters.getAttackType())
@@ -114,9 +113,7 @@ public class ThreesimSimulationRoundResultFactory {
                         _parameters.getAttackerHashPower(),
                         _parameters.getConfirmationDepth()).calculate(),
 
-                new AttackSuccessTimeCalculator(_monitor.getAttackSuccessTime()).calculate(),
-
-                new ForkProbabilityCalculator(lambdaH, _parameters.getPropagationDelay()).calculate()
+                new AttackSuccessTimeCalculator(_monitor.getAttackSuccessTime()).calculate()
         ), _monitor.getChainReorganizations());
     }
 }

@@ -7,7 +7,7 @@ attacker_configurations.csv).
 Pairing scheme
 --------------
 Full Cartesian product: every one of the 2,500 system configs (250 core configs x
-10 propagation_delay variants each) is paired with every one of the 100 attacker
+10 bandwidth variants each) is paired with every one of the 100 attacker
 configs, for 2,500 * 100 = 250,000 rows per strategy.
 Row order is system-major (all 100 attacker configs for system_config_id=1, then
 all 100 for system_config_id=2, ...), and config_id is the 1-based row number, so
@@ -20,7 +20,7 @@ Output
   run_configurations_trail_stubborn.csv (attack_strategy=trail_stubborn)
 
 Each row carries the columns ATOSIMSimulator.validateCsvColumns requires:
-config_id, system_config_id, validator_count, node_degree, propagation_delay,
+config_id, system_config_id, validator_count, node_degree, bandwidth,
 block_creation_interval, max_block_size, attacker_config_id, attack_strategy,
 plus attacker_hash_power/tie_breaking_parameter for traceability in the output JSON.
 """
@@ -33,7 +33,7 @@ from pathlib import Path
 STRATEGIES = ["selfish", "lead_stubborn", "trail_stubborn"]
 
 SYSTEM_COLUMNS = [
-    "validator_count", "node_degree", "propagation_delay",
+    "validator_count", "node_degree", "bandwidth",
     "block_creation_interval", "max_block_size",
 ]
 ATTACKER_COLUMNS = ["attacker_hash_power", "tie_breaking_parameter"]

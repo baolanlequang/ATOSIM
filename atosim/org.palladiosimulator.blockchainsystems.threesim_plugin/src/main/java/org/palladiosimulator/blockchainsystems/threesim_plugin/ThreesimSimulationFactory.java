@@ -21,6 +21,7 @@ import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimMonteCarloSimulation;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSingleSimulation;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.TransactionGenerationMode;
 
 import java.util.Collections;
 
@@ -91,10 +92,11 @@ public class ThreesimSimulationFactory implements SimulationFactory {
                     Long.parseLong(configuration.getAttribute(ThreesimAttributes.TRANSACTION_B_ACCELERATION, ThreesimAttributes.TRANSACTION_B_ACCELERATION_DEFAULT)),
                     6,
                     Double.parseDouble(configuration.getAttribute(ThreesimAttributes.BLOCK_INTERVAL, ThreesimAttributes.BLOCK_INTERVAL_DEFAULT)),
-                    Double.parseDouble(configuration.getAttribute(ThreesimAttributes.PROPAGATION_DELAY, ThreesimAttributes.PROPAGATION_DELAY_DEFAULT)),
                     Integer.parseInt(configuration.getAttribute(ThreesimAttributes.NODE_DEGREE, ThreesimAttributes.NODE_DEGREE_DEFAULT)),
                     Integer.parseInt(configuration.getAttribute(ThreesimAttributes.MAX_BLOCK_SIZE, ThreesimAttributes.MAX_BLOCK_SIZE_DEFAULT)),
-                    Double.parseDouble(configuration.getAttribute(ThreesimAttributes.NETWORK_BANDWIDTH, ThreesimAttributes.NETWORK_BANDWIDTH_DEFAULT))
+                    Double.parseDouble(configuration.getAttribute(ThreesimAttributes.NETWORK_BANDWIDTH, ThreesimAttributes.NETWORK_BANDWIDTH_DEFAULT)),
+                    TransactionGenerationMode.valueOf(configuration.getAttribute(
+                            ThreesimAttributes.TRANSACTION_GENERATION_MODE, ThreesimAttributes.TRANSACTION_GENERATION_MODE_DEFAULT))
             );
 
             String attackModelPath = configuration.getAttribute(

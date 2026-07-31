@@ -24,8 +24,10 @@ import org.palladiosimulator.blockchainsystems.threesim.behavior.ThreesimBlockch
 import org.palladiosimulator.blockchainsystems.threesim.behavior.ThreesimTransactionSelectionProcessFactory;
 import org.palladiosimulator.blockchainsystems.threesim.creation.abstractions.NodeAllocationResolver;
 import org.palladiosimulator.blockchainsystems.threesim.creation.geography.ThreesimGeographicalRegionsResolver;
+import org.palladiosimulator.blockchainsystems.threesim.behavior.NoOpTransactionSubmissionProcess;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.TransactionGenerationMode;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -78,10 +80,10 @@ public abstract class ThreesimBlockchainSystemFactory {
                 params.getDeltaB(),
                 params.getConfirmationDepth(),
                 params.getBlockInterval(),
-                params.getPropagationDelay(),
                 params.getNodeDegree(),
                 params.getMaxBlockSize(),
-                params.getNetworkBandwidth()
+                params.getNetworkBandwidth(),
+                params.getTransactionGenerationMode()
         );
 
         ResourcePowerCalculator baseResourcePowerCalculator = getResourcePowerCalculator(networkCreationResult);
@@ -104,14 +106,16 @@ public abstract class ThreesimBlockchainSystemFactory {
         org.palladiosimulator.blockchainsystems.core.system.BlockchainSystem system =
                 createBlockchainSystemInstance(networkCreationResult.getCreatedNetwork(), blockFactory,
                         nodeFactory, geographicalRegionsResolver,
-                        designBlockchainSystem.getSpecification().getBlockReward());
+                        designBlockchainSystem.getSpecification().getBlockReward(),
+                        effectiveParameters.getTransactionGenerationMode());
 
         return new BlockchainSystemWithParameters(system, effectiveParameters);
     }
 
     private org.palladiosimulator.blockchainsystems.core.system.BlockchainSystem createBlockchainSystemInstance(
             P2PNetwork network, BlockFactory blockFactory, BlockchainSystemNodeFactory nodeFactory,
-            GeographicalRegionsResolver geographicalRegionsResolver, double blockReward) {
+            GeographicalRegionsResolver geographicalRegionsResolver, double blockReward,
+            TransactionGenerationMode transactionGenerationMode) {
 
         String id = UUID.randomUUID().toString();
         String name = "BlockchainSystem_" + id.substring(0, 8);
@@ -121,17 +125,24 @@ public abstract class ThreesimBlockchainSystemFactory {
                 .map(ni -> nodeFactory.createBlockchainSystemNode(ni, genesisBlock))
                 .collect(Collectors.toCollection(HashSet::new));
 
-        var trxPropSpec = designBlockchainSystem.getTransactionsSpecification().getTransactionPropertiesSpecification();
-        double meanTrxInterval = designBlockchainSystem.getTransactionsSpecification().getMeanTransactionCreationInterval();
-
-        var txSubmissionProcess = new org.palladiosimulator.blockchainsystems.threesim.behavior.ThreesimTransactionSubmissionProcess(
-                id, name, meanTrxInterval,
-                TransactionPropertiesValueProviderAdapter.create(trxPropSpec, java.util.random.RandomGenerator.of("Random")));
+        var txSubmissionProcess = (transactionGenerationMode == TransactionGenerationMode.DETERMINISTIC_FULL_BLOCK)
+                ? new NoOpTransactionSubmissionProcess(id, name)
+                : createMempoolTransactionSubmissionProcess(id, name);
 
         var geoRegions = geographicalRegionsResolver.resolveGeographicalRegions();
 
         return new org.palladiosimulator.blockchainsystems.core.system.BlockchainSystem(
                 id, name, network, geoRegions, nodes, txSubmissionProcess, blockReward);
+    }
+
+    private org.palladiosimulator.blockchainsystems.threesim.behavior.ThreesimTransactionSubmissionProcess
+            createMempoolTransactionSubmissionProcess(String id, String name) {
+        var trxPropSpec = designBlockchainSystem.getTransactionsSpecification().getTransactionPropertiesSpecification();
+        double meanTrxInterval = designBlockchainSystem.getTransactionsSpecification().getMeanTransactionCreationInterval();
+
+        return new org.palladiosimulator.blockchainsystems.threesim.behavior.ThreesimTransactionSubmissionProcess(
+                id, name, meanTrxInterval,
+                TransactionPropertiesValueProviderAdapter.create(trxPropSpec, java.util.random.RandomGenerator.of("Random")));
     }
 
     private BlockchainSystemNodeFactory createBlockchainSystemNodeFactory(
@@ -152,11 +163,18 @@ public abstract class ThreesimBlockchainSystemFactory {
                                 effectiveParameters.getDeltaB())
                         : TransactionPropagationStrategy::new);
 
+        var trxPropSpec = designBlockchainSystem.getTransactionsSpecification().getTransactionPropertiesSpecification();
+        var transactionPropertiesProvider = TransactionPropertiesValueProviderAdapter.create(
+                trxPropSpec, java.util.random.RandomGenerator.of("Random"));
+
         return new BlockchainSystemNodeFactory(
                 blockFactory,
                 blockchainFactory,
                 new ThreesimMiningProcessFactory(effectiveParameters.getBlockInterval(), resourcePowerCalculator),
-                new ThreesimTransactionSelectionProcessFactory(effectiveParameters.getMaxBlockSize()),
+                new ThreesimTransactionSelectionProcessFactory(
+                        effectiveParameters.getMaxBlockSize(),
+                        effectiveParameters.getTransactionGenerationMode(),
+                        transactionPropertiesProvider),
                 new ThreesimBlockValidatorFactory(nodeAllocationResolver),
                 new BlockPropagationStrategyFactoryImpl(),
                 txPropStrategyFactory,

@@ -68,8 +68,6 @@ public class ThreesimAverageSimulationRoundResult {
                         (List<AttackerBlockRewards>) (List<?>) entry.getValue());
                 case TotalBlockRewards.NAME -> TotalBlockRewardsCalculator.calculateAverage(
                         (List<TotalBlockRewards>) (List<?>) entry.getValue());
-                case ForkProbability.NAME -> ForkProbabilityCalculator.calculateAverage(
-                        (List<ForkProbability>) (List<?>) entry.getValue());
                 case DoubleSpendSuccessProbability.NAME -> DoubleSpendSuccessProbabilityCalculator.calculateAverage(
                         (List<DoubleSpendSuccessProbability>) (List<?>) entry.getValue());
                 case AttackSuccessTime.NAME -> AttackSuccessTimeCalculator.calculateAverage(

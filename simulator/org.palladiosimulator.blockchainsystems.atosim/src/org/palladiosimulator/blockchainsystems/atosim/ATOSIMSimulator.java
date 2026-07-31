@@ -220,7 +220,7 @@ public class ATOSIMSimulator {
                 "system_config_id",
                 "validator_count",
                 "node_degree",
-                "propagation_delay",
+                "bandwidth",
                 "block_creation_interval",
                 "max_block_size",
                 "attacker_config_id",
