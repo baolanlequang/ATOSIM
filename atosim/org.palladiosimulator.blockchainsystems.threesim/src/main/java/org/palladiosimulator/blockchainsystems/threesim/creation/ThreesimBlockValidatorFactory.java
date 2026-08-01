@@ -13,9 +13,11 @@ import java.util.random.RandomGenerator;
 public class ThreesimBlockValidatorFactory implements BlockValidatorFactory {
 
     private final NodeAllocationResolver _nodeAllocationResolver;
+    private final boolean _staticValidationDelayEnabled;
 
-    public ThreesimBlockValidatorFactory(NodeAllocationResolver nodeAllocationResolver) {
+    public ThreesimBlockValidatorFactory(NodeAllocationResolver nodeAllocationResolver, boolean staticValidationDelayEnabled) {
         _nodeAllocationResolver = nodeAllocationResolver;
+        _staticValidationDelayEnabled = staticValidationDelayEnabled;
     }
 
     @Override
@@ -36,6 +38,6 @@ public class ThreesimBlockValidatorFactory implements BlockValidatorFactory {
 
         BlockValidationDurationProviderAdapter adapter = BlockValidationDurationProviderAdapter.create(
                 component.getValidationDuration(), RandomGenerator.of("Random"));
-        return new BlockValidatorImpl(adapter);
+        return new BlockValidatorImpl(adapter, _staticValidationDelayEnabled);
     }
 }

@@ -176,15 +176,21 @@ def patch_topology(target: Path, node_degree: str, validator_count: str) -> None
 
 
 def patch_linkallocation(path: Path, bandwidth_mbps: str) -> None:
-    """Patch Throughput (bps) from a bandwidth value given in Mbit/s.
+    """Patch Throughput (bps) from a bandwidth value given in Mbit/s, and force
+    Latency to 0 on every link -- propagation is derived purely from
+    transmission time (message size / bandwidth), not an independent base
+    latency (P2PLink's formula keeps a `latency +` term, but the model always
+    supplies 0 for it now).
 
     Net.linkallocation's Throughput field is bps; P2PLink divides it by 8000
     to get bytes/ms, so the conversion here must match: Mbit/s * 1_000_000.
     """
     bps = int(round(float(bandwidth_mbps) * 1_000_000))
     text = path.read_text(encoding="utf-8")
-    text, n = _replace_attr(text, "Throughput", str(bps))
-    _require(text, "Throughput", n, path, expected_min=1)
+    text, n_tp = _replace_attr(text, "Throughput", str(bps))
+    _require(text, "Throughput", n_tp, path, expected_min=1)
+    text, n_lat = _replace_attr(text, "Latency", "0")
+    _require(text, "Latency", n_lat, path, expected_min=1)
     path.write_text(text, encoding="utf-8")
 
 

@@ -96,7 +96,9 @@ public class ThreesimSimulationFactory implements SimulationFactory {
                     Integer.parseInt(configuration.getAttribute(ThreesimAttributes.MAX_BLOCK_SIZE, ThreesimAttributes.MAX_BLOCK_SIZE_DEFAULT)),
                     Double.parseDouble(configuration.getAttribute(ThreesimAttributes.NETWORK_BANDWIDTH, ThreesimAttributes.NETWORK_BANDWIDTH_DEFAULT)),
                     TransactionGenerationMode.valueOf(configuration.getAttribute(
-                            ThreesimAttributes.TRANSACTION_GENERATION_MODE, ThreesimAttributes.TRANSACTION_GENERATION_MODE_DEFAULT))
+                            ThreesimAttributes.TRANSACTION_GENERATION_MODE, ThreesimAttributes.TRANSACTION_GENERATION_MODE_DEFAULT)),
+                    Boolean.parseBoolean(configuration.getAttribute(
+                            ThreesimAttributes.STATIC_VALIDATION_DELAY_ENABLED, ThreesimAttributes.STATIC_VALIDATION_DELAY_ENABLED_DEFAULT))
             );
 
             String attackModelPath = configuration.getAttribute(

@@ -23,6 +23,7 @@ public class ThreesimSimulationParameters {
     private final int maxBlockSize;
     private final double networkBandwidth;
     private final TransactionGenerationMode transactionGenerationMode;
+    private final boolean staticValidationDelayEnabled;
 
     public ThreesimSimulationParameters(
             double failureThroughputThreshold,
@@ -42,7 +43,8 @@ public class ThreesimSimulationParameters {
             int nodeDegree,
             int maxBlockSize,
             double networkBandwidth,
-            TransactionGenerationMode transactionGenerationMode
+            TransactionGenerationMode transactionGenerationMode,
+            boolean staticValidationDelayEnabled
     ) {
         this.failureThroughputThreshold = failureThroughputThreshold;
         this.shannonEntropyK = shannonEntropyK;
@@ -63,6 +65,7 @@ public class ThreesimSimulationParameters {
         this.networkBandwidth = networkBandwidth;
         this.transactionGenerationMode =
                 transactionGenerationMode != null ? transactionGenerationMode : TransactionGenerationMode.MEMPOOL;
+        this.staticValidationDelayEnabled = staticValidationDelayEnabled;
     }
 
     public double getFailureThroughputThreshold() { return failureThroughputThreshold; }
@@ -83,4 +86,5 @@ public class ThreesimSimulationParameters {
     public int getMaxBlockSize() { return maxBlockSize; }
     public double getNetworkBandwidth() { return networkBandwidth; }
     public TransactionGenerationMode getTransactionGenerationMode() { return transactionGenerationMode; }
+    public boolean isStaticValidationDelayEnabled() { return staticValidationDelayEnabled; }
 }

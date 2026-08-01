@@ -126,6 +126,8 @@ public class ATOSIMSimulationFactory implements Simulation {
                         configuration.getOrDefault("transactionGenerationMode", "mempool").strip())
                         ? TransactionGenerationMode.DETERMINISTIC_FULL_BLOCK
                         : TransactionGenerationMode.MEMPOOL;
+        boolean staticValidationDelayEnabled =
+                Boolean.parseBoolean(configuration.getOrDefault("staticValidationDelayEnabled", "true"));
 
         AttackType attackType;
         Set<String> attackerNodeIds;
@@ -222,7 +224,8 @@ public class ATOSIMSimulationFactory implements Simulation {
                 nodeDegree,
                 maxBlockSize,
                 networkBandwidth,
-                transactionGenerationMode
+                transactionGenerationMode,
+                staticValidationDelayEnabled
         );
     }
 

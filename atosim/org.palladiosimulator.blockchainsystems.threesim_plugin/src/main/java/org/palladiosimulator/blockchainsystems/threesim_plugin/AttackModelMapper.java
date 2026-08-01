@@ -100,7 +100,8 @@ public class AttackModelMapper {
                 base.getNodeDegree(),
                 base.getMaxBlockSize(),
                 base.getNetworkBandwidth(),
-                base.getTransactionGenerationMode()
+                base.getTransactionGenerationMode(),
+                base.isStaticValidationDelayEnabled()
         );
     }
 

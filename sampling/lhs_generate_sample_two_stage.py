@@ -23,10 +23,13 @@ system_core_param_ranges = {
     "max_block_size":           (250_000, 8_000_000),
 }
 
-# Homogeneous-link bandwidth (Mbit/s). Net.linkallocation's Throughput field is
-# bps, so generate_models_two_stage.py converts via *1_000_000 (matching
-# P2PLink's bps/8000 -> bytes/ms usage).
-bandwidth_range_mbps = (5.0, 125.0)
+# Homogeneous-link bandwidth (Mbit/s) -- L_B=10 FIXED, approximately-log-spaced
+# values (the draft's design), not LHS-sampled: every evaluated setting gets
+# one of these exact values, cross-joined with every core config (not a random
+# per-config draw). Net.linkallocation's Throughput field is bps, so
+# generate_models_two_stage.py converts via *1_000_000 (matching P2PLink's
+# bps/8000 -> bytes/ms usage).
+BANDWIDTH_VALUES_MBPS = [5.0, 7.1, 10.2, 14.6, 20.9, 29.9, 42.7, 61.0, 87.4, 125.0]
 
 attacker_param_ranges = {
     "attacker_hash_power":      (0.2, 0.5),
@@ -64,16 +67,14 @@ def build_system_core_df(seed: int) -> pd.DataFrame:
     return df
 
 
-def build_bandwidth_df(seed: int) -> pd.DataFrame:
-    """Stage 1b: LHS over bandwidth (Mbit/s), shared across every core config."""
-    lhs_unit = qmc.LatinHypercube(d=1, seed=seed).random(n=N_BANDWIDTH_VARIANTS)
+def build_bandwidth_df() -> pd.DataFrame:
+    """Stage 1b: the L_B=10 fixed bandwidth values, shared across every core config.
 
-    low, high = bandwidth_range_mbps
-    scaled = low + lhs_unit[:, 0] * (high - low)
-
-    df = pd.DataFrame({"bandwidth": scaled})
-
-    return df
+    Not LHS-sampled -- a fixed, deterministic list, in the draft's stated order
+    (so bandwidth_variant_id=1 is always 5.0 Mbit/s, ..., =10 is always 125.0).
+    """
+    assert len(BANDWIDTH_VALUES_MBPS) == N_BANDWIDTH_VARIANTS
+    return pd.DataFrame({"bandwidth": list(BANDWIDTH_VALUES_MBPS)})
 
 
 def build_attacker_df(seed: int) -> pd.DataFrame:
@@ -105,14 +106,6 @@ def score_system_core_df(df: pd.DataFrame) -> float:
     return qmc.discrepancy(arr, method="CD")
 
 
-def score_bandwidth_df(df: pd.DataFrame) -> float:
-    """Centered discrepancy of the bandwidth design (lower = better coverage)."""
-    low, high = bandwidth_range_mbps
-    arr = df[["bandwidth"]].to_numpy(dtype=float)
-    arr[:, 0] = np.clip((arr[:, 0] - low) / (high - low), 0.0, 1.0)
-    return qmc.discrepancy(arr, method="CD")
-
-
 def score_attacker_df(df: pd.DataFrame) -> float:
     """Centered discrepancy of the attacker design (lower = better coverage)."""
     arr = df[attacker_param_names].to_numpy(dtype=float)
@@ -141,27 +134,13 @@ core_df   = best_core_df
 CORE_SEED = best_core_seed
 
 # -----------------------------
-# 6. Seed selection — Stage 1b (bandwidth)
+# 6. Stage 1b (bandwidth) — fixed L_B=10 values, no seed search
 # -----------------------------
-# One shared bandwidth LHS design is selected (lowest CD).
-# The same design is reused for every core config, preserving a
-# matched/paired structure: every core config gets the identical
-# set of bandwidth variants.
+# The 10 fixed bandwidth values are used directly, in a fixed order. The same
+# list is reused for every core config, preserving the matched/paired
+# structure: every core config gets the identical set of bandwidth variants.
 
-best_bw_seed  = -1
-best_bw_df    = None
-best_bw_score = float("inf")
-
-# Offset seed range to avoid overlap with core seeds
-for s in range(N_CANDIDATE_SEEDS, 2 * N_CANDIDATE_SEEDS):
-    df_candidate = build_bandwidth_df(s)
-    score = score_bandwidth_df(df_candidate)
-    if score < best_bw_score:
-        best_bw_seed, best_bw_df, best_bw_score = s, df_candidate, score
-
-assert best_bw_df is not None
-bandwidth_df = best_bw_df
-BANDWIDTH_SEED = best_bw_seed
+bandwidth_df = build_bandwidth_df()
 
 # -----------------------------
 # 7. Seed selection — Stage 2 (attacker)
@@ -210,8 +189,11 @@ system_df = system_df[[
 assert (system_df["node_degree"] >= 1).all()
 assert (system_df["node_degree"] <= system_df["validator_count"] - 1).all()
 
-assert (system_df["bandwidth"] >= bandwidth_range_mbps[0]).all()
-assert (system_df["bandwidth"] <= bandwidth_range_mbps[1]).all()
+# Exact-membership check (fixed set, not a range) -- catches float drift too,
+# since round-tripping through the DataFrame/CSV must reproduce the literals
+# exactly (no arithmetic is applied to these values anywhere in this script).
+assert system_df["bandwidth"].nunique() == N_BANDWIDTH_VARIANTS
+assert set(system_df["bandwidth"].unique()) == set(BANDWIDTH_VALUES_MBPS)
 
 assert len(system_df) == N_SYSTEM_SAMPLES * N_BANDWIDTH_VARIANTS
 
@@ -235,7 +217,7 @@ print("=" * 60)
 print("TWO-STAGE LHS — CONFIGURATIONS GENERATED")
 print("=" * 60)
 print(f"  Core seed              : {CORE_SEED}   (CD={best_core_score:.6f})")
-print(f"  Bandwidth seed         : {BANDWIDTH_SEED}   (CD={best_bw_score:.6f})")
+print(f"  Bandwidth values (fixed): {BANDWIDTH_VALUES_MBPS}")
 print(f"  Attacker seed          : {ATTACKER_SEED}   (CD={best_attacker_score:.6f})")
 print(f"  Core configurations     : {N_SYSTEM_SAMPLES}")
 print(f"  Bandwidth variants per core config: {N_BANDWIDTH_VARIANTS}")

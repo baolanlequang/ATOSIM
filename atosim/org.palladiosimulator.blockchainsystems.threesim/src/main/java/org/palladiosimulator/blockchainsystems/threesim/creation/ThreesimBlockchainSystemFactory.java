@@ -83,7 +83,8 @@ public abstract class ThreesimBlockchainSystemFactory {
                 params.getNodeDegree(),
                 params.getMaxBlockSize(),
                 params.getNetworkBandwidth(),
-                params.getTransactionGenerationMode()
+                params.getTransactionGenerationMode(),
+                params.isStaticValidationDelayEnabled()
         );
 
         ResourcePowerCalculator baseResourcePowerCalculator = getResourcePowerCalculator(networkCreationResult);
@@ -175,7 +176,7 @@ public abstract class ThreesimBlockchainSystemFactory {
                         effectiveParameters.getMaxBlockSize(),
                         effectiveParameters.getTransactionGenerationMode(),
                         transactionPropertiesProvider),
-                new ThreesimBlockValidatorFactory(nodeAllocationResolver),
+                new ThreesimBlockValidatorFactory(nodeAllocationResolver, effectiveParameters.isStaticValidationDelayEnabled()),
                 new BlockPropagationStrategyFactoryImpl(),
                 txPropStrategyFactory,
                 new TrxMemPoolFactoryImpl(),

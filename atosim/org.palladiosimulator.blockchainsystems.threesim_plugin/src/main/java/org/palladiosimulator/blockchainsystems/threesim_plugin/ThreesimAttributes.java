@@ -44,4 +44,7 @@ public final class ThreesimAttributes {
 
     public static final String TRANSACTION_GENERATION_MODE = "TransactionGenerationMode";
     public static final String TRANSACTION_GENERATION_MODE_DEFAULT = "MEMPOOL";
+
+    public static final String STATIC_VALIDATION_DELAY_ENABLED = "StaticValidationDelayEnabled";
+    public static final String STATIC_VALIDATION_DELAY_ENABLED_DEFAULT = "true";
 }
