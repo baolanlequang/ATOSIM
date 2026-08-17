@@ -82,6 +82,17 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
     private final List<ChainReorganizationOccurrence> _chainReorganizations = new ArrayList<>();
 
+    // Quiescence-wait termination state. _lastEventTimestamp tracks the occurrence time of the
+    // most recently processed trace event of any kind -- the closest available proxy for
+    // "current simulated time" from here, since this class has no direct SystemClock access and
+    // (per EventCoordinatorImpl.processEvents) events are always dispatched strictly in
+    // non-decreasing timestamp order, single-threaded within one round, so this is safe to use.
+    // _lastReorgTimestamp is the occurrence time of the most recent ChainReorganizedTraceEvent;
+    // both start at 0 but _lastReorgTimestamp is only ever read once _chainReorganizations is
+    // non-empty, at which point it has always already been set by that same first reorg.
+    private long _lastEventTimestamp = 0L;
+    private long _lastReorgTimestamp = 0L;
+
     public ThreesimSimulationMonitor(
             LongestChainExceededMaxLengthCondition maxBlockchainLengthCondition,
             double failureThroughputThreshold,
@@ -137,6 +148,8 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
     @Override
     public void onTraceEventOccurred(TraceEvent event, TraceEventLogOrigin logOrigin) {
+        _lastEventTimestamp = event.getOccurrenceTime();
+
         if (BlockMinedTraceEvent.EVENT_TYPE.equals(event.getEventType())) {
             BlockMinedTraceEvent e = (BlockMinedTraceEvent) event;
             Block block = e.getBlock();
@@ -195,17 +208,26 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
             _numberOfSubmittedTransactions++;
 
         } else if (ChainReorganizedTraceEvent.EVENT_TYPE.equals(event.getEventType())) {
-            _chainReorganizations.add(new ChainReorganizationOccurrence(logOrigin.getId(), (ChainReorganizedTraceEvent) event));
+            ChainReorganizedTraceEvent reorgEvent = (ChainReorganizedTraceEvent) event;
+            _chainReorganizations.add(new ChainReorganizationOccurrence(logOrigin.getId(), reorgEvent, isAttackerCaused(reorgEvent)));
+            _lastReorgTimestamp = reorgEvent.getOccurrenceTime();
         }
     }
 
     @Override
     public boolean shouldTerminate() {
-        // Episode-style termination: a reorg ends the round immediately (attacker "wins",
-        // D_r = the recorded depth) rather than continuing to accumulate further reorgs up to
-        // the length cap. Reaching maxAllowedBlockchainLength with this list still empty is the
-        // "attacker loses" case, D_r = 0 -- no separate abandonment signal needed.
-        if (!_chainReorganizations.isEmpty()) return true;
+        // Quiescence-wait termination: a reorg no longer ends the round on its own -- it must
+        // first go quiet (no further reorg, from any node) for 0.5 x block_creation_interval of
+        // simulated time before the current state is accepted as converged. Any new reorg resets
+        // the wait by advancing _lastReorgTimestamp, so this checks the gap since the MOST
+        // RECENT one, not the first. Falls through to the existing maxAllowedBlockchainLength
+        // check below as a backstop if quiescence is never reached.
+        if (!_chainReorganizations.isEmpty()) {
+            long quiescenceWindow = (long) (0.5 * _simulationParameters.getBlockInterval());
+            if (_lastEventTimestamp - _lastReorgTimestamp >= quiescenceWindow) {
+                return true;
+            }
+        }
 
         boolean maxExceeded = _maxBlockchainLengthCondition.hasLengthExceeded();
 
@@ -222,6 +244,14 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
             }
 
             if (reachedDepth) return true;
+        }
+
+        if (maxExceeded && !_chainReorganizations.isEmpty()) {
+            // Cap reached before quiescence was ever achieved (reorgs kept resetting the wait):
+            // treat identically to "no reorg ever occurred" (D_r=0, loss) per the simplified
+            // termination rule, rather than reporting a still-contested, possibly-transient
+            // result as final.
+            _chainReorganizations.clear();
         }
 
         return maxExceeded;
@@ -328,6 +358,19 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
     private boolean isAttacker(String originId) {
         return originId != null && _simulationParameters.getAttackerNodeIds().contains(originId);
+    }
+
+    // Branch-lineage attribution: a reorg counts as attacker-caused when the winning branch's
+    // earliest block past the common ancestor (i.e. where it first diverges from the shared
+    // history) is attacker-mined -- regardless of who mined the later, decisive block that
+    // actually pushed the chain past its previous length. This correctly credits the attacker
+    // for a tie it forced even when gamma-recruited honest hashpower finishes extending it, and
+    // correctly excludes an honest-vs-honest natural fork that the attacker merely happened to
+    // finish (see GammaAwareHonestBlockchainSystemNodeBehavior / SelfishMiningNodeBehavior's
+    // honest-fallback path for the two respective mechanisms).
+    private boolean isAttackerCaused(ChainReorganizedTraceEvent e) {
+        List<ChainReorganizedTraceEvent.ChainBlock> chain = e.getReplacingChainBlocks();
+        return !chain.isEmpty() && isAttacker(chain.get(0).getBlock().getOriginId());
     }
 
     private void addTo(Map<String, Set<String>> map, String key, String value) {

@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64gb
-#SBATCH --time=12:00:00
+#SBATCH --time=72:00:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=baolan2005@gmail.com
 

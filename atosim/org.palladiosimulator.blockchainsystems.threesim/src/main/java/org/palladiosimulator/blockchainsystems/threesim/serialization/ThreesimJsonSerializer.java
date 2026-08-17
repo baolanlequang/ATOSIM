@@ -49,7 +49,10 @@ public class ThreesimJsonSerializer {
         appendMetricsArray(sb, result.getSimulationRoundResult().getOutputMetrics(), "  ");
         sb.append(",\n");
         sb.append("  \"chainReorganizationDepth\": ")
-          .append(maxReorgDepth(result.getSimulationRoundResult().getChainReorganizations()));
+          .append(finalReorgDepth(result.getSimulationRoundResult().getChainReorganizations()));
+        sb.append(",\n");
+        sb.append("  \"attackerCausedChainReorganizationDepth\": ")
+          .append(finalAttackerCausedReorgDepth(result.getSimulationRoundResult().getChainReorganizations()));
         if (includeChainReorganizations) {
             sb.append(",\n");
             sb.append("  \"chainReorganizations\": ");
@@ -81,7 +84,13 @@ public class ThreesimJsonSerializer {
         sb.append("  \"chainReorganizationDepths\": [");
         for (int i = 0; i < rounds.size(); i++) {
             if (i > 0) sb.append(",");
-            sb.append(maxReorgDepth(rounds.get(i).getChainReorganizations()));
+            sb.append(finalReorgDepth(rounds.get(i).getChainReorganizations()));
+        }
+        sb.append("],\n");
+        sb.append("  \"attackerCausedChainReorganizationDepths\": [");
+        for (int i = 0; i < rounds.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(finalAttackerCausedReorgDepth(rounds.get(i).getChainReorganizations()));
         }
         sb.append("]");
         if (includeChainReorganizations) {
@@ -138,20 +147,31 @@ public class ThreesimJsonSerializer {
         sb.append(indent).append("}");
     }
 
-    // The deepest single reorg observed anywhere in these occurrences (0 if none) -- this is
-    // D_r, the per-round value the attack success rate / conditional depth / severity formulas
-    // (P, Dbar_plus, V) are computed from. A round can contain reorgs from many independent
-    // per-node chain views (see ChainReorganizationOccurrence), so D_r is the max across all of
-    // them, not a sum -- matches "how bad did the attack get this round" rather than double
-    // counting the same underlying attack once per node that observed it.
-    private static long maxReorgDepth(List<ChainReorganizationOccurrence> occurrences) {
-        long max = 0;
-        for (ChainReorganizationOccurrence occ : occurrences) {
-            ChainReorganizedTraceEvent e = occ.getEvent();
-            long depth = e.getNewCanonicalTipHeight() - e.getCommonAncestorHeight();
-            if (depth > max) max = depth;
-        }
-        return max;
+    // D_r for this round: the depth of the LAST occurrence observed before the round
+    // terminated -- quiescence reached (0.5 x block_creation_interval with no further reorg,
+    // see ThreesimSimulationMonitor.shouldTerminate()), or the cap-without-quiescence/no-reorg
+    // case, where the list is already empty by the time it gets here (cleared by the monitor).
+    // Deliberately NOT the deepest occurrence across the round: a deeper transient excursion
+    // earlier on can later be fully orphaned by a shallower, final resolution (or vice versa),
+    // so taking the max would report a possibly-superseded snapshot instead of the converged
+    // outcome. 0 if no reorg occurred (or none survived to quiescence).
+    private static long finalReorgDepth(List<ChainReorganizationOccurrence> occurrences) {
+        if (occurrences.isEmpty()) return 0;
+        ChainReorganizedTraceEvent last = occurrences.get(occurrences.size() - 1).getEvent();
+        return last.getNewCanonicalTipHeight() - last.getCommonAncestorHeight();
+    }
+
+    // Same as finalReorgDepth, but only non-zero when that SAME last (converged) occurrence's
+    // winning branch originated from the attacker (see ChainReorganizationOccurrence.
+    // isAttackerCaused / branch-lineage attribution in ThreesimSimulationMonitor.
+    // isAttackerCaused) -- 0 whenever the final outcome was not attacker-caused, even if some
+    // earlier, since-superseded occurrence in this same round was.
+    private static long finalAttackerCausedReorgDepth(List<ChainReorganizationOccurrence> occurrences) {
+        if (occurrences.isEmpty()) return 0;
+        ChainReorganizationOccurrence last = occurrences.get(occurrences.size() - 1);
+        if (!last.isAttackerCaused()) return 0;
+        ChainReorganizedTraceEvent e = last.getEvent();
+        return e.getNewCanonicalTipHeight() - e.getCommonAncestorHeight();
     }
 
     // Only emitted when includeChainReorganizations is set (see toJson overloads) -- distinct

@@ -9,12 +9,18 @@ public class ChainReorganizationOccurrence {
 
     private final String nodeId;
     private final ChainReorganizedTraceEvent event;
+    private final boolean attackerCaused;
 
-    public ChainReorganizationOccurrence(String nodeId, ChainReorganizedTraceEvent event) {
+    public ChainReorganizationOccurrence(String nodeId, ChainReorganizedTraceEvent event, boolean attackerCaused) {
         this.nodeId = nodeId;
         this.event = event;
+        this.attackerCaused = attackerCaused;
     }
 
     public String getNodeId() { return nodeId; }
     public ChainReorganizedTraceEvent getEvent() { return event; }
+
+    // True when the winning branch's earliest block past the common ancestor was attacker-mined
+    // (branch-lineage attribution -- see ThreesimSimulationMonitor.isAttackerCaused).
+    public boolean isAttackerCaused() { return attackerCaused; }
 }
