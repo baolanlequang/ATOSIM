@@ -1,0 +1,255 @@
+Generated: 2026-09-05 07:14:27
+Strategies: lead_stubborn, selfish
+n rows total: 20000
+
+##############################################################################
+OUTCOME: attack_success_rate (Attack success rate P = (1/R) sum_r 1[D_r > 0])
+##############################################################################
+lead_stubborn (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.921
+    CV MAE (mean across folds)   = 0.029562  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.038324  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Attacker hash power          90.5% +/- 1.0%
+    Node degree                   7.4% +/- 0.6%
+    Validating-node count         0.2% +/- 0.1%
+    Block creation interval       0.0% +/- 0.0%
+    Max block size                0.0% +/- 0.0%
+    Bandwidth                     0.0% +/- 0.0%
+  interaction residual (mean +/- std across trees): 2.0% +/- 0.7%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.944
+    Node degree                  0.084
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.000
+    Bandwidth                    0.000
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1%
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0%
+    Attacker hash power x Node degree                                                                 0.4% +/- 0.3%
+selfish (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.921
+    CV MAE (mean across folds)   = 0.029394  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.038285  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Attacker hash power          89.8% +/- 1.0%
+    Node degree                   8.0% +/- 0.7%
+    Validating-node count         0.1% +/- 0.0%
+    Max block size                0.0% +/- 0.0%
+    Block creation interval       0.0% +/- 0.0%
+    Bandwidth                     0.0% +/- 0.0%
+  interaction residual (mean +/- std across trees): 1.9% +/- 0.7%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.933
+    Node degree                  0.092
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1%
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0%
+    Attacker hash power x Node degree                                                                 0.4% +/- 0.2%
+All strategies (pooled) (n=20000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.922
+    CV MAE (mean across folds)   = 0.029388  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.038153  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Attacker hash power          90.1% +/- 0.6%
+    Node degree                   7.9% +/- 0.4%
+    Validating-node count         0.2% +/- 0.0%
+    Block creation interval       0.0% +/- 0.0%
+    Max block size                0.0% +/- 0.0%
+    Bandwidth                     0.0% +/- 0.0%
+  interaction residual (mean +/- std across trees): 1.8% +/- 0.3%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.938
+    Node degree                  0.093
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               0.0% +/- 0.0%
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0%
+    Attacker hash power x Node degree                                                                 0.3% +/- 0.1%
+
+Chart saved: ../../fanova_smoketest_10k/fanova_hutter2014_exact/fanova_sobol_bar_attack_success_rate.png
+
+##############################################################################
+OUTCOME: conditional_reorg_depth (Conditional reorg depth D-bar+ = mean(D_r | D_r > 0), undefined if P=0)
+##############################################################################
+lead_stubborn (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = -0.152
+    CV MAE (mean across folds)   = 0.007607  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.014791  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Node degree                  20.8% +/- 6.9%
+    Validating-node count         3.7% +/- 13.1%
+    Max block size                3.6% +/- 6.8%
+    Block creation interval       3.2% +/- 6.9%
+    Bandwidth                     0.7% +/- 0.6%
+    Attacker hash power           0.4% +/- 0.2%
+  interaction residual (mean +/- std across trees): 67.7% +/- 12.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Node degree                  0.921
+    Block creation interval      0.219
+    Bandwidth                    0.161
+    Max block size               0.130
+    Validating-node count        0.063
+    Attacker hash power          0.004
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               5.9% +/- 8.3%
+    Max block size x Bandwidth                                                                        0.2% +/- 0.3%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.1% +/- 0.4%
+    Attacker hash power x Node degree                                                                 0.2% +/- 0.3%
+selfish (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.030
+    CV MAE (mean across folds)   = 0.005517  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.011610  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Node degree                  23.6% +/- 6.9%
+    Validating-node count         4.4% +/- 14.5%
+    Block creation interval       3.9% +/- 8.0%
+    Max block size                3.3% +/- 6.5%
+    Attacker hash power           0.5% +/- 0.3%
+    Bandwidth                     0.5% +/- 0.5%
+  interaction residual (mean +/- std across trees): 63.7% +/- 12.6%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Node degree                  0.923
+    Block creation interval      0.230
+    Bandwidth                    0.141
+    Max block size               0.101
+    Validating-node count        0.058
+    Attacker hash power          0.006
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               4.5% +/- 6.8%
+    Max block size x Bandwidth                                                                        0.2% +/- 0.3%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.1% +/- 0.3%
+    Attacker hash power x Node degree                                                                 0.3% +/- 0.4%
+All strategies (pooled) (n=20000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = -0.055
+    CV MAE (mean across folds)   = 0.006623  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.013410  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Node degree                  20.1% +/- 5.3%
+    Block creation interval       3.2% +/- 6.1%
+    Validating-node count         2.6% +/- 9.8%
+    Max block size                2.3% +/- 4.2%
+    Bandwidth                     0.9% +/- 0.4%
+    Attacker hash power           0.4% +/- 0.2%
+  interaction residual (mean +/- std across trees): 70.5% +/- 9.1%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Node degree                  0.921
+    Block creation interval      0.230
+    Bandwidth                    0.219
+    Max block size               0.107
+    Validating-node count        0.059
+    Attacker hash power          0.010
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               4.1% +/- 5.8%
+    Max block size x Bandwidth                                                                        0.5% +/- 0.7%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.4% +/- 0.8%
+    Attacker hash power x Node degree                                                                 0.4% +/- 0.4%
+
+Chart saved: ../../fanova_smoketest_10k/fanova_hutter2014_exact/fanova_sobol_bar_conditional_reorg_depth.png
+
+##############################################################################
+OUTCOME: attack_severity (Attack severity V = (1/R) sum_r D_r = P * D-bar+ (when P>0))
+##############################################################################
+lead_stubborn (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.916
+    CV MAE (mean across folds)   = 0.060456  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.079838  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Attacker hash power          89.2% +/- 1.1%
+    Node degree                   8.4% +/- 0.8%
+    Validating-node count         0.2% +/- 0.1%
+    Block creation interval       0.0% +/- 0.0%
+    Max block size                0.0% +/- 0.0%
+    Bandwidth                     0.0% +/- 0.0%
+  interaction residual (mean +/- std across trees): 2.3% +/- 0.7%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.930
+    Node degree                  0.097
+    Validating-node count        0.003
+    Max block size               0.002
+    Block creation interval      0.000
+    Bandwidth                    0.000
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1%
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0%
+    Attacker hash power x Node degree                                                                 0.4% +/- 0.2%
+selfish (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.918
+    CV MAE (mean across folds)   = 0.059709  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.079011  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Attacker hash power          88.9% +/- 1.1%
+    Node degree                   8.8% +/- 0.7%
+    Validating-node count         0.1% +/- 0.0%
+    Max block size                0.0% +/- 0.0%
+    Block creation interval       0.0% +/- 0.0%
+    Bandwidth                     0.0% +/- 0.0%
+  interaction residual (mean +/- std across trees): 2.1% +/- 0.7%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.922
+    Node degree                  0.103
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1%
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0%
+    Attacker hash power x Node degree                                                                 0.5% +/- 0.3%
+All strategies (pooled) (n=20000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.918
+    CV MAE (mean across folds)   = 0.059842  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.078958  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- std across 500 trees, Corollary 8 uncertainty):
+    Attacker hash power          88.9% +/- 0.7%
+    Node degree                   8.8% +/- 0.5%
+    Validating-node count         0.2% +/- 0.0%
+    Max block size                0.0% +/- 0.0%
+    Block creation interval       0.0% +/- 0.0%
+    Bandwidth                     0.0% +/- 0.0%
+  interaction residual (mean +/- std across trees): 2.1% +/- 0.4%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.924
+    Node degree                  0.107
+    Validating-node count        0.003
+    Max block size               0.002
+    Block creation interval      0.001
+    Bandwidth                    0.001
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- std across 500 trees; interaction only, main effects already subtracted):
+    Node degree x Validating-node count                                                               0.1% +/- 0.0%
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0%
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0%
+    Attacker hash power x Node degree                                                                 0.3% +/- 0.1%
+
+Chart saved: ../../fanova_smoketest_10k/fanova_hutter2014_exact/fanova_sobol_bar_attack_severity.png

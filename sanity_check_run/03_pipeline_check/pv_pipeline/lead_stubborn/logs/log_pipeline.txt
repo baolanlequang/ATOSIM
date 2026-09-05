@@ -1,0 +1,17 @@
+[2026-08-23 15:56:12] === run_selfish_pipeline.py started ===
+[2026-08-23 15:56:12] Args: {'json_dir': '/Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/results_new/sanity_check_run/lead_stubborn', 'json_pattern': '*.json', 'config_csv': 'run_configurations_lead_stubborn.csv', 'output_dir': '/Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline/lead_stubborn', 'num_workers': 4, 'expected_i': 1000, 'expected_j': 100, 'r_rounds': 200, 'n_bootstrap': 200, 'seed': 42}
+[2026-08-23 15:56:12] Using num_workers=4
+[2026-08-23 15:56:12] Found 1000 JSON files matching pattern
+[2026-08-23 15:56:12] Stage 1: processing 1000 JSON files with 4 worker processes
+[2026-08-23 15:56:29] Stage 1 done: 1000 files OK, 0 files failed, elapsed 0.3 min
+[2026-08-23 15:56:29] Stage 2 done: merged table has 1000 rows
+[2026-08-23 15:56:29] Merged (i,j) table written: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline/lead_stubborn/agg_selfish_full.csv (1000 rows)
+[2026-08-23 15:56:29] Completeness check: 1000 unique system_config_id (expected 1000), 100 unique attacker_config_id (expected 100), 1000 pairs (expected 100000)
+[2026-08-23 15:56:29] WARNING: pair count does not match the full crossed design. System-level aggregation will proceed using whatever pairs are present.
+[2026-08-23 15:56:29] Stage 3: building (system_config_id x attacker_config_id) matrices: 1000 x 100
+[2026-08-23 15:56:29] WARNING: 99000 missing P_ij cells in the pivoted matrix (incomplete crossed design); excluded via nan-aware averaging.
+[2026-08-23 15:56:29] Stage 3: running bootstrap for P_bar_i CI: 200 resamples over 100 attacker-context configs (seed=42)
+[2026-08-23 15:56:29] Stage 3 done: system-level table has 1000 rows
+[2026-08-23 15:56:29] System-level table written: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline/lead_stubborn/system_level_selfish.csv (1000 rows)
+[2026-08-23 15:56:29] Summary: mean P_bar_i=0.3270, mean B_bar_i=1.8221, mean V_bar_i=0.6091, min V_bar_i=0.2200 (system_config_id=2057), max V_bar_i=9.8000 (system_config_id=831)
+[2026-08-23 15:56:29] === Finished OK: 0 files failed in Stage 1, total elapsed 0.3 min ===

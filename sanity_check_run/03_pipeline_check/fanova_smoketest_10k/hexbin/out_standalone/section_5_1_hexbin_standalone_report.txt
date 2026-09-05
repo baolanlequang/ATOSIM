@@ -1,0 +1,64 @@
+
+========================================================================================
+SECTION 5.1 - STANDALONE PER-STRATEGY HEXBIN FIGURES (split from combined 3-panel figure)
+========================================================================================
+selfish: n=10000  <-- below full 250000 (trail_stubborn backfill pending)
+lead_stubborn: n=10000  <-- below full 250000 (trail_stubborn backfill pending)
+trail_stubborn: n=249500  <-- below full 250000 (trail_stubborn backfill pending)
+Per-strategy y-limits (dynamic, computed from loaded data): {'selfish': (0.2, 0.5, 0.131, 0.989), 'lead_stubborn': (0.2, 0.5, 0.11599999999999999, 0.9740000000000001), 'trail_stubborn': (0.2, 0.5, 0.21775, 1.0)}
+
+--- Color scale ---
+  selfish: max hex-cell count in its own extent = 41
+  lead_stubborn: max hex-cell count in its own extent = 41
+  trail_stubborn: max hex-cell count in its own extent = 1269
+Global max cell count across the 3 strategies (recomputed fresh from current data) = 1269
+Decision: KEEP the shared LogNorm(vmin=1, vmax=1269) color scale across all three standalone files (matches the combined figure's vmax=7500; comparability across strategies has been the consistent priority throughout this analysis, and none of the three panels visibly washes out under this shared scale - see Task 4 check below / figures themselves).
+
+--- Per-file settings ---
+selfish: gridsize=60, extent(x,y)=(0.2, 0.5, 0.131, 0.989), cmap=viridis, color_norm=LogNorm(1,1269), y-axis=raw P (linear)
+lead_stubborn: gridsize=60, extent(x,y)=(0.2, 0.5, 0.11599999999999999, 0.9740000000000001), cmap=viridis, color_norm=LogNorm(1,1269), y-axis=raw P (linear)
+trail_stubborn: gridsize=60, extent(x,y)=(0.2, 0.5, 0.21775, 1.0), cmap=viridis, color_norm=LogNorm(1,1269), y-axis=raw P (linear)
+
+========================================================================================
+FIGURES
+========================================================================================
+Saved: /private/tmp/claude-501/-Users-lanle-Documents-Working-Uni-Ulm-PhD-atosim-acm-2026-ATOSIM/17f6cb07-4bc8-43c0-9cce-d0ed37878407/scratchpad/hexbin_verify_10k/out_standalone/hexbin_attack_success_selfish.png
+Saved: /private/tmp/claude-501/-Users-lanle-Documents-Working-Uni-Ulm-PhD-atosim-acm-2026-ATOSIM/17f6cb07-4bc8-43c0-9cce-d0ed37878407/scratchpad/hexbin_verify_10k/out_standalone/hexbin_attack_success_lead_stubborn.png
+Saved: /private/tmp/claude-501/-Users-lanle-Documents-Working-Uni-Ulm-PhD-atosim-acm-2026-ATOSIM/17f6cb07-4bc8-43c0-9cce-d0ed37878407/scratchpad/hexbin_verify_10k/out_standalone/hexbin_attack_success_trail_stubborn.png
+
+--- Task 4: per-bin mean P vs. previously-reported numbers (sanity check, not new analysis) ---
+selfish:
+  bin             fresh_mean  prior_mean     delta
+  ------------------------------------------------
+  0.20-0.25           0.3026      0.9995   -0.6969
+  0.25-0.30           0.3755      0.9999   -0.6244
+  0.30-0.35           0.4518      1.0000   -0.5482
+  0.35-0.40           0.5288      1.0000   -0.4712
+  0.40-0.45           0.6022      1.0000   -0.3978
+  0.45-0.50           0.6652      1.0000   -0.3348
+  max |delta| = 0.696915 -> MISMATCH - investigate
+lead_stubborn:
+  bin             fresh_mean  prior_mean     delta
+  ------------------------------------------------
+  0.20-0.25           0.2989      0.9995   -0.7006
+  0.25-0.30           0.3733      0.9999   -0.6266
+  0.30-0.35           0.4482      1.0000   -0.5518
+  0.35-0.40           0.5247      1.0000   -0.4753
+  0.40-0.45           0.5976      1.0000   -0.4024
+  0.45-0.50           0.6632      1.0000   -0.3368
+  max |delta| = 0.700619 -> MISMATCH - investigate
+trail_stubborn:
+  bin             fresh_mean  prior_mean     delta
+  ------------------------------------------------
+  0.20-0.25           0.6565      0.6565    0.0000
+  0.25-0.30           0.6949      0.6949    0.0000
+  0.30-0.35           0.7320      0.7320   -0.0000
+  0.35-0.40           0.7670      0.7670    0.0000
+  0.40-0.45           0.7999      0.7999   -0.0000
+  0.45-0.50           0.8303      0.8303   -0.0000
+  max |delta| = 0.000045 -> MATCHES prior combined-figure numbers
+
+========================================================================================
+NOTE
+========================================================================================
+Combined 3-panel figure (section_5_1_out/hexbin_attack_success_by_hash_power.png) is NOT modified or deleted by this script - both versions remain available.

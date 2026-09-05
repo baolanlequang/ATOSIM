@@ -1,0 +1,58 @@
+==========================================================================================
+Paired-difference analysis (lead_stubborn - selfish), 10k matched sample
+Matched on (system_config_id, attacker_config_id, bandwidth) -- see script docstring
+for why this 3-key match is used instead of the 1000-row analysis's 2-key match.
+==========================================================================================
+selfish rows: 10000, lead_stubborn rows: 10000
+Matched pairs: 10000  (unmatched: 0 selfish-only, 0 lead_stubborn-only)
+
+------------------------------------------------------------------------------------------
+Outcome: attack_success_rate
+  0 pairs excluded -- attack_success_rate was defined (non-NaN) for all 10000 matched pairs
+  in both strategies at this data scale.
+  n = 10000
+  mean = -0.003367   (95% bootstrap CI: [-0.004319, -0.002423], 10000 resamples)
+  mean = -0.003367   (95% analytic CI:  [-0.004307, -0.002427], normal approx, for comparison)
+  std = 0.047962, median = -0.005000, min = -0.185000, max = 0.170000
+  fraction |diff| > 0.02: 0.7004  (7004/10000)
+  fraction |diff| > 0.05: 0.2930  (2930/10000)
+  fraction |diff| > 0.10: 0.0360  (360/10000)
+  distinguishable from zero (bootstrap CI excludes 0)? YES
+------------------------------------------------------------------------------------------
+Outcome: conditional_reorg_depth
+  0 pairs excluded -- conditional_reorg_depth was defined (non-NaN) for all 10000 matched pairs
+  in both strategies at this data scale.
+  n = 10000
+  mean = 0.002341   (95% bootstrap CI: [0.002099, 0.002592], 10000 resamples)
+  mean = 0.002341   (95% analytic CI:  [0.002096, 0.002586], normal approx, for comparison)
+  std = 0.012503, median = 0.000000, min = -0.139373, max = 0.244286
+  fraction |diff| > 0.02: 0.0647  (647/10000)
+  fraction |diff| > 0.05: 0.0072  (72/10000)
+  fraction |diff| > 0.10: 0.0015  (15/10000)
+  distinguishable from zero (bootstrap CI excludes 0)? YES
+------------------------------------------------------------------------------------------
+Outcome: attack_severity
+  0 pairs excluded -- attack_severity was defined (non-NaN) for all 10000 matched pairs
+  in both strategies at this data scale.
+  n = 10000
+  mean = -0.005526   (95% bootstrap CI: [-0.007443, -0.003626], 10000 resamples)
+  mean = -0.005526   (95% analytic CI:  [-0.007417, -0.003635], normal approx, for comparison)
+  std = 0.096458, median = -0.005000, min = -0.360000, max = 0.340000
+  fraction |diff| > 0.02: 0.8565  (8565/10000)
+  fraction |diff| > 0.05: 0.6152  (6152/10000)
+  fraction |diff| > 0.10: 0.2923  (2923/10000)
+  distinguishable from zero (bootstrap CI excludes 0)? YES
+------------------------------------------------------------------------------------------
+Threshold-appropriateness note:
+  0.02/0.05/0.10 are absolute thresholds. For attack_success_rate and
+  attack_severity, whose natural ranges are ~[0.15,0.95] and ~[0.3,2.1] respectively,
+  these thresholds represent genuinely small-to-moderate perturbations, comparable
+  in spirit to the original 1000-row ASR analysis. For conditional_reorg_depth,
+  whose ENTIRE observed range is ~[2.0, 2.4] (std ~0.015-0.02), a 0.02 absolute
+  threshold is comparable to the outcome's entire standard deviation -- the same
+  thresholds are NOT on a comparable relative scale for this outcome. Reported below
+  for consistency/comparability across outcomes, but should not be read as 'similarly
+  small' across all three.
+
+Saved plot: ./paired_diff_10k.png
+Saved per-pair data: ./paired_diff_10k.csv

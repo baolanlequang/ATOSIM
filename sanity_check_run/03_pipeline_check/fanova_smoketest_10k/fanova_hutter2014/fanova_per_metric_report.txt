@@ -1,0 +1,128 @@
+Generated: 2026-08-31 23:48:39
+Strategies: lead_stubborn, selfish
+n rows total: 20000
+
+##############################################################################
+OUTCOME: attack_success_rate (Attack success rate P = (1/R) sum_r 1[D_r > 0])
+##############################################################################
+lead_stubborn (n=10000, mean CV R^2=0.921)
+  fANOVA importance (Hutter et al. 2014, primary; interaction residual = 2.0%):
+    Attacker hash power          90.5%
+    Node degree                   7.4%
+    Validating-node count         0.2%
+    Block creation interval       0.0%
+    Max block size                0.0%
+    Bandwidth                     0.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.944
+    Node degree                  0.084
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.000
+    Bandwidth                    0.000
+selfish (n=10000, mean CV R^2=0.921)
+  fANOVA importance (Hutter et al. 2014, primary; interaction residual = 1.9%):
+    Attacker hash power          89.8%
+    Node degree                   8.0%
+    Validating-node count         0.1%
+    Max block size                0.0%
+    Block creation interval       0.0%
+    Bandwidth                     0.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.933
+    Node degree                  0.092
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+All strategies (pooled) (n=20000, mean CV R^2=0.922)
+  fANOVA importance (Hutter et al. 2014, primary; interaction residual = 1.8%):
+    Attacker hash power          90.1%
+    Node degree                   7.9%
+    Validating-node count         0.2%
+    Block creation interval       0.0%
+    Max block size                0.0%
+    Bandwidth                     0.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.938
+    Node degree                  0.093
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+
+Chart saved: ../../fanova_smoketest_10k/fanova_hutter2014/fanova_sobol_bar_attack_success_rate.png
+
+##############################################################################
+OUTCOME: conditional_reorg_depth (Conditional reorg depth D-bar+ = mean(D_r | D_r > 0), undefined if P=0)
+##############################################################################
+lead_stubborn: SKIPPED (mean CV R^2 <= threshold, not interpretable)
+selfish (n=10000, mean CV R^2=0.030)
+  fANOVA importance (Hutter et al. 2014, primary; interaction residual = 64.3%):
+    Node degree                  24.5%
+    Block creation interval       4.4%
+    Validating-node count         3.3%
+    Max block size                2.8%
+    Attacker hash power           0.4%
+    Bandwidth                     0.4%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Node degree                  0.923
+    Block creation interval      0.230
+    Bandwidth                    0.141
+    Max block size               0.101
+    Validating-node count        0.058
+    Attacker hash power          0.006
+All strategies (pooled): SKIPPED (mean CV R^2 <= threshold, not interpretable)
+
+Chart saved: ../../fanova_smoketest_10k/fanova_hutter2014/fanova_sobol_bar_conditional_reorg_depth.png
+
+##############################################################################
+OUTCOME: attack_severity (Attack severity V = (1/R) sum_r D_r = P * D-bar+ (when P>0))
+##############################################################################
+lead_stubborn (n=10000, mean CV R^2=0.916)
+  fANOVA importance (Hutter et al. 2014, primary; interaction residual = 2.3%):
+    Attacker hash power          89.2%
+    Node degree                   8.4%
+    Validating-node count         0.2%
+    Block creation interval       0.0%
+    Max block size                0.0%
+    Bandwidth                     0.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.930
+    Node degree                  0.097
+    Validating-node count        0.003
+    Max block size               0.002
+    Block creation interval      0.000
+    Bandwidth                    0.000
+selfish (n=10000, mean CV R^2=0.918)
+  fANOVA importance (Hutter et al. 2014, primary; interaction residual = 2.1%):
+    Attacker hash power          88.9%
+    Node degree                   8.8%
+    Validating-node count         0.1%
+    Max block size                0.0%
+    Block creation interval       0.0%
+    Bandwidth                     0.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.922
+    Node degree                  0.103
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+All strategies (pooled) (n=20000, mean CV R^2=0.918)
+  fANOVA importance (Hutter et al. 2014, primary; interaction residual = 2.1%):
+    Attacker hash power          88.8%
+    Node degree                   8.8%
+    Validating-node count         0.2%
+    Max block size                0.0%
+    Block creation interval       0.0%
+    Bandwidth                     0.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.924
+    Node degree                  0.107
+    Validating-node count        0.003
+    Max block size               0.002
+    Block creation interval      0.001
+    Bandwidth                    0.001
+
+Chart saved: ../../fanova_smoketest_10k/fanova_hutter2014/fanova_sobol_bar_attack_severity.png

@@ -1,0 +1,30 @@
+  [selfish] 200/1000 files checked, elapsed 53s
+  [selfish] 400/1000 files checked, elapsed 102s
+  [selfish] 600/1000 files checked, elapsed 153s
+  [selfish] 800/1000 files checked, elapsed 209s
+  [selfish] 1000/1000 files checked, elapsed 264s
+  [lead_stubborn] 200/1000 files checked, elapsed 320s
+  [lead_stubborn] 400/1000 files checked, elapsed 373s
+  [lead_stubborn] 600/1000 files checked, elapsed 429s
+  [lead_stubborn] 800/1000 files checked, elapsed 486s
+  [lead_stubborn] 1000/1000 files checked, elapsed 542s
+
+Total elapsed: 542s
+
+=== FILE COUNTS ===
+  selfish: 1000 files (expected 1000)
+  lead_stubborn: 1000 files (expected 1000)
+
+=== PER-INVARIANT PASS/FAIL/N-A/PARTIAL COUNTS (selfish+lead_stubborn combined, 2000 files) ===
+  1. block-production rate = 1/tau_B: {'PASS': 0, 'FAIL': 0, 'N/A': 0, 'PARTIAL': 2000}
+  2. exactly one attacker controls alpha: {'PASS': 2000, 'FAIL': 0, 'N/A': 0, 'PARTIAL': 0}
+  3. honest power sums to 1-alpha: {'PASS': 0, 'FAIL': 0, 'N/A': 0, 'PARTIAL': 2000}
+  4. every topology connected and bilateral: {'PASS': 2000, 'FAIL': 0, 'N/A': 0, 'PARTIAL': 0}
+  5. equal-work choices follow processing order: {'PASS': 0, 'FAIL': 0, 'N/A': 2000, 'PARTIAL': 0}
+  6. no episode ends after only one local reorg: {'PASS': 0, 'FAIL': 0, 'N/A': 2000, 'PARTIAL': 0}
+  7. unresolved episodes never encoded as failures: {'PASS': 2000, 'FAIL': 0, 'N/A': 0, 'PARTIAL': 0}
+  8. D > 0 exactly when status is successful: {'PASS': 2000, 'FAIL': 0, 'N/A': 0, 'PARTIAL': 0}
+
+=== TOTAL FAILURES: 0 ===
+
+Done. config_id index saved.

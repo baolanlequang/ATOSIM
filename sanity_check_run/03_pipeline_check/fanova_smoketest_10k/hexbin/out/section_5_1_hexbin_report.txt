@@ -1,0 +1,65 @@
+
+========================================================================================
+SECTION 5.1 FOLLOW-UP - RAW HEXBIN OF P vs. ATTACKER_HASH_POWER (no alpha-binning)
+========================================================================================
+
+--- Task 1: raw P vs. 1-P/log decision ---
+Decision: raw P, linear Y-axis, NOT 1-P/log.
+Reasoning: the earlier log-1-P transform was needed for the BOXPLOT because a box/whisker
+summary of a near-constant value has no visible shape unless the residual variation is
+stretched out on a log axis. A hexbin does not have that problem - overplotting is handled by
+the color/count dimension, not by spreading points along Y. Raw P lets the saturated band show
+up honestly as a dense dark region at P~1.0 while sparse low-P outliers still get their own
+(lighter) hex cells at their true P value. 1-P/log would in fact be WORSE here: P=1.0 rows
+(98% of selfish/lead_stubborn) give 1-P=0, undefined on a log axis, forcing the same exclusion
+problem as the boxplot version right back into a plot type that was supposed to avoid needing it.
+selfish: n=10000, P range [0.1700, 0.9500], P 1st pct=0.2350
+lead_stubborn: n=10000, P range [0.1550, 0.9350], P 1st pct=0.2300
+trail_stubborn: n=249500, P range [0.2550, 1.0000], P 1st pct=0.3950
+
+--- Task 2: gridsize ---
+gridsize=60 (x-cells across [0.20,0.50] -> ~0.0050 wide per cell), matching the resolution of the earlier binned analysis (~40-42k rows per 0.05-wide alpha region here spread over ~60 bins). mincnt=1 so every non-empty cell is drawn (no cell is silently dropped); log color norm shared across panels (see below) so cell shading is cross-strategy comparable, not just within-panel relative.
+
+--- Task 3: axis comparability - shared y-limits diagnostic ---
+Shared color scale: LogNorm(vmin=1, vmax=1446) (max hex-cell count across all 3 panels, so cell darkness is directly comparable across strategies)
+Saved diagnostic (shared [0,1] y-axis): /private/tmp/claude-501/-Users-lanle-Documents-Working-Uni-Ulm-PhD-atosim-acm-2026-ATOSIM/17f6cb07-4bc8-43c0-9cce-d0ed37878407/scratchpad/hexbin_verify_10k/out/hexbin_attack_success_by_hash_power_shared_ylim.png
+Expected/observed: selfish/lead_stubborn P sits in [0.170,0.950] - on a full [0,1] axis this may be too narrow a band for structure to be visible depending on the data's actual spread. Decision: do NOT use shared y-limits for the delivered figure.
+
+--- Task 3: axis comparability - delivered choice ---
+Delivered figure uses PER-PANEL y-limits, computed dynamically per strategy from that strategy's own loaded P min/max + 5% padding (see compute_extents; SANITY-CHECK COPY note at top of this file) rather than a hardcoded constant, so the figure stays correct as the data's P range shifts. Exact values used are printed below. This sacrifices literal shared-range comparability, but is the only way to keep both panel types individually readable (matching the same trade-off already made and accepted for the log-1-P boxplot). Partial comparability is preserved via: (a) identical x-axis [0.20,0.50] and gridsize across all 3 panels, (b) a single shared log color scale (LogNorm over the same [1, global_max_count] range) so hex darkness means the same row-count across panels, (c) gridlines at the same visual density. The y-axis numbers must be read explicitly per panel, not compared by eye position.
+Shared color scale: LogNorm(vmin=1, vmax=1269) (max hex-cell count across all 3 panels, so cell darkness is directly comparable across strategies)
+Saved (delivered): /private/tmp/claude-501/-Users-lanle-Documents-Working-Uni-Ulm-PhD-atosim-acm-2026-ATOSIM/17f6cb07-4bc8-43c0-9cce-d0ed37878407/scratchpad/hexbin_verify_10k/out/hexbin_attack_success_by_hash_power.png
+Per-panel y-limits used: {'selfish': (0.2, 0.5, 0.131, 0.989), 'lead_stubborn': (0.2, 0.5, 0.11599999999999999, 0.9740000000000001), 'trail_stubborn': (0.2, 0.5, 0.21775, 1.0)}
+
+--- Task 5: consistency check vs. prior binned means ---
+Per-bin mean P computed fresh from the raw per-row data used in this hexbin, vs. the prior session's already-reported binned means (should match closely - same source rows, same D_r-based P, just re-aggregated here as a sanity check):
+
+--- selfish ---
+bin             fresh_mean  prior_mean     delta
+------------------------------------------------
+0.20-0.25           0.3026      0.9995   -0.6969
+0.25-0.30           0.3755      0.9999   -0.6244
+0.30-0.35           0.4518      1.0000   -0.5482
+0.35-0.40           0.5288      1.0000   -0.4712
+0.40-0.45           0.6022      1.0000   -0.3978
+0.45-0.50           0.6652      1.0000   -0.3348
+
+--- lead_stubborn ---
+bin             fresh_mean  prior_mean     delta
+------------------------------------------------
+0.20-0.25           0.2989      0.9995   -0.7006
+0.25-0.30           0.3733      0.9999   -0.6266
+0.30-0.35           0.4482      1.0000   -0.5518
+0.35-0.40           0.5247      1.0000   -0.4753
+0.40-0.45           0.5976      1.0000   -0.4024
+0.45-0.50           0.6632      1.0000   -0.3368
+
+--- trail_stubborn ---
+bin             fresh_mean  prior_mean     delta
+------------------------------------------------
+0.20-0.25           0.6565      0.6565    0.0000
+0.25-0.30           0.6949      0.6949    0.0000
+0.30-0.35           0.7320      0.7320   -0.0000
+0.35-0.40           0.7670      0.7670    0.0000
+0.40-0.45           0.7999      0.7999   -0.0000
+0.45-0.50           0.8303      0.8303   -0.0000

@@ -1,0 +1,36 @@
+[2026-08-23 20:21:30] === run_selfish_pipeline.py started ===
+[2026-08-23 20:21:30] Args: {'json_dir': '/Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/results_new/sanity_check_run/selfish', 'json_pattern': '*.json', 'config_csv': 'run_configurations_selfish.csv', 'output_dir': '/Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline_v2/selfish', 'num_workers': 4, 'expected_i': 1000, 'expected_j': 100, 'r_rounds': 200, 'n_bootstrap': 200, 'seed': 42}
+[2026-08-23 20:21:30] Using num_workers=4
+[2026-08-23 20:21:30] Found 1000 JSON files matching pattern
+[2026-08-23 20:21:30] Stage 1: processing 1000 JSON files with 4 worker processes
+[2026-08-23 20:21:47] Stage 1 done: 1000 files OK, 0 files failed, elapsed 0.3 min
+[2026-08-23 20:21:47] Stage 2 done: merged table has 1000 rows
+[2026-08-23 20:21:47] Merged (i,j) table written: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline_v2/selfish/agg_selfish_full.csv (1000 rows)
+[2026-08-23 20:21:47] Completeness check: 1000 unique system_config_id (expected 1000), 100 unique attacker_config_id (expected 100), 1000 pairs (expected 100000)
+[2026-08-23 20:21:47] WARNING: pair count does not match the full crossed design. System-level aggregation will proceed using whatever pairs are present.
+[2026-08-23 20:21:47] Stage 3: building (system_config_id x attacker_config_id) matrices: 1000 x 100
+[2026-08-23 20:21:47] WARNING: 99000 missing P_ij cells in the pivoted matrix (incomplete crossed design); excluded via nan-aware averaging.
+[2026-08-23 20:21:47] Stage 3: running bootstrap for P_bar_i / P_status_bar_i / Dbar_plus_i CIs: 200 resamples over 100 attacker-context configs (seed=42)
+[2026-08-23 20:21:48] Stage 3 done: system-level table has 1000 rows
+[2026-08-23 20:21:48] System-level table written: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline_v2/selfish/system_level_selfish.csv (1000 rows)
+[2026-08-23 20:21:48] Summary: mean P_bar_i=0.2981, mean B_bar_i=1.8839, mean V_bar_i=0.5780, min V_bar_i=0.1600 (system_config_id=1077), max V_bar_i=12.4100 (system_config_id=831)
+[2026-08-23 20:21:48] Summary (D-bar-plus severity): mean P_status_bar_i=0.4893, mean Dbar_plus_i=2.0047, mean V_reorg_i=0.9812, min V_reorg_i=0.3400 (system_config_id=514), max V_reorg_i=1.7800 (system_config_id=241)
+[2026-08-23 20:21:48] === Finished OK: 0 files failed in Stage 1, total elapsed 0.3 min ===
+[2026-08-23 20:27:39] === run_selfish_pipeline.py started ===
+[2026-08-23 20:27:39] Args: {'json_dir': '/Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/results_new/sanity_check_run/selfish', 'json_pattern': '*.json', 'config_csv': 'run_configurations_selfish.csv', 'output_dir': '/Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline_v2/selfish', 'num_workers': 4, 'expected_i': 1000, 'expected_j': 100, 'r_rounds': 200, 'n_bootstrap': 200, 'seed': 42}
+[2026-08-23 20:27:39] Using num_workers=4
+[2026-08-23 20:27:39] Found 1000 JSON files matching pattern
+[2026-08-23 20:27:39] Stage 1: processing 1000 JSON files with 4 worker processes
+[2026-08-23 20:27:56] Stage 1 done: 1000 files OK, 0 files failed, elapsed 0.3 min
+[2026-08-23 20:27:56] Stage 2 done: merged table has 1000 rows
+[2026-08-23 20:27:56] Merged (i,j) table written: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline_v2/selfish/agg_selfish_full.csv (1000 rows)
+[2026-08-23 20:27:56] Completeness check: 1000 unique system_config_id (expected 1000), 100 unique attacker_config_id (expected 100), 1000 pairs (expected 100000)
+[2026-08-23 20:27:56] WARNING: pair count does not match the full crossed design. System-level aggregation will proceed using whatever pairs are present.
+[2026-08-23 20:27:56] Stage 3: building (system_config_id x attacker_config_id) matrices: 1000 x 100
+[2026-08-23 20:27:56] WARNING: 99000 missing P_ij cells in the pivoted matrix (incomplete crossed design); excluded via nan-aware averaging.
+[2026-08-23 20:27:56] Stage 3: running bootstrap for P_bar_i / P_status_bar_i / Dbar_plus_i CIs: 200 resamples over 100 attacker-context configs (seed=42)
+[2026-08-23 20:27:56] Stage 3 done: system-level table has 1000 rows
+[2026-08-23 20:27:56] System-level table written: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/pv_pipeline_v2/selfish/system_level_selfish.csv (1000 rows)
+[2026-08-23 20:27:56] Summary: mean P_bar_i=0.2981, mean B_bar_i=1.8839, mean V_bar_i=0.5780, min V_bar_i=0.1600 (system_config_id=1077), max V_bar_i=12.4100 (system_config_id=831)
+[2026-08-23 20:27:56] Summary (D-bar-plus severity): mean P_status_bar_i=0.4893, mean Dbar_plus_i=2.0047, mean V_reorg_i=0.9812, min V_reorg_i=0.3400 (system_config_id=514), max V_reorg_i=1.7800 (system_config_id=241)
+[2026-08-23 20:27:56] === Finished OK: 0 files failed in Stage 1, total elapsed 0.3 min ===

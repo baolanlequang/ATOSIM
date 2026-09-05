@@ -1,0 +1,128 @@
+Generated: 2026-08-31 23:07:25
+Strategies: lead_stubborn, selfish
+n rows total: 20000
+
+##############################################################################
+OUTCOME: attack_success_rate (Attack success rate P = (1/R) sum_r 1[D_r > 0])
+##############################################################################
+lead_stubborn (n=10000, mean CV R^2=0.921)
+  Total-order S_Ti (primary):
+    Attacker hash power          0.944
+    Node degree                  0.082
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.000
+    Bandwidth                    0.000
+  First-order fractions (context; interaction residual = 2.0%):
+    Attacker hash power          90.5%
+    Node degree                   7.4%
+    Validating-node count         0.2%
+    Block creation interval       0.0%
+    Max block size                0.0%
+    Bandwidth                     0.0%
+selfish (n=10000, mean CV R^2=0.921)
+  Total-order S_Ti (primary):
+    Attacker hash power          0.936
+    Node degree                  0.090
+    Validating-node count        0.002
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  First-order fractions (context; interaction residual = 1.9%):
+    Attacker hash power          89.8%
+    Node degree                   8.0%
+    Validating-node count         0.1%
+    Max block size                0.0%
+    Block creation interval       0.0%
+    Bandwidth                     0.0%
+All strategies (pooled) (n=20000, mean CV R^2=0.922)
+  Total-order S_Ti (primary):
+    Attacker hash power          0.937
+    Node degree                  0.088
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  First-order fractions (context; interaction residual = 1.8%):
+    Attacker hash power          90.1%
+    Node degree                   7.9%
+    Validating-node count         0.2%
+    Block creation interval       0.0%
+    Max block size                0.0%
+    Bandwidth                     0.0%
+
+Chart saved: ../../fanova_smoketest_10k/fanova_sobol_bar_attack_success_rate.png
+
+##############################################################################
+OUTCOME: conditional_reorg_depth (Conditional reorg depth D-bar+ = mean(D_r | D_r > 0), undefined if P=0)
+##############################################################################
+lead_stubborn: SKIPPED (mean CV R^2 <= threshold, not interpretable)
+selfish (n=10000, mean CV R^2=0.030)
+  Total-order S_Ti (primary):
+    Node degree                  0.927
+    Block creation interval      0.291
+    Max block size               0.159
+    Bandwidth                    0.054
+    Validating-node count        0.043
+    Attacker hash power          0.011
+  First-order fractions (context; interaction residual = 64.3%):
+    Node degree                  24.5%
+    Block creation interval       4.4%
+    Validating-node count         3.3%
+    Max block size                2.8%
+    Attacker hash power           0.4%
+    Bandwidth                     0.4%
+All strategies (pooled): SKIPPED (mean CV R^2 <= threshold, not interpretable)
+
+Chart saved: ../../fanova_smoketest_10k/fanova_sobol_bar_conditional_reorg_depth.png
+
+##############################################################################
+OUTCOME: attack_severity (Attack severity V = (1/R) sum_r D_r = P * D-bar+ (when P>0))
+##############################################################################
+lead_stubborn (n=10000, mean CV R^2=0.916)
+  Total-order S_Ti (primary):
+    Attacker hash power          0.933
+    Node degree                  0.094
+    Validating-node count        0.003
+    Max block size               0.001
+    Block creation interval      0.000
+    Bandwidth                    0.000
+  First-order fractions (context; interaction residual = 2.3%):
+    Attacker hash power          89.2%
+    Node degree                   8.4%
+    Validating-node count         0.2%
+    Block creation interval       0.0%
+    Max block size                0.0%
+    Bandwidth                     0.0%
+selfish (n=10000, mean CV R^2=0.918)
+  Total-order S_Ti (primary):
+    Attacker hash power          0.927
+    Node degree                  0.099
+    Validating-node count        0.002
+    Max block size               0.001
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  First-order fractions (context; interaction residual = 2.1%):
+    Attacker hash power          88.9%
+    Node degree                   8.8%
+    Validating-node count         0.1%
+    Max block size                0.0%
+    Block creation interval       0.0%
+    Bandwidth                     0.0%
+All strategies (pooled) (n=20000, mean CV R^2=0.918)
+  Total-order S_Ti (primary):
+    Attacker hash power          0.928
+    Node degree                  0.100
+    Validating-node count        0.003
+    Max block size               0.002
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  First-order fractions (context; interaction residual = 2.1%):
+    Attacker hash power          88.8%
+    Node degree                   8.8%
+    Validating-node count         0.2%
+    Max block size                0.0%
+    Block creation interval       0.0%
+    Bandwidth                     0.0%
+
+Chart saved: ../../fanova_smoketest_10k/fanova_sobol_bar_attack_severity.png

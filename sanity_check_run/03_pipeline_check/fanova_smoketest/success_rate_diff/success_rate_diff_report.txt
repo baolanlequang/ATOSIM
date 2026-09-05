@@ -1,0 +1,31 @@
+
+========================================================================================
+SuccessRateDiff (lead_stubborn - selfish), matched per (system_config_id, attacker_config_id) pair
+========================================================================================
+Matched pairs (same config_id -> same (system_config_id, attacker_config_id) across strategies): 1000
+
+--- Summary statistics of SuccessRateDiff ---
+mean:   -0.0049
+std:    0.0472
+median: -0.0050
+min:    -0.1550
+max:    0.1300
+fraction |diff| > 0.02: 0.6770  (677/1000)
+fraction |diff| > 0.05: 0.2770  (277/1000)
+fraction |diff| > 0.10: 0.0410  (41/1000)
+
+correlation(diff, attacker_hash_power): -0.0667  (negligible -- diff is not explained by alpha alone)
+
+--- Interpretation ---
+Mean diff is near zero (-0.0049), consistent with the two strategies' near-identical
+aggregate S_Ti sensitivity pattern. But per-pair std is 0.0472, and 27.7% of the 1000
+matched pairs differ by more than 0.05 in attack_success_rate -- so 'near-identical'
+holds only in AGGREGATE (the mean cancels out real per-config differences in both
+directions), not at the per-config level. The near-zero correlation with
+attacker_hash_power (-0.0667) rules out alpha as the driver of these per-pair
+differences -- they must come from the other varying parameters (topology,
+bandwidth, block timing, etc.) or from genuine strategy-specific dynamics not
+captured by the aggregate S_Ti ranking.
+
+Saved: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/fanova_smoketest/success_rate_diff/success_rate_diff.png
+Saved per-pair data: /Users/lanle/Documents/Working/Uni_Ulm/PhD/atosim-acm-2026/ATOSIM/sanity_check_run/03_pipeline_check/fanova_smoketest/success_rate_diff/success_rate_diff.csv
