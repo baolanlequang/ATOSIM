@@ -207,6 +207,35 @@ public class ATOSIMSimulationFactory implements Simulation {
         };
 
         return new ThreesimSimulationParameters(
+                // Item 1b: this feeds DeterministicSeeds.topologySeed(configId, replicationId)
+                // (ThreesimBlockchainSystemFactory.createBlockchainSystem), which must be keyed
+                // on the topology-defining design, not the per-row config_id (unique per row --
+                // using it gives every row its own distinct topology instead of reusing one
+                // across bandwidth/attacker/strategy conditions, confirmed by measurement to be
+                // the current behavior). system_config_id alone is NOT sufficient here despite
+                // looking like the natural candidate: lhs_generate_sample_two_stage.py assigns a
+                // *fresh* system_config_id to every (core_config_id x bandwidth_variant_id) pair
+                // (core_df.merge(bandwidth_df, how="cross"), then a flat sequential id over the
+                // cross-joined rows) -- so it varies *with* bandwidth and would only reuse
+                // topology across attacker_config_id/attack_strategy, not bandwidth, missing part
+                // of the checklist's "across all bandwidth, alpha, and strategy conditions"
+                // requirement. core_config_id (the actually bandwidth-invariant id) never reaches
+                // this CSV at all -- generate_run_configurations.py's output only carries the
+                // columns ATOSIMSimulator.validateCsvColumns requires, which excludes it, and
+                // adding it would mean touching the Python generator (out of scope here). Instead,
+                // this reconstructs the same invariant from the four already-present columns that
+                // -- together -- define a core config 1:1 (validator_count, node_degree,
+                // block_creation_interval, max_block_size; verified across the real 250-row
+                // sampling design: exactly 250 distinct 4-tuples, each mapping to exactly 10
+                // distinct system_config_id values, one per bandwidth variant, zero collisions).
+                // The per-row config_id is untouched everywhere else -- still echoed unchanged in
+                // the output JSON's inputParameters, sourced directly from the raw CSV row,
+                // independent of this parameter.
+                String.join("|",
+                        configuration.getOrDefault("validator_count", ""),
+                        configuration.getOrDefault("node_degree", ""),
+                        configuration.getOrDefault("block_creation_interval", ""),
+                        configuration.getOrDefault("max_block_size", "")),
                 failureThroughputThreshold,
                 shannonEntropyK,
                 nakamotoCoefficientThreshold,
