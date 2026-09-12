@@ -8,9 +8,7 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeContext;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * Lead-stubborn mining, a.k.a. "L-stubborn" (Nayak et al., "Stubborn Mining", Section 3.1).
@@ -23,41 +21,36 @@ import java.util.UUID;
  * (lead=0 adopt; own-mining behavior; the lead=0' win-on-own-block case) is unchanged from
  * selfish mining.
  *
- * State:
+ * State (item 9: now held in the shared {@link AttackForkState}, see the `state` field below --
+ * semantics unchanged from when these were local fields):
  * - privateChain: attacker-mined blocks that are still hidden / unpublished
  * - ownTipHash: hash of the attacker's own most recently authored block, published or not
  * - inContestState: true when the attacker has revealed part of its private branch and is
  *   currently in a tied public contest
+ *
+ * Known anomaly, preserved as-is by item 9 (not adjudicated as bug or intentional -- a decision-
+ * logic change is explicitly out of scope for this refactor): unlike Selfish/Trail/Equal-fork's
+ * inTieState/inEqualForkContest, inContestState is never read to gate onBlockValidated's
+ * branching -- L-stubborn reveals exactly one block on every hiddenLead&gt;=1 case regardless of
+ * whether a contest is already active. It IS read once, in onBlockMined's wasWinningRace check
+ * below, just never used to change how a newly-validated block gets handled.
  */
-public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
+public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
+    private RandomGenerator _blockHashGenerator;
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        _blockHashGenerator = generator;
+    }
 
     /**
-     * Hidden attacker blocks that have been mined but not yet published.
-     * Index 0 is the next hidden block that would be published first.
+     * Item 9: shared private-branch/fork state -- replaces the privateChain/ownTipHash/
+     * inContestState/publishedInCurrentContest fields this class used to hold directly.
      */
-    private final List<Block> privateChain = new ArrayList<>();
-
-    /**
-     * Hash of the attacker's own most recently authored block, published or not.
-     * Kept separate from privateChain because privateChain empties out the moment a
-     * block is published, even though the attacker must keep mining on top of that same
-     * block rather than falling back to an ambiguous public tip.
-     */
-    private String ownTipHash = null;
-
-    /**
-     * True when the attacker has already revealed part of its private branch and is currently
-     * managing an ongoing public contest.
-     */
-    private boolean inContestState = false;
-
-    /**
-     * Number of attacker blocks revealed in the current contest.
-     * This is not the same thing as hidden lead.
-     */
-    private int publishedInCurrentContest = 0;
+    private final AttackForkState state = new AttackForkState();
 
     @Override
     public void onNodeInitialized(BlockchainSystemNodeContext context) {
@@ -83,41 +76,50 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
 
     @Override
     public void onBlockValidated(Block block, boolean isValid, BlockchainSystemNodeContext context) {
-        if (!isValid) {
-            return;
-        }
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            if (!isValid) {
+                return;
+            }
 
-        int hiddenLead = hiddenLead();
+            int hiddenLead = hiddenLead();
 
-        // No hidden advantage -> behave honestly and reset.
-        if (hiddenLead == 0) {
-            adoptPublicBlockAndAbandonPrivateState(block, context);
-            return;
-        }
+            // No hidden advantage -> behave honestly and reset.
+            if (hiddenLead == 0) {
+                adoptPublicBlockAndAbandonPrivateState(block, context);
+                return;
+            }
 
-        // L-stubborn's defining rule: for ANY hidden lead >= 1, reveal exactly one block to
-        // match the public chain's new length and keep the tied contest alive, instead of
-        // selfish mining's reveal-all-at-2 / reveal-nothing-beyond-2 behavior.
-        boolean published = publishOneHiddenBlock(context);
-        if (published) {
-            inContestState = true;
-            publishedInCurrentContest++;
+            // L-stubborn's defining rule: for ANY hidden lead >= 1, reveal exactly one block to
+            // match the public chain's new length and keep the tied contest alive, instead of
+            // selfish mining's reveal-all-at-2 / reveal-nothing-beyond-2 behavior.
+            boolean published = publishOneHiddenBlock(context);
+            if (published) {
+                state.setInContest(true);
+                state.incrementPublishedInCurrentContest();
+            }
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
     @Override
     public void onBlockMined(Block block, BlockchainSystemNodeContext context) {
-        // Selfish mining's own-mining rule is unchanged by L-stubborn: only the special case of
-        // winning an already-tied race outright (state 0', no remaining hidden material) reveals;
-        // otherwise Alice always keeps mining privately without revealing.
-        boolean wasWinningRace = inContestState && privateChain.isEmpty();
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            // Selfish mining's own-mining rule is unchanged by L-stubborn: only the special case of
+            // winning an already-tied race outright (state 0', no remaining hidden material) reveals;
+            // otherwise Alice always keeps mining privately without revealing.
+            boolean wasWinningRace = state.isInContest() && state.getPrivateChain().isEmpty();
 
-        privateChain.add(block);
-        ownTipHash = block.getHash();
+            state.recordMinedBlock(block);
 
-        if (wasWinningRace) {
-            publishAllHiddenBlocks(context);
-            clearContestStateOnly();
+            if (wasWinningRace) {
+                publishAllHiddenBlocks(context);
+                clearContestStateOnly();
+            }
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
@@ -126,7 +128,7 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
         var selection = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
 
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _blockHashGenerator.nextLong(), _blockHashGenerator.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,
@@ -141,8 +143,8 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
         // Always continue mining on top of my own last-authored block, published or not.
         // Falling back to the generic public-tip lookup here would pick arbitrarily between
         // my own tip and a tied honest tip during a contest.
-        if (ownTipHash != null) {
-            return ownTipHash;
+        if (state.getOwnTipHash() != null) {
+            return state.getOwnTipHash();
         }
 
         return honest.onPreviousBlockSelection(context);
@@ -168,16 +170,15 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
      * @return true iff the block was meaningfully appended and removed from hidden state
      */
     private boolean publishOneHiddenBlock(BlockchainSystemNodeContext context) {
-        if (privateChain.isEmpty()) {
+        Block publish = state.peekNextToPublish();
+        if (publish == null) {
             return false;
         }
-
-        Block publish = privateChain.get(0);
 
         AppendOutcome outcome = BehaviorUtils.INSTANCE.appendBlockToBlockchainDetailed(publish, context);
 
         if (outcome == AppendOutcome.INCLUDED || outcome == AppendOutcome.FORKING) {
-            privateChain.remove(0);
+            state.removeFirstPending();
             context.getTrxMemPool().removeTransactions(publish.getTransactions());
             context.getMiningProcess().restartMining();
             context.getBlockPropagationStrategy().distribute(publish);
@@ -191,29 +192,26 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject impleme
      * Publish all remaining hidden attacker blocks in order.
      */
     private void publishAllHiddenBlocks(BlockchainSystemNodeContext context) {
-        while (!privateChain.isEmpty()) {
-            int sizeBefore = privateChain.size();
+        while (!state.getPrivateChain().isEmpty()) {
+            int sizeBefore = state.getPrivateChain().size();
             boolean published = publishOneHiddenBlock(context);
 
-            if (!published || privateChain.size() == sizeBefore) {
+            if (!published || state.getPrivateChain().size() == sizeBefore) {
                 break;
             }
         }
     }
 
     private int hiddenLead() {
-        return privateChain.size();
+        return state.hiddenLead();
     }
 
     private void clearContestStateOnly() {
-        inContestState = false;
-        publishedInCurrentContest = 0;
+        state.clearContestOnly();
     }
 
     private void resetPrivateState() {
-        privateChain.clear();
-        ownTipHash = null;
-        clearContestStateOnly();
+        state.reset();
     }
 
     @Override

@@ -4,12 +4,13 @@ Bundle-Name: %pluginName
 Bundle-SymbolicName: org.palladiosimulator.blockchainsystems.bscm.edit;s
  ingleton:=true
 Automatic-Module-Name: org.palladiosimulator.blockchainsystems.bscm.edit
-Bundle-Version: 0.0.1.202608141423
+Bundle-Version: 0.0.1.202609121134
 Bundle-ClassPath: .
 Bundle-Activator: org.palladiosimulator.blockchainsystems.bscm.nodealloc
  ation.provider.BscmEditPlugin$Implementation
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Export-Package: org.palladiosimulator.blockchainsystems.bscm.attackmodel
  .provider,org.palladiosimulator.blockchainsystems.bscm.blockchainsystem
  .provider,org.palladiosimulator.blockchainsystems.bscm.blockchainsystem
@@ -35,5 +36,4 @@ Require-Bundle: org.eclipse.core.runtime,org.palladiosimulator.blockchai
 Bundle-ActivationPolicy: lazy
 Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
  org/licenses/LICENSE-2.0.txt"
-Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=17))"
 

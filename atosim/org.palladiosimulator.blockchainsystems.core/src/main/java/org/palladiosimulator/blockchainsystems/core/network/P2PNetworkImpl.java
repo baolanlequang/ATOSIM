@@ -11,7 +11,6 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.P2PNetwo
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class P2PNetworkImpl extends BlockchainSimulationObject implements P2PNetwork {
@@ -73,8 +72,7 @@ public class P2PNetworkImpl extends BlockchainSimulationObject implements P2PNet
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    public static P2PNetworkImpl create(Graph<P2PNode, P2PLink> networkGraph) {
-        String id = UUID.randomUUID().toString();
+    public static P2PNetworkImpl create(Graph<P2PNode, P2PLink> networkGraph, String id) {
         return new P2PNetworkImpl(id, networkGraph, "P2PNetwork_" + networkGraph.hashCode());
     }
 }

@@ -6,7 +6,7 @@ import org.palladiosimulator.blockchainsystems.core.network.LinkLatency;
 import org.palladiosimulator.blockchainsystems.core.utils.RandomValueProvider;
 import org.palladiosimulator.blockchainsystems.threesim.creation.abstractions.TemporalValueProviderAdapter;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.random.RandomGenerator;
 
@@ -18,7 +18,7 @@ public class LatencyValueProviderAdapter extends TemporalValueProviderAdapter<Lo
 
     public static LatencyValueProviderAdapter create(
             DynamicLinkLatencySpecification spec, RandomGenerator randomGenerator) {
-        Map<LinkLatency, Double> map = new HashMap<>();
+        Map<LinkLatency, Double> map = new LinkedHashMap<>();
         for (DynamicLinkLatencySpecificationValue v : spec.getValues()) {
             map.put(new LinkLatency(v.getLatency(), v.getDuration()), v.getProbability());
         }

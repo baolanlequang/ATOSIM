@@ -10,7 +10,7 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * Race-attack behavior with explicit arming, trigger, contest, and reset states.
@@ -27,9 +27,16 @@ import java.util.UUID;
  * This gives the race attack real strategic depth instead of modeling it as honest mining plus
  * only transaction-gossip timing manipulation.
  */
-public class RaceMiningNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
+public class RaceMiningNodeBehavior extends BlockchainNodeObject
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
+    private RandomGenerator _blockHashGenerator;
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        _blockHashGenerator = generator;
+    }
 
     /**
      * Hidden attacker blocks that have been mined but not yet published.
@@ -124,7 +131,7 @@ public class RaceMiningNodeBehavior extends BlockchainNodeObject implements Bloc
         var selection = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
 
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _blockHashGenerator.nextLong(), _blockHashGenerator.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,

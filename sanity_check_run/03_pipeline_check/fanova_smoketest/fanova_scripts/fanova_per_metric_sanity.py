@@ -63,7 +63,7 @@ def bar_chart(results_by_group, outcome, outdir):
     ax.set_yticks(y_base)
     ax.set_yticklabels(labels)
     ax.invert_yaxis()
-    ax.set_xlabel("First-order fANOVA importance fraction, mean +/- 1 std across trees - {}".format(
+    ax.set_xlabel("First-order fANOVA importance fraction, mean +/- 1 across-tree standard deviation - {}".format(
         common.OUTCOME_DESC[outcome]))
     ax.set_title("fANOVA importance (Hutter et al. 2014, Corollary 8 cross-tree uncertainty) - {} - per strategy and pooled".format(outcome))
     ax.legend(fontsize=8, loc="lower right")
@@ -85,28 +85,33 @@ def format_report_block(out, group_label, outcome, res):
     out("    CV R^2 (mean across folds)   = {:.3f}".format(res["cv_r2"]))
     out("    CV MAE (mean across folds)   = {:.6f}  [outcome's natural scale]".format(res["cv_mae"]))
     out("    CV RMSE (mean across folds)  = {:.6f}  [outcome's natural scale]".format(res["cv_rmse"]))
-    out("  fANOVA importance (Hutter et al. 2014, mean +/- std across {} trees, Corollary 8 uncertainty):".format(
+    out("  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across {} trees,".format(
         res["n_trees"]
     ))
+    out("  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true")
+    out("  importance -- they reflect variation across the Random Forest's {} trees, per".format(res["n_trees"]))
+    out("  Corollary 8 (Hutter et al. 2014):")
     for lab, mean_frac in sorted(res["fractions_mean"].items(), key=lambda kv: kv[1], reverse=True):
         std_frac = res["fractions_std"][lab]
-        out("    {:<26s}{:>7.1f}% +/- {:.1f}%".format(lab, 100 * mean_frac, 100 * std_frac))
-    out("  interaction residual (mean +/- std across trees): {:.1f}% +/- {:.1f}%".format(
+        out("    {:<26s}{:>7.1f}% +/- {:.1f}% (across-tree std)".format(lab, 100 * mean_frac, 100 * std_frac))
+    out("  interaction residual (mean +/- across-tree standard deviation): {:.1f}% +/- {:.1f}%".format(
         100 * res["interaction_mean"], 100 * res["interaction_std"]
     ))
     out("  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:")
     for lab, val in sorted(res["S_Ti"].items(), key=lambda kv: kv[1], reverse=True):
         out("    {:<26s}{:>8.3f}".format(lab, val))
     out("  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,")
-    out("  mean +/- std across {} trees; interaction only, main effects already subtracted):".format(
+    out("  mean +/- across-tree standard deviation across {} trees; interaction only, main".format(
         res["n_trees"]
     ))
+    out("  effects already subtracted). Note: not confidence intervals -- variation across the")
+    out("  Random Forest's {} trees, per Corollary 8 (Hutter et al. 2014):".format(res["n_trees"]))
     for (lab_a, lab_b), pair_res in res["second_order"].items():
         pair_name = "{} x {}".format(lab_a, lab_b)
         if {lab_a, lab_b} == {"Bandwidth", "Block creation interval"}:
             pair_name += " [substituted for 'propagation time x BCI' -- propagation" \
                           " time is not an input feature, confirm this substitution]"
-        out("    {:<95s}{:>6.1f}% +/- {:.1f}%".format(
+        out("    {:<95s}{:>6.1f}% +/- {:.1f}% (across-tree std)".format(
             pair_name, 100 * pair_res["frac_mean"], 100 * pair_res["frac_std"]
         ))
 

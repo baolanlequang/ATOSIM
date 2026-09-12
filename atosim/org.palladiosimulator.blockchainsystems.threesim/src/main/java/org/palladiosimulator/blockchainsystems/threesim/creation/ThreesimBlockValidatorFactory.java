@@ -7,17 +7,18 @@ import org.palladiosimulator.blockchainsystems.core.block.BlockValidatorImpl;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.BlockValidator;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.BlockValidatorFactory;
 import org.palladiosimulator.blockchainsystems.threesim.creation.abstractions.NodeAllocationResolver;
-
-import java.util.random.RandomGenerator;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.DeterministicSeeds;
 
 public class ThreesimBlockValidatorFactory implements BlockValidatorFactory {
 
     private final NodeAllocationResolver _nodeAllocationResolver;
     private final boolean _staticValidationDelayEnabled;
+    private final long _rootSeed;
 
-    public ThreesimBlockValidatorFactory(NodeAllocationResolver nodeAllocationResolver, boolean staticValidationDelayEnabled) {
+    public ThreesimBlockValidatorFactory(NodeAllocationResolver nodeAllocationResolver, boolean staticValidationDelayEnabled, long rootSeed) {
         _nodeAllocationResolver = nodeAllocationResolver;
         _staticValidationDelayEnabled = staticValidationDelayEnabled;
+        _rootSeed = rootSeed;
     }
 
     @Override
@@ -37,7 +38,7 @@ public class ThreesimBlockValidatorFactory implements BlockValidatorFactory {
                 "No BlockValidatorComponent found for node with ID: " + nodeId);
 
         BlockValidationDurationProviderAdapter adapter = BlockValidationDurationProviderAdapter.create(
-                component.getValidationDuration(), RandomGenerator.of("Random"));
+                component.getValidationDuration(), DeterministicSeeds.seededGenerator(_rootSeed, "validation:" + nodeId));
         return new BlockValidatorImpl(adapter, _staticValidationDelayEnabled);
     }
 }

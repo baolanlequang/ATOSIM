@@ -5,6 +5,7 @@ import org.palladiosimulator.blockchainsystems.core.simulation.termination.Longe
 import org.palladiosimulator.blockchainsystems.core.tracing.TraceEventLogOutput;
 import org.palladiosimulator.blockchainsystems.threesim.creation.BlockchainSystemWithParameters;
 import org.palladiosimulator.blockchainsystems.threesim.creation.ThreesimBlockchainSystemFactory;
+import org.palladiosimulator.blockchainsystems.threesim.creation.TopologyDeterminismInfo;
 import org.palladiosimulator.blockchainsystems.threesim.monitoring.ThreesimSimulationMonitor;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimSimulationRoundResult;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimSimulationRoundResultFactory;
@@ -15,14 +16,16 @@ public class ThreesimSimulationRound
         extends SimulationRound<ThreesimSimulationMonitor, ThreesimSimulationRoundResult> {
 
     private final ThreesimSimulationParameters _effectiveParameters;
+    private final TopologyDeterminismInfo _topologyDeterminismInfo;
 
     public ThreesimSimulationRound(
             ThreesimBlockchainSystemFactory blockchainSystemFactory,
             Set<TraceEventLogOutput> logOutputs,
             long maxAllowedBlockchainLength,
-            ThreesimSimulationParameters originalParameters) {
+            ThreesimSimulationParameters originalParameters,
+            int replicationId) {
 
-        this(blockchainSystemFactory.createBlockchainSystem(originalParameters),
+        this(blockchainSystemFactory.createBlockchainSystem(originalParameters, replicationId),
                 logOutputs, maxAllowedBlockchainLength, originalParameters);
     }
 
@@ -38,11 +41,12 @@ public class ThreesimSimulationRound
                         originalParameters.getFailureThroughputThreshold(),
                         result.getEffectiveParameters()));
         _effectiveParameters = result.getEffectiveParameters();
+        _topologyDeterminismInfo = result.getTopologyDeterminismInfo();
     }
 
     @Override
     public ThreesimSimulationRoundResult createSimulationRoundResult(long finalSystemTime) {
-        return new ThreesimSimulationRoundResultFactory(_effectiveParameters, monitor, finalSystemTime)
+        return new ThreesimSimulationRoundResultFactory(_effectiveParameters, monitor, finalSystemTime, _topologyDeterminismInfo)
                 .createSimulationRoundResult();
     }
 }

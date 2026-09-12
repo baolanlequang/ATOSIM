@@ -12,18 +12,21 @@ public class BlockchainElement {
     private final BlockchainElement _previousBlockchainElement;
     private BlockchainElementType _type;
     private final long _position;
+    private final long _validationSequence;
     private final HashSet<BlockchainElement> _nextBlockchainElements = new HashSet<>();
 
     public BlockchainElement(
             Block block,
             BlockchainElement previousBlockchainElement,
             BlockchainElementType type,
-            long position
+            long position,
+            long validationSequence
     ) {
         _block = block;
         _previousBlockchainElement = previousBlockchainElement;
         _type = type;
         _position = position;
+        _validationSequence = validationSequence;
         if (previousBlockchainElement != null) {
             previousBlockchainElement._nextBlockchainElements.add(this);
         }
@@ -34,6 +37,13 @@ public class BlockchainElement {
     public BlockchainElementType getType() { return _type; }
     public void setType(BlockchainElementType type) { _type = type; }
     public long getPosition() { return _position; }
+
+    /** Monotonically increasing per-node counter assigned when this element's block completed
+     * validation and was appended to this node's local blockchain view -- the arrival order used
+     * to break equal-work ties between candidate tips deterministically (see
+     * {@link org.palladiosimulator.blockchainsystems.core.system.abstractions.ReadonlyBlockchain#getPreferredTipOfLongestChains()}),
+     * instead of unordered {@code HashSet} iteration. */
+    public long getValidationSequence() { return _validationSequence; }
 
     public Set<BlockchainElement> getNextBlockchainElements() {
         return Collections.unmodifiableSet(_nextBlockchainElements);

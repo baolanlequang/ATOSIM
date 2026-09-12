@@ -4,18 +4,19 @@ import org.palladiosimulator.blockchainsystems.core.mining.MiningProcessImpl;
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.MiningProcess;
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.MiningProcessFactory;
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.ResourcePowerCalculator;
-
-import java.util.random.RandomGenerator;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.DeterministicSeeds;
 
 public class ThreesimMiningProcessFactory implements MiningProcessFactory {
 
     private final double _meanBlockTime;
     private final ResourcePowerCalculator _resourcePowerCalculator;
+    private final long _rootSeed;
 
-    public ThreesimMiningProcessFactory(double meanBlockTime, ResourcePowerCalculator resourcePowerCalculator) {
+    public ThreesimMiningProcessFactory(double meanBlockTime, ResourcePowerCalculator resourcePowerCalculator, long rootSeed) {
         if (meanBlockTime <= 0.0) throw new IllegalArgumentException("meanBlockTime must be > 0, but was " + meanBlockTime);
         _meanBlockTime = meanBlockTime;
         _resourcePowerCalculator = resourcePowerCalculator;
+        _rootSeed = rootSeed;
     }
 
     @Override
@@ -35,6 +36,6 @@ public class ThreesimMiningProcessFactory implements MiningProcessFactory {
                 "Node with ID " + nodeId + " has non-positive resource power share: " + share);
 
         double nodeMeanBlockTime = _meanBlockTime / share;
-        return new MiningProcessImpl(nodeMeanBlockTime, RandomGenerator.of("Random"));
+        return new MiningProcessImpl(nodeMeanBlockTime, DeterministicSeeds.seededGenerator(_rootSeed, "mining:" + nodeId));
     }
 }

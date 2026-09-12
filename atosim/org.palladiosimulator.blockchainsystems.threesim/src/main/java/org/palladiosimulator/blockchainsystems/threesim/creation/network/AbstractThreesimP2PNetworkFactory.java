@@ -12,31 +12,35 @@ import org.palladiosimulator.blockchainsystems.threesim.creation.LatencyValuePro
 import org.palladiosimulator.blockchainsystems.threesim.creation.StaticLatencyValueProvider;
 import org.palladiosimulator.blockchainsystems.threesim.creation.StaticThroughputValueProvider;
 import org.palladiosimulator.blockchainsystems.threesim.creation.ThroughputValueProviderAdapter;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.DeterministicSeeds;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
-
-import java.util.random.RandomGenerator;
 
 public abstract class AbstractThreesimP2PNetworkFactory implements P2PNetworkFactory {
 
     protected final ThreesimSimulationParameters simulationParameters;
+    protected final long rootSeed;
 
-    protected AbstractThreesimP2PNetworkFactory(ThreesimSimulationParameters simulationParameters) {
+    protected AbstractThreesimP2PNetworkFactory(ThreesimSimulationParameters simulationParameters, long rootSeed) {
         this.simulationParameters = simulationParameters;
+        this.rootSeed = rootSeed;
     }
 
+    // siteTag must be a stable identifier for this specific call (e.g. the model element's own
+    // id) so that repeated calls within one replication (once per subgraph, once per subgraph
+    // link, ...) get independent seeds instead of all drawing from the same stream.
     protected SimulationLifecycleAwareValueProvider<Long> createLatencyValueProvider(
-            LinkLatencySpecification latencySpecification) {
+            LinkLatencySpecification latencySpecification, String siteTag) {
         if (latencySpecification instanceof StaticLinkLatencySpecification s) {
             return new StaticLatencyValueProvider(s.getLatency());
         }
         if (latencySpecification instanceof DynamicLinkLatencySpecification d) {
-            return LatencyValueProviderAdapter.create(d, RandomGenerator.of("Random"));
+            return LatencyValueProviderAdapter.create(d, DeterministicSeeds.seededGenerator(rootSeed, siteTag));
         }
         throw new IllegalArgumentException("Unsupported latency specification type: " + latencySpecification.getClass().getName());
     }
 
     protected SimulationLifecycleAwareValueProvider<Long> createThroughputValueProvider(
-            LinkThroughputSpecification throughputSpecification) {
+            LinkThroughputSpecification throughputSpecification, String siteTag) {
         if (simulationParameters.getNetworkBandwidth() > 0.0) {
             long bps = (long) (simulationParameters.getNetworkBandwidth() * 1_000_000.0);
             return new StaticThroughputValueProvider(bps);
@@ -45,7 +49,7 @@ public abstract class AbstractThreesimP2PNetworkFactory implements P2PNetworkFac
             return new StaticThroughputValueProvider(s.getThroughput());
         }
         if (throughputSpecification instanceof DynamicLinkThroughputSpecification d) {
-            return ThroughputValueProviderAdapter.create(d, RandomGenerator.of("Random"));
+            return ThroughputValueProviderAdapter.create(d, DeterministicSeeds.seededGenerator(rootSeed, siteTag));
         }
         throw new IllegalArgumentException("Unsupported throughput specification type: " + throughputSpecification.getClass().getName());
     }

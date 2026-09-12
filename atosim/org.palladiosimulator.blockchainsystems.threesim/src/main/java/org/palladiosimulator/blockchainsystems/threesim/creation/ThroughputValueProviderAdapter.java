@@ -6,7 +6,7 @@ import org.palladiosimulator.blockchainsystems.core.network.LinkThroughput;
 import org.palladiosimulator.blockchainsystems.core.utils.RandomValueProvider;
 import org.palladiosimulator.blockchainsystems.threesim.creation.abstractions.TemporalValueProviderAdapter;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.random.RandomGenerator;
 
@@ -18,7 +18,7 @@ public class ThroughputValueProviderAdapter extends TemporalValueProviderAdapter
 
     public static ThroughputValueProviderAdapter create(
             DynamicLinkThroughputSpecification spec, RandomGenerator randomGenerator) {
-        Map<LinkThroughput, Double> map = new HashMap<>();
+        Map<LinkThroughput, Double> map = new LinkedHashMap<>();
         for (DynamicLinkThroughputSpecificationValue v : spec.getValues()) {
             map.put(new LinkThroughput(v.getThroughput(), v.getDuration()), v.getProbability());
         }

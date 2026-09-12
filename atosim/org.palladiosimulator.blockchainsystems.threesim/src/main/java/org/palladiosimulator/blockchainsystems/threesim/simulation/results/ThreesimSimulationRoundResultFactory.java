@@ -1,13 +1,25 @@
 package org.palladiosimulator.blockchainsystems.threesim.simulation.results;
 
+import org.palladiosimulator.blockchainsystems.threesim.metrics.ActualBlockSize;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.AttackerBlockRewards;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.BlockTransactionCount;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.FinneyAttackSuccess;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.ForkDurationMean;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.ForkDurationMedian;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.LeadStubbornLostLeadTransitionCount;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.PropagationTimeMean;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.PropagationTimeMedian;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.PropagationTimeP95;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.PropagationTimeToP90Coverage;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.PropagationTimeToP95Coverage;
+import org.palladiosimulator.blockchainsystems.threesim.metrics.PropagationTimeToP100Coverage;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.RaceAttackSuccess;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.SelfishMiningAttackSuccess;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.TotalBlockRewards;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.calculators.*;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.utils.OutputMetricsSet;
 import org.palladiosimulator.blockchainsystems.threesim.monitoring.ThreesimSimulationMonitor;
+import org.palladiosimulator.blockchainsystems.threesim.creation.TopologyDeterminismInfo;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 
@@ -32,12 +44,19 @@ public class ThreesimSimulationRoundResultFactory {
     private final ThreesimSimulationParameters _parameters;
     private final ThreesimSimulationMonitor _monitor;
     private final long _finalSystemTime;
+    private final TopologyDeterminismInfo _topologyDeterminismInfo;
 
     public ThreesimSimulationRoundResultFactory(ThreesimSimulationParameters parameters,
             ThreesimSimulationMonitor monitor, long finalSystemTime) {
+        this(parameters, monitor, finalSystemTime, null);
+    }
+
+    public ThreesimSimulationRoundResultFactory(ThreesimSimulationParameters parameters,
+            ThreesimSimulationMonitor monitor, long finalSystemTime, TopologyDeterminismInfo topologyDeterminismInfo) {
         _parameters = parameters;
         _monitor = monitor;
         _finalSystemTime = finalSystemTime;
+        _topologyDeterminismInfo = topologyDeterminismInfo;
     }
 
     public ThreesimSimulationRoundResult createSimulationRoundResult() {
@@ -101,6 +120,35 @@ public class ThreesimSimulationRoundResultFactory {
                         state.getNumberOfStaleBlocks(),
                         state.getNumberOfConfirmedBlocks()).calculate(),
 
+                // Item 7: mean actual packed size / transaction count across every block mined
+                // this round -- distinct from the configured maxBlockSize cap (already output
+                // separately in threesimSimulationParameters, unchanged).
+                new ActualBlockSize(_monitor.getMeanActualBlockSize()),
+                new BlockTransactionCount(_monitor.getMeanBlockTransactionCount()),
+
+                // Part B: count of Lead-stubborn's defining PRIVATE_LEAD -> TIED_CONTEST phase
+                // transitions this round (0 for every other attack type) -- see
+                // LeadStubbornLostLeadTransitionCount's doc for the granularity caveat.
+                new LeadStubbornLostLeadTransitionCount(_monitor.getLeadStubbornLostLeadTransitions()),
+
+                // Colleague review item 6: propagation-time quantiles (mean/median/p95) and
+                // fork-duration (mean/median) -- see ThreesimSimulationMonitor's field/method
+                // docs for what's measured and why (-1.0 = no data this round for that metric).
+                new PropagationTimeMean(_monitor.getMeanPropagationTime()),
+                new PropagationTimeMedian(_monitor.getMedianPropagationTime()),
+                new PropagationTimeP95(_monitor.getP95PropagationTime()),
+
+                // Topology/forwarding/timing investigation follow-up: percentage-based coverage
+                // thresholds (90%/95%/100%, 100% kept alongside unchanged) -- see
+                // ThreesimSimulationMonitor.recordBlockPropagation's doc for why 100%-only
+                // structurally never completes on high-diameter, low-degree topologies.
+                new PropagationTimeToP90Coverage(_monitor.getMeanPropagationTimeP90Coverage()),
+                new PropagationTimeToP95Coverage(_monitor.getMeanPropagationTimeP95Coverage()),
+                new PropagationTimeToP100Coverage(_monitor.getMeanPropagationTimeP100Coverage()),
+
+                new ForkDurationMean(_monitor.getMeanForkDuration()),
+                new ForkDurationMedian(_monitor.getMedianForkDuration()),
+
                 new AttackerRevenueShareCalculator(attackerRewards, totalRewards).calculate(),
                 new AttackerBlockRewards((int) attackerRewards),
                 new TotalBlockRewards((int) totalRewards),
@@ -114,6 +162,7 @@ public class ThreesimSimulationRoundResultFactory {
                         _parameters.getConfirmationDepth()).calculate(),
 
                 new AttackSuccessTimeCalculator(_monitor.getAttackSuccessTime()).calculate()
-        ), _monitor.getChainReorganizations());
+        ), _monitor.getChainReorganizations(), _topologyDeterminismInfo, _monitor.getEpisodeStatus(),
+                _monitor.getDecisiveAttackerReorg());
     }
 }

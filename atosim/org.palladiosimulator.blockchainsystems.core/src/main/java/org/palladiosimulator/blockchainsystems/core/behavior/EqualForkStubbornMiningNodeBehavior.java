@@ -8,9 +8,7 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeContext;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * Equal-fork stubborn mining, a.k.a. "F-stubborn" (Nayak et al., "Stubborn Mining", Section 3.2).
@@ -22,39 +20,29 @@ import java.util.UUID;
  * adopt; lead=1 reveal-one-to-tie; lead=2 reveal-all-to-win; lead&gt;2 reveal-one-to-pressure) is
  * unchanged from selfish mining.
  *
- * State:
+ * State (item 9: now held in the shared {@link AttackForkState}, see the `state` field below --
+ * semantics unchanged from when these were local fields):
  * - privateChain: attacker-mined blocks that are still hidden / unpublished
  * - ownTipHash: hash of the attacker's own most recently authored block, published or not
  * - inEqualForkContest: true when the attacker has revealed part of its private branch and is
  *   currently in a tied public contest
  */
-public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
+public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
+    private RandomGenerator _blockHashGenerator;
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        _blockHashGenerator = generator;
+    }
 
     /**
-     * Hidden attacker blocks that have been mined but not yet published.
-     * Index 0 is the next hidden block to reveal.
+     * Item 9: shared private-branch/fork state -- replaces the privateChain/ownTipHash/
+     * inEqualForkContest/publishedInCurrentContest fields this class used to hold directly.
      */
-    private final List<Block> privateChain = new ArrayList<>();
-
-    /**
-     * Hash of the attacker's own most recently authored block, published or not.
-     * Kept separate from privateChain because privateChain empties out the moment a
-     * block is published, even though the attacker must keep mining on top of that same
-     * block rather than falling back to an ambiguous public tip.
-     */
-    private String ownTipHash = null;
-
-    /**
-     * True when the attacker is currently engaged in a tied public contest.
-     */
-    private boolean inEqualForkContest = false;
-
-    /**
-     * Number of attacker blocks already revealed in the current contest.
-     */
-    private int publishedInCurrentContest = 0;
+    private final AttackForkState state = new AttackForkState();
 
     @Override
     public void onNodeInitialized(BlockchainSystemNodeContext context) {
@@ -80,59 +68,68 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
 
     @Override
     public void onBlockValidated(Block block, boolean isValid, BlockchainSystemNodeContext context) {
-        if (!isValid) {
-            return;
-        }
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            if (!isValid) {
+                return;
+            }
 
-        if (inEqualForkContest) {
-            handleBlockWhileInEqualForkContest(block, context);
-            return;
-        }
+            if (state.isInContest()) {
+                handleBlockWhileInEqualForkContest(block, context);
+                return;
+            }
 
-        int hiddenLead = hiddenLead();
+            int hiddenLead = hiddenLead();
 
-        // No hidden branch -> behave honestly.
-        if (hiddenLead == 0) {
-            adoptPublicBlockAndAbandonPrivateState(block, context);
-            return;
-        }
+            // No hidden branch -> behave honestly.
+            if (hiddenLead == 0) {
+                adoptPublicBlockAndAbandonPrivateState(block, context);
+                return;
+            }
 
-        // lead=1: reveal one block to force a tie (unchanged from selfish mining).
-        if (hiddenLead == 1) {
+            // lead=1: reveal one block to force a tie (unchanged from selfish mining).
+            if (hiddenLead == 1) {
+                boolean published = publishOneHiddenBlock(context);
+                if (published) {
+                    state.setInContest(true);
+                    state.setPublishedInCurrentContest(1);
+                }
+                return;
+            }
+
+            // lead=2: reveal everything and win outright (unchanged from selfish mining).
+            if (hiddenLead == 2) {
+                publishAllHiddenBlocks(context);
+                clearContestStateOnly();
+                return;
+            }
+
+            // lead>2: reveal one block to keep pressure while preserving the rest (unchanged).
             boolean published = publishOneHiddenBlock(context);
             if (published) {
-                inEqualForkContest = true;
-                publishedInCurrentContest = 1;
+                clearContestStateOnly();
             }
-            return;
-        }
-
-        // lead=2: reveal everything and win outright (unchanged from selfish mining).
-        if (hiddenLead == 2) {
-            publishAllHiddenBlocks(context);
-            clearContestStateOnly();
-            return;
-        }
-
-        // lead>2: reveal one block to keep pressure while preserving the rest (unchanged).
-        boolean published = publishOneHiddenBlock(context);
-        if (published) {
-            clearContestStateOnly();
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
     @Override
     public void onBlockMined(Block block, BlockchainSystemNodeContext context) {
-        // F-stubborn's defining rule: winning an already-tied race outright (state 0', no
-        // remaining hidden material) is NOT revealed. Conceal the new block and keep mining
-        // on it privately instead, landing at a plain hidden lead of 1.
-        boolean wasWinningRace = inEqualForkContest && privateChain.isEmpty();
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            // F-stubborn's defining rule: winning an already-tied race outright (state 0', no
+            // remaining hidden material) is NOT revealed. Conceal the new block and keep mining
+            // on it privately instead, landing at a plain hidden lead of 1.
+            boolean wasWinningRace = state.isInContest() && state.getPrivateChain().isEmpty();
 
-        privateChain.add(block);
-        ownTipHash = block.getHash();
+            state.recordMinedBlock(block);
 
-        if (wasWinningRace) {
-            clearContestStateOnly();
+            if (wasWinningRace) {
+                clearContestStateOnly();
+            }
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
@@ -141,7 +138,7 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
         var selection = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
 
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _blockHashGenerator.nextLong(), _blockHashGenerator.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,
@@ -156,8 +153,8 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
         // Always continue mining on top of my own last-authored block, published or not.
         // Falling back to the generic public-tip lookup here would pick arbitrarily between
         // my own tip and a tied honest tip during a contest.
-        if (ownTipHash != null) {
-            return ownTipHash;
+        if (state.getOwnTipHash() != null) {
+            return state.getOwnTipHash();
         }
 
         return honest.onPreviousBlockSelection(context);
@@ -197,16 +194,15 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
      * @return true iff the block was meaningfully appended and removed from hidden state
      */
     private boolean publishOneHiddenBlock(BlockchainSystemNodeContext context) {
-        if (privateChain.isEmpty()) {
+        Block publish = state.peekNextToPublish();
+        if (publish == null) {
             return false;
         }
-
-        Block publish = privateChain.get(0);
 
         AppendOutcome outcome = BehaviorUtils.INSTANCE.appendBlockToBlockchainDetailed(publish, context);
 
         if (outcome == AppendOutcome.INCLUDED || outcome == AppendOutcome.FORKING) {
-            privateChain.remove(0);
+            state.removeFirstPending();
             context.getTrxMemPool().removeTransactions(publish.getTransactions());
             context.getMiningProcess().restartMining();
             context.getBlockPropagationStrategy().distribute(publish);
@@ -220,29 +216,26 @@ public class EqualForkStubbornMiningNodeBehavior extends BlockchainNodeObject im
      * Publish all remaining hidden attacker blocks in order.
      */
     private void publishAllHiddenBlocks(BlockchainSystemNodeContext context) {
-        while (!privateChain.isEmpty()) {
-            int sizeBefore = privateChain.size();
+        while (!state.getPrivateChain().isEmpty()) {
+            int sizeBefore = state.getPrivateChain().size();
             boolean published = publishOneHiddenBlock(context);
 
-            if (!published || privateChain.size() == sizeBefore) {
+            if (!published || state.getPrivateChain().size() == sizeBefore) {
                 break;
             }
         }
     }
 
     private int hiddenLead() {
-        return privateChain.size();
+        return state.hiddenLead();
     }
 
     private void clearContestStateOnly() {
-        inEqualForkContest = false;
-        publishedInCurrentContest = 0;
+        state.clearContestOnly();
     }
 
     private void resetPrivateState() {
-        privateChain.clear();
-        ownTipHash = null;
-        clearContestStateOnly();
+        state.reset();
     }
 
     @Override

@@ -12,6 +12,7 @@ import org.palladiosimulator.blockchainsystems.core.network.P2PNetworkImpl;
 import org.palladiosimulator.blockchainsystems.core.network.P2PNode;
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.P2PNetworkCreationResult;
 import org.palladiosimulator.blockchainsystems.threesim.creation.network.AbstractThreesimP2PNetworkFactory;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.DeterministicSeeds;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 
 import java.util.ArrayList;
@@ -24,8 +25,8 @@ public class ExplicitTopologyP2PNetworkFactory extends AbstractThreesimP2PNetwor
     private final ExplicitNetworkTopology _topology;
 
     public ExplicitTopologyP2PNetworkFactory(ExplicitNetworkTopology topology,
-            ThreesimSimulationParameters simulationParameters) {
-        super(simulationParameters);
+            ThreesimSimulationParameters simulationParameters, long rootSeed) {
+        super(simulationParameters, rootSeed);
         _topology = topology;
     }
 
@@ -41,8 +42,10 @@ public class ExplicitTopologyP2PNetworkFactory extends AbstractThreesimP2PNetwor
         }
 
         for (Link designLink : _topology.getLinks()) {
-            var latencyProvider = createLatencyValueProvider(designLink.getAllocation().getLatencySpecification());
-            var throughputProvider = createThroughputValueProvider(designLink.getAllocation().getThroughputSpecification());
+            var latencyProvider = createLatencyValueProvider(
+                    designLink.getAllocation().getLatencySpecification(), "latency:link:" + designLink.getId());
+            var throughputProvider = createThroughputValueProvider(
+                    designLink.getAllocation().getThroughputSpecification(), "throughput:link:" + designLink.getId());
 
             List<String[]> pairs = new ArrayList<>();
             if (designLink instanceof UnidirectionalLink u) {
@@ -65,7 +68,8 @@ public class ExplicitTopologyP2PNetworkFactory extends AbstractThreesimP2PNetwor
             }
         }
 
-        P2PNetworkImpl networkImpl = P2PNetworkImpl.create(networkGraph);
+        P2PNetworkImpl networkImpl = P2PNetworkImpl.create(networkGraph,
+                DeterministicSeeds.randomHexId(DeterministicSeeds.seededGenerator(rootSeed, "p2pNetworkId")));
         for (P2PNode node : p2pNodeMappings.values()) node.initNetwork(networkImpl);
 
         return new ExplicitP2PNetworkCreationResult(networkImpl);

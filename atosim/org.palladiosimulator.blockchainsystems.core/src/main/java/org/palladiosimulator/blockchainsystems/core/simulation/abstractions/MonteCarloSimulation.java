@@ -31,8 +31,9 @@ public abstract class MonteCarloSimulation<R extends SimulationRoundResult> impl
         ForkJoinPool executor = parallelism > 0 ? new ForkJoinPool(parallelism) : ForkJoinPool.commonPool();
         List<Callable<R>> tasks = new ArrayList<>();
         for (int i = 0; i < numberOfRounds; i++) {
+            int replicationId = i;
             tasks.add(() -> {
-            	R result = performSimulationRound();
+            	R result = performSimulationRound(replicationId);
                 int round = roundCounter.incrementAndGet();
                 System.out.println("Monte Carlo round " + round + "/" + numberOfRounds + " finished");
                 progressMonitor.onSimulationRoundFinished();
@@ -58,6 +59,6 @@ public abstract class MonteCarloSimulation<R extends SimulationRoundResult> impl
         return createSimulationResultFromRoundResults(results);
     }
 
-    public abstract R performSimulationRound();
+    public abstract R performSimulationRound(int replicationId);
     public abstract MonteCarloSimulationResult createSimulationResultFromRoundResults(List<R> results);
 }

@@ -8,10 +8,19 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeContext;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 
-public class CombinedSelfishTrailStubbornNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
+import java.util.random.RandomGenerator;
+
+public class CombinedSelfishTrailStubbornNodeBehavior extends BlockchainNodeObject
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
 
     private final SelfishMiningNodeBehavior selfish = new SelfishMiningNodeBehavior();
     private final TrailStubbornMiningNodeBehavior trailStubborn = new TrailStubbornMiningNodeBehavior();
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        selfish.setBlockHashGenerator(generator);
+        trailStubborn.setBlockHashGenerator(generator);
+    }
 
     @Override
     public void onNodeInitialized(BlockchainSystemNodeContext context) {

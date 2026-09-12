@@ -6,7 +6,7 @@ import org.palladiosimulator.blockchainsystems.core.common.abstractions.ValuePro
 import org.palladiosimulator.blockchainsystems.core.transaction.TransactionProperties;
 import org.palladiosimulator.blockchainsystems.core.utils.RandomValueProvider;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.random.RandomGenerator;
 
@@ -25,7 +25,7 @@ public class TransactionPropertiesValueProviderAdapter implements ValueProvider<
 
     public static TransactionPropertiesValueProviderAdapter create(
             TransactionPropertiesSpecification spec, RandomGenerator randomGenerator) {
-        Map<TransactionProperties, Double> map = new HashMap<>();
+        Map<TransactionProperties, Double> map = new LinkedHashMap<>();
         for (TransactionPropertiesSpecificationValue v : spec.getValues()) {
             map.put(new TransactionProperties(v.getSize(), v.getFee(), v.getAmount()), v.getProbability());
         }

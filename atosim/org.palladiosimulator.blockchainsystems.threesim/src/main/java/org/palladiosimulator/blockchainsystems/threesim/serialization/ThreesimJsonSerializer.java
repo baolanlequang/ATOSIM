@@ -14,8 +14,10 @@ import org.palladiosimulator.blockchainsystems.threesim.metrics.abstractions.Ave
 import org.palladiosimulator.blockchainsystems.threesim.metrics.abstractions.AverageOutputMetricImpl;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.abstractions.OutputMetric;
 import org.palladiosimulator.blockchainsystems.threesim.metrics.utils.OutputMetricsSet;
+import org.palladiosimulator.blockchainsystems.threesim.creation.TopologyDeterminismInfo;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ChainReorganizationOccurrence;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.results.EpisodeStatus;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimAverageSimulationRoundResult;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimMonteCarloSimulationResult;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimSimulationRoundResult;
@@ -49,10 +51,14 @@ public class ThreesimJsonSerializer {
         appendMetricsArray(sb, result.getSimulationRoundResult().getOutputMetrics(), "  ");
         sb.append(",\n");
         sb.append("  \"chainReorganizationDepth\": ")
-          .append(finalReorgDepth(result.getSimulationRoundResult().getChainReorganizations()));
+          .append(finalReorgDepth(result.getSimulationRoundResult()));
         sb.append(",\n");
         sb.append("  \"attackerCausedChainReorganizationDepth\": ")
-          .append(finalAttackerCausedReorgDepth(result.getSimulationRoundResult().getChainReorganizations()));
+          .append(finalAttackerCausedReorgDepth(result.getSimulationRoundResult()));
+        sb.append(",\n");
+        sb.append("  \"status\": ").append(jsonStr(episodeStatusJson(result.getSimulationRoundResult().getEpisodeStatus())));
+        sb.append(",\n");
+        appendTopologyDeterminismInfo(sb, result.getSimulationRoundResult().getTopologyDeterminismInfo(), "  ");
         if (includeChainReorganizations) {
             sb.append(",\n");
             sb.append("  \"chainReorganizations\": ");
@@ -84,15 +90,29 @@ public class ThreesimJsonSerializer {
         sb.append("  \"chainReorganizationDepths\": [");
         for (int i = 0; i < rounds.size(); i++) {
             if (i > 0) sb.append(",");
-            sb.append(finalReorgDepth(rounds.get(i).getChainReorganizations()));
+            sb.append(finalReorgDepth(rounds.get(i)));
         }
         sb.append("],\n");
         sb.append("  \"attackerCausedChainReorganizationDepths\": [");
         for (int i = 0; i < rounds.size(); i++) {
             if (i > 0) sb.append(",");
-            sb.append(finalAttackerCausedReorgDepth(rounds.get(i).getChainReorganizations()));
+            sb.append(finalAttackerCausedReorgDepth(rounds.get(i)));
         }
-        sb.append("]");
+        sb.append("],\n");
+        sb.append("  \"status\": [");
+        for (int i = 0; i < rounds.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(jsonStr(episodeStatusJson(rounds.get(i).getEpisodeStatus())));
+        }
+        sb.append("],\n");
+        sb.append("  \"topologyDeterminismInfo\": [\n");
+        for (int i = 0; i < rounds.size(); i++) {
+            sb.append("    ");
+            appendTopologyDeterminismInfo(sb, rounds.get(i).getTopologyDeterminismInfo(), "    ");
+            if (i < rounds.size() - 1) sb.append(",");
+            sb.append("\n");
+        }
+        sb.append("  ]");
         if (includeChainReorganizations) {
             sb.append(",\n");
             sb.append("  \"chainReorganizations\": [\n");
@@ -147,31 +167,101 @@ public class ThreesimJsonSerializer {
         sb.append(indent).append("}");
     }
 
-    // D_r for this round: the depth of the LAST occurrence observed before the round
-    // terminated -- quiescence reached (0.5 x block_creation_interval with no further reorg,
-    // see ThreesimSimulationMonitor.shouldTerminate()), or the cap-without-quiescence/no-reorg
-    // case, where the list is already empty by the time it gets here (cleared by the monitor).
-    // Deliberately NOT the deepest occurrence across the round: a deeper transient excursion
-    // earlier on can later be fully orphaned by a shallower, final resolution (or vice versa),
-    // so taking the max would report a possibly-superseded snapshot instead of the converged
-    // outcome. 0 if no reorg occurred (or none survived to quiescence).
-    private static long finalReorgDepth(List<ChainReorganizationOccurrence> occurrences) {
+    // D_r for this round.
+    //
+    // When the episode is a genuine attacker success (status == SUCCESS, per D5's
+    // ThreesimSimulationMonitor.getEpisodeStatus(), broad-scanned across every recorded reorg,
+    // not just the last one -- see getDecisiveAttackerReorg()'s doc comment for why "last reorg
+    // only" under-detects attacker success whenever an episode has 2+ reorgs and the last one
+    // isn't the attacker-caused one): depth is the decisive occurrence's depth -- the same
+    // occurrence attackerCausedChainReorganizationDepths reports below, so a SUCCESS round's two
+    // depth metrics always describe the same reorg, one unconditional and one attacker-filtered.
+    //
+    // Otherwise (FAILURE, or UNRESOLVED where the list is already empty -- cleared by the
+    // monitor per shouldTerminate()'s cap-without-quiescence branch): depth is the LAST
+    // occurrence's depth, unchanged from prior behavior -- there's no decisive attacker
+    // occurrence to point at in these cases, and the redefinition is specifically about closing
+    // the SUCCESS-case attribution gap, not about changing FAILURE/UNRESOLVED semantics.
+    // Deliberately NOT the deepest occurrence across the round in either branch: a deeper
+    // transient excursion earlier on can later be fully orphaned by a shallower, final
+    // resolution (or vice versa), so taking the max would report a possibly-superseded snapshot
+    // instead of the converged outcome. 0 if no reorg occurred (or none survived to quiescence).
+    private static long finalReorgDepth(ThreesimSimulationRoundResult round) {
+        ChainReorganizationOccurrence decisive = round.getEpisodeStatus() == EpisodeStatus.SUCCESS
+                ? round.getDecisiveAttackerReorg() : null;
+        if (decisive != null) return depthOf(decisive);
+
+        List<ChainReorganizationOccurrence> occurrences = round.getChainReorganizations();
         if (occurrences.isEmpty()) return 0;
-        ChainReorganizedTraceEvent last = occurrences.get(occurrences.size() - 1).getEvent();
-        return last.getNewCanonicalTipHeight() - last.getCommonAncestorHeight();
+        return depthOf(occurrences.get(occurrences.size() - 1));
     }
 
-    // Same as finalReorgDepth, but only non-zero when that SAME last (converged) occurrence's
-    // winning branch originated from the attacker (see ChainReorganizationOccurrence.
-    // isAttackerCaused / branch-lineage attribution in ThreesimSimulationMonitor.
-    // isAttackerCaused) -- 0 whenever the final outcome was not attacker-caused, even if some
-    // earlier, since-superseded occurrence in this same round was.
-    private static long finalAttackerCausedReorgDepth(List<ChainReorganizationOccurrence> occurrences) {
-        if (occurrences.isEmpty()) return 0;
-        ChainReorganizationOccurrence last = occurrences.get(occurrences.size() - 1);
-        if (!last.isAttackerCaused()) return 0;
-        ChainReorganizedTraceEvent e = last.getEvent();
+    // Same value as finalReorgDepth when status == SUCCESS (the decisive occurrence is
+    // attacker-caused by construction -- see getDecisiveAttackerReorg()); 0 otherwise. This
+    // makes "D > 0 iff status == success" hold by construction, closing item 12's invariant-8
+    // gap (previously: only the LAST reorg was checked for attacker attribution, missing an
+    // earlier decisive one whenever the episode had 2+ reorgs).
+    private static long finalAttackerCausedReorgDepth(ThreesimSimulationRoundResult round) {
+        if (round.getEpisodeStatus() != EpisodeStatus.SUCCESS) return 0;
+        ChainReorganizationOccurrence decisive = round.getDecisiveAttackerReorg();
+        return decisive != null ? depthOf(decisive) : 0;
+    }
+
+    private static long depthOf(ChainReorganizationOccurrence occurrence) {
+        ChainReorganizedTraceEvent e = occurrence.getEvent();
         return e.getNewCanonicalTipHeight() - e.getCommonAncestorHeight();
+    }
+
+    // D5 episode-resolution status (see EpisodeStatus) as its lowercase JSON string, or null if
+    // absent (e.g. an aggregate round-result bucket that was never assigned one).
+    private static String episodeStatusJson(EpisodeStatus status) {
+        return status != null ? status.toJsonValue() : null;
+    }
+
+    // rootSeed/topologyId/attackerNodeIndices/nodeAdjacency (item 1a: deterministic seeding +
+    // stable node indices). replicationId is item 11's explicit per-round replication identifier
+    // (previously only implicit via array position in simulationRoundResults/status/etc.).
+    // meanDegree/minDegree/maxDegree are item 2's realized degree statistics -- grouped here
+    // rather than as new top-level fields, since they're derived straight from nodeAdjacency
+    // (already present in this same object) and share its per-topology-type availability. Not
+    // the full item-11 output schema (block-size summaries etc. are a separate, later item;
+    // "status" -- D5 episode resolution -- is covered by episodeStatusJson/EpisodeStatus above)
+    // -- this is the minimal per-replication debug surface needed to verify (configId,
+    // replicationId) reproduces the same topology. Absent (null) info -- e.g. explicit-topology
+    // runs, which don't assign node indices -- serializes as nulls/empty rather than omitting the
+    // field, so the schema shape stays uniform.
+    private static void appendTopologyDeterminismInfo(StringBuilder sb, TopologyDeterminismInfo info, String indent) {
+        if (info == null) {
+            sb.append("{\"rootSeed\": null, \"replicationId\": null, \"topologyId\": null, \"attackerNodeIndices\": [], ")
+              .append("\"nodeAdjacency\": {}, \"meanDegree\": null, \"minDegree\": null, \"maxDegree\": null}");
+            return;
+        }
+        sb.append("{\"rootSeed\": ").append(info.rootSeed())
+          .append(", \"replicationId\": ").append(info.replicationId())
+          .append(", \"topologyId\": ").append(jsonStr(info.topologyId()))
+          .append(", \"attackerNodeIndices\": [");
+        List<Integer> attackerIndices = info.attackerNodeIndices();
+        for (int i = 0; i < attackerIndices.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(attackerIndices.get(i));
+        }
+        sb.append("], \"nodeAdjacency\": {");
+        boolean first = true;
+        for (Map.Entry<Integer, List<Integer>> entry : info.nodeAdjacency().entrySet()) {
+            if (!first) sb.append(",");
+            first = false;
+            sb.append("\"").append(entry.getKey()).append("\": [");
+            List<Integer> neighbors = entry.getValue();
+            for (int i = 0; i < neighbors.size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append(neighbors.get(i));
+            }
+            sb.append("]");
+        }
+        sb.append("}, \"meanDegree\": ").append(info.meanDegree())
+          .append(", \"minDegree\": ").append(info.minDegree())
+          .append(", \"maxDegree\": ").append(info.maxDegree())
+          .append("}");
     }
 
     // Only emitted when includeChainReorganizations is set (see toJson overloads) -- distinct

@@ -18,9 +18,9 @@ public class ExplicitNetworkBlockchainSystemFactory extends ThreesimBlockchainSy
     }
 
     @Override
-    protected P2PNetworkFactory createP2PNetworkFactory(ThreesimSimulationParameters params) {
+    protected P2PNetworkFactory createP2PNetworkFactory(ThreesimSimulationParameters params, long rootSeed) {
         return new ExplicitTopologyP2PNetworkFactory(
-                (ExplicitNetworkTopology) networkTopology, params);
+                (ExplicitNetworkTopology) networkTopology, params, rootSeed);
     }
 
     @Override

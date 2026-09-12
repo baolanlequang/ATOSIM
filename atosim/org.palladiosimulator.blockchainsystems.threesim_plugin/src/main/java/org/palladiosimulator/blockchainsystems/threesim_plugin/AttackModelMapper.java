@@ -83,6 +83,7 @@ public class AttackModelMapper {
         }
 
         return new ThreesimSimulationParameters(
+                base.getConfigId(),
                 base.getFailureThroughputThreshold(),
                 base.getShannonEntropyK(),
                 base.getNakamotoCoefficientThreshold(),

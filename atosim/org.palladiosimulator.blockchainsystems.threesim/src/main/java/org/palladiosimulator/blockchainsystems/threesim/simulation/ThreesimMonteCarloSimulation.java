@@ -40,12 +40,13 @@ public class ThreesimMonteCarloSimulation
     }
 
     @Override
-    public ThreesimSimulationRoundResult performSimulationRound() {
+    public ThreesimSimulationRoundResult performSimulationRound(int replicationId) {
         return new ThreesimSimulationRound(
                 _blockchainSystemFactory,
                 _logOutputProvider.getLogOutputs(),
                 _maxAllowedBlockchainLength,
-                _threesimSimulationParameters
+                _threesimSimulationParameters,
+                replicationId
         ).run();
     }
 
@@ -64,7 +65,10 @@ public class ThreesimMonteCarloSimulation
                         r.getOutputMetrics().stream()
                                 .filter(m -> !(m instanceof NakamotoCoefficient) && !(m instanceof GeographicalDiversity))
                                 .collect(Collectors.toCollection(OutputMetricsSet::new)),
-                        r.getChainReorganizations()))
+                        r.getChainReorganizations(),
+                        r.getTopologyDeterminismInfo(),
+                        r.getEpisodeStatus(),
+                        r.getDecisiveAttackerReorg()))
                 .collect(Collectors.toList());
 
         return new ThreesimMonteCarloSimulationResult(

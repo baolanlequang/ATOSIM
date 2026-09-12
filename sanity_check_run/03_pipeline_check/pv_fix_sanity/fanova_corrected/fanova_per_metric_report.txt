@@ -1,0 +1,300 @@
+Generated: 2026-09-07 08:33:51
+Strategies: lead_stubborn, selfish
+n rows total: 20000
+
+##############################################################################
+OUTCOME: attack_success_rate (Attack success rate P = (1/R) sum_r 1[D_r > 0])
+##############################################################################
+lead_stubborn (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.914
+    CV MAE (mean across folds)   = 0.030070  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.040074  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Attacker hash power          88.3% +/- 1.5% (across-tree std)
+    Node degree                   8.8% +/- 0.9% (across-tree std)
+    Validating-node count         0.2% +/- 0.1% (across-tree std)
+    Block creation interval       0.0% +/- 0.0% (across-tree std)
+    Max block size                0.0% +/- 0.1% (across-tree std)
+    Bandwidth                     0.0% +/- 0.0% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 2.7% +/- 0.9%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.923
+    Node degree                  0.104
+    Max block size               0.003
+    Validating-node count        0.003
+    Block creation interval      0.001
+    Bandwidth                    0.000
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1% (across-tree std)
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.5% +/- 0.2% (across-tree std)
+selfish (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.914
+    CV MAE (mean across folds)   = 0.029941  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.040219  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Attacker hash power          87.5% +/- 1.6% (across-tree std)
+    Node degree                   9.6% +/- 1.0% (across-tree std)
+    Validating-node count         0.1% +/- 0.0% (across-tree std)
+    Max block size                0.0% +/- 0.1% (across-tree std)
+    Block creation interval       0.0% +/- 0.0% (across-tree std)
+    Bandwidth                     0.0% +/- 0.0% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 2.7% +/- 0.9%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.910
+    Node degree                  0.115
+    Validating-node count        0.003
+    Max block size               0.003
+    Block creation interval      0.001
+    Bandwidth                    0.001
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1% (across-tree std)
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.6% +/- 0.3% (across-tree std)
+All strategies (pooled) (n=20000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.916
+    CV MAE (mean across folds)   = 0.029887  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.039871  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Attacker hash power          87.6% +/- 1.3% (across-tree std)
+    Node degree                   9.3% +/- 0.7% (across-tree std)
+    Validating-node count         0.2% +/- 0.0% (across-tree std)
+    Block creation interval       0.0% +/- 0.0% (across-tree std)
+    Max block size                0.0% +/- 0.0% (across-tree std)
+    Bandwidth                     0.0% +/- 0.0% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 2.8% +/- 0.7%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.915
+    Node degree                  0.117
+    Max block size               0.004
+    Validating-node count        0.003
+    Block creation interval      0.002
+    Bandwidth                    0.001
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               0.1% +/- 0.0% (across-tree std)
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.4% +/- 0.1% (across-tree std)
+
+Chart saved: ../../pv_fix_sanity/fanova_corrected/fanova_sobol_bar_attack_success_rate.png
+
+##############################################################################
+OUTCOME: attack_severity (Attack severity V = (1/R) sum_r D_r = P * D-bar+ (when P>0))
+##############################################################################
+lead_stubborn (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.905
+    CV MAE (mean across folds)   = 0.061908  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.085628  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Attacker hash power          86.3% +/- 2.1% (across-tree std)
+    Node degree                  10.0% +/- 1.2% (across-tree std)
+    Validating-node count         0.2% +/- 0.1% (across-tree std)
+    Max block size                0.0% +/- 0.0% (across-tree std)
+    Block creation interval       0.0% +/- 0.1% (across-tree std)
+    Bandwidth                     0.0% +/- 0.0% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 3.4% +/- 1.3%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.902
+    Node degree                  0.122
+    Max block size               0.005
+    Validating-node count        0.003
+    Block creation interval      0.001
+    Bandwidth                    0.001
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1% (across-tree std)
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.6% +/- 0.3% (across-tree std)
+selfish (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.907
+    CV MAE (mean across folds)   = 0.061110  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.084637  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Attacker hash power          86.1% +/- 2.0% (across-tree std)
+    Node degree                  10.6% +/- 1.2% (across-tree std)
+    Validating-node count         0.1% +/- 0.0% (across-tree std)
+    Max block size                0.1% +/- 0.1% (across-tree std)
+    Block creation interval       0.0% +/- 0.1% (across-tree std)
+    Bandwidth                     0.0% +/- 0.0% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 3.2% +/- 1.1%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.893
+    Node degree                  0.130
+    Max block size               0.004
+    Validating-node count        0.003
+    Block creation interval      0.001
+    Bandwidth                    0.001
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1% (across-tree std)
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.6% +/- 0.3% (across-tree std)
+All strategies (pooled) (n=20000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.908
+    CV MAE (mean across folds)   = 0.061182  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.084427  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Attacker hash power          85.8% +/- 1.7% (across-tree std)
+    Node degree                  10.3% +/- 0.9% (across-tree std)
+    Validating-node count         0.2% +/- 0.0% (across-tree std)
+    Max block size                0.0% +/- 0.1% (across-tree std)
+    Block creation interval       0.0% +/- 0.1% (across-tree std)
+    Bandwidth                     0.0% +/- 0.0% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 3.6% +/- 0.9%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Attacker hash power          0.896
+    Node degree                  0.135
+    Max block size               0.006
+    Validating-node count        0.003
+    Block creation interval      0.003
+    Bandwidth                    0.002
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               0.1% +/- 0.1% (across-tree std)
+    Max block size x Bandwidth                                                                        0.0% +/- 0.0% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.0% +/- 0.0% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.5% +/- 0.2% (across-tree std)
+
+Chart saved: ../../pv_fix_sanity/fanova_corrected/fanova_sobol_bar_attack_severity.png
+
+##############################################################################
+OUTCOME: conditional_reorg_depth (Conditional reorg depth D-bar+ = mean(D_r | D_r > 0), undefined if P=0)
+##############################################################################
+lead_stubborn (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = -0.152
+    CV MAE (mean across folds)   = 0.007607  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.014791  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Node degree                  20.8% +/- 6.9% (across-tree std)
+    Validating-node count         3.7% +/- 13.1% (across-tree std)
+    Max block size                3.6% +/- 6.8% (across-tree std)
+    Block creation interval       3.2% +/- 6.9% (across-tree std)
+    Bandwidth                     0.7% +/- 0.6% (across-tree std)
+    Attacker hash power           0.4% +/- 0.2% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 67.7% +/- 12.0%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Node degree                  0.921
+    Block creation interval      0.219
+    Bandwidth                    0.161
+    Max block size               0.130
+    Validating-node count        0.063
+    Attacker hash power          0.004
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               5.9% +/- 8.3% (across-tree std)
+    Max block size x Bandwidth                                                                        0.2% +/- 0.3% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.1% +/- 0.4% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.2% +/- 0.3% (across-tree std)
+selfish (n=10000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = 0.030
+    CV MAE (mean across folds)   = 0.005517  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.011610  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Node degree                  23.6% +/- 6.9% (across-tree std)
+    Validating-node count         4.4% +/- 14.5% (across-tree std)
+    Block creation interval       3.9% +/- 8.0% (across-tree std)
+    Max block size                3.3% +/- 6.5% (across-tree std)
+    Attacker hash power           0.5% +/- 0.3% (across-tree std)
+    Bandwidth                     0.5% +/- 0.5% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 63.7% +/- 12.6%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Node degree                  0.923
+    Block creation interval      0.230
+    Bandwidth                    0.141
+    Max block size               0.101
+    Validating-node count        0.058
+    Attacker hash power          0.006
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               4.5% +/- 6.8% (across-tree std)
+    Max block size x Bandwidth                                                                        0.2% +/- 0.3% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.1% +/- 0.3% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.3% +/- 0.4% (across-tree std)
+All strategies (pooled) (n=20000)
+  Held-out predictive performance (diagnostic, not part of Hutter 2014 method, not used to gate results):
+    CV R^2 (mean across folds)   = -0.055
+    CV MAE (mean across folds)   = 0.006623  [outcome's natural scale]
+    CV RMSE (mean across folds)  = 0.013410  [outcome's natural scale]
+  fANOVA importance (Hutter et al. 2014, mean +/- across-tree standard deviation across 500 trees,
+  Corollary 8 uncertainty). Note: these are NOT confidence intervals for the true
+  importance -- they reflect variation across the Random Forest's 500 trees, per
+  Corollary 8 (Hutter et al. 2014):
+    Node degree                  20.1% +/- 5.3% (across-tree std)
+    Block creation interval       3.2% +/- 6.1% (across-tree std)
+    Validating-node count         2.6% +/- 9.8% (across-tree std)
+    Max block size                2.3% +/- 4.2% (across-tree std)
+    Bandwidth                     0.9% +/- 0.4% (across-tree std)
+    Attacker hash power           0.4% +/- 0.2% (across-tree std)
+  interaction residual (mean +/- across-tree standard deviation): 70.5% +/- 9.1%
+  Total-order Sobol S_Ti (Jansen 1999, RF-surrogate) - supplementary, not fANOVA:
+    Node degree                  0.921
+    Block creation interval      0.230
+    Bandwidth                    0.219
+    Max block size               0.107
+    Validating-node count        0.059
+    Attacker hash power          0.010
+  Second-order interaction effects (4 requested pairs, Hutter et al. 2014 Theorem 3,
+  mean +/- across-tree standard deviation across 500 trees; interaction only, main
+  effects already subtracted). Note: not confidence intervals -- variation across the
+  Random Forest's 500 trees, per Corollary 8 (Hutter et al. 2014):
+    Node degree x Validating-node count                                                               4.1% +/- 5.8% (across-tree std)
+    Max block size x Bandwidth                                                                        0.5% +/- 0.7% (across-tree std)
+    Bandwidth x Block creation interval [substituted for 'propagation time x BCI' -- propagation time is not an input feature, confirm this substitution]   0.4% +/- 0.8% (across-tree std)
+    Attacker hash power x Node degree                                                                 0.4% +/- 0.4% (across-tree std)
+
+Chart saved: ../../pv_fix_sanity/fanova_corrected/fanova_sobol_bar_conditional_reorg_depth.png

@@ -9,8 +9,10 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,15 +24,19 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
 
     private final BlockchainElement _genesisBlock;
     private final int _numberOfRequiredSecurityConfirmations;
-    private final HashSet<BlockchainElement> _longestChainsLastBlocks;
+    private final LinkedHashSet<BlockchainElement> _longestChainsLastBlocks;
     private final HashMap<String, BlockchainElement> _blockchainElementsMap;
     private long _length;
     private ChainReorganizedTraceEvent _lastChainReorganization;
+    // Assigned to each BlockchainElement as it's appended (see appendIncludedBlock/
+    // appendForkingBlock/appendStaleBlock), i.e. in the order this node actually completes
+    // validation of each block -- starts at 1 since the genesis element is seeded with 0.
+    private long _nextValidationSequence = 1L;
 
     public BlockchainImpl(BlockchainElement genesisBlock, int numberOfRequiredSecurityConfirmations) {
         _genesisBlock = genesisBlock;
         _numberOfRequiredSecurityConfirmations = numberOfRequiredSecurityConfirmations;
-        _longestChainsLastBlocks = new HashSet<>();
+        _longestChainsLastBlocks = new LinkedHashSet<>();
         _longestChainsLastBlocks.add(genesisBlock);
         _blockchainElementsMap = new HashMap<>();
         _blockchainElementsMap.put(genesisBlock.getBlock().getHash(), genesisBlock);
@@ -44,6 +50,14 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
     @Override
     public Set<Block> getLastBlocksOfLongestChains() {
         return _longestChainsLastBlocks.stream().map(BlockchainElement::getBlock).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Block getPreferredTipOfLongestChains() {
+        return _longestChainsLastBlocks.stream()
+                .min(Comparator.comparingLong(BlockchainElement::getValidationSequence))
+                .map(BlockchainElement::getBlock)
+                .orElseThrow();
     }
 
     @Override
@@ -82,12 +96,12 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
     }
 
     private void appendIncludedBlock(Block block, BlockchainElement prev, long pos) {
-        BlockchainElement el = new BlockchainElement(block, prev, BlockchainElementType.Included, pos);
+        BlockchainElement el = new BlockchainElement(block, prev, BlockchainElementType.Included, pos, _nextValidationSequence++);
         _blockchainElementsMap.put(block.getHash(), el);
         _length = pos;
 
         _longestChainsLastBlocks.remove(prev);
-        HashSet<BlockchainElement> stale = new HashSet<>(_longestChainsLastBlocks);
+        LinkedHashSet<BlockchainElement> stale = new LinkedHashSet<>(_longestChainsLastBlocks);
         _longestChainsLastBlocks.clear();
         _longestChainsLastBlocks.add(el);
 
@@ -108,7 +122,7 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
     }
 
     private void appendForkingBlock(Block block, BlockchainElement prev, long pos) {
-        BlockchainElement el = new BlockchainElement(block, prev, BlockchainElementType.Forking, pos);
+        BlockchainElement el = new BlockchainElement(block, prev, BlockchainElementType.Forking, pos, _nextValidationSequence++);
         _blockchainElementsMap.put(block.getHash(), el);
         _longestChainsLastBlocks.add(el);
 
@@ -121,7 +135,7 @@ public class BlockchainImpl extends BlockchainNodeObject implements Blockchain {
     }
 
     private void appendStaleBlock(Block block, BlockchainElement prev, long pos) {
-        BlockchainElement el = new BlockchainElement(block, prev, BlockchainElementType.Stale, pos);
+        BlockchainElement el = new BlockchainElement(block, prev, BlockchainElementType.Stale, pos, _nextValidationSequence++);
         _blockchainElementsMap.put(block.getHash(), el);
         logBlockAppended(block, pos, prev.getBlock(), BlockType.StaleBlock);
     }

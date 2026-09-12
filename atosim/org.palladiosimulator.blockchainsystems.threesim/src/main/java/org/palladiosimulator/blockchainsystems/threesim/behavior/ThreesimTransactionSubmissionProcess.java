@@ -11,10 +11,10 @@ import org.palladiosimulator.blockchainsystems.core.transaction.TransactionSubmi
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.TransactionSubmissionProcess;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.TransactionSubmittedCallbackSubscriber;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.DeterministicSeeds;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 
@@ -23,6 +23,7 @@ public class ThreesimTransactionSubmissionProcess extends BlockchainSimulationOb
 
     private final PoissonProcess _poissonProcess;
     private final ValueProvider<TransactionProperties> _transactionPropertiesProvider;
+    private final RandomGenerator _idGenerator;
 
     private Supplier<String> _onSelectRecipientNodeIdCallback;
     private final Set<TransactionSubmittedCallbackSubscriber> _subscribers = new HashSet<>();
@@ -32,11 +33,14 @@ public class ThreesimTransactionSubmissionProcess extends BlockchainSimulationOb
             String id,
             String name,
             double meanTransactionCreationTime,
-            ValueProvider<TransactionProperties> transactionPropertiesProvider
+            ValueProvider<TransactionProperties> transactionPropertiesProvider,
+            RandomGenerator randomGenerator,
+            RandomGenerator idGenerator
     ) {
         super(id, name);
-        _poissonProcess = new PoissonProcess(1.0 / meanTransactionCreationTime, RandomGenerator.of("Random"));
+        _poissonProcess = new PoissonProcess(1.0 / meanTransactionCreationTime, randomGenerator);
         _transactionPropertiesProvider = transactionPropertiesProvider;
+        _idGenerator = idGenerator;
     }
 
     @Override
@@ -76,9 +80,9 @@ public class ThreesimTransactionSubmissionProcess extends BlockchainSimulationOb
 
     private Transaction createTransaction(long creationTime, String recipientId) {
         TransactionProperties props = _transactionPropertiesProvider.getValue();
-        String senderId = UUID.randomUUID().toString();
+        String senderId = DeterministicSeeds.randomHexId(_idGenerator);
         return new TransactionFactoryImpl().createTransaction(
-                UUID.randomUUID().toString(),
+                DeterministicSeeds.randomHexId(_idGenerator),
                 props.getSize(),
                 creationTime,
                 senderId,

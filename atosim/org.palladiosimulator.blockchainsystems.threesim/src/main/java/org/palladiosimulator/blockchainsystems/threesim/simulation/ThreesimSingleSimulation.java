@@ -35,7 +35,8 @@ public class ThreesimSingleSimulation implements SingleSimulation {
                 _blockchainSystemFactory,
                 _logOutputProvider.getLogOutputs(),
                 _maxAllowedBlockchainLength,
-                _threesimSimulationParameters
+                _threesimSimulationParameters,
+                0
         ).run();
 
         return new ThreesimSingleSimulationResult(

@@ -48,7 +48,6 @@ from __future__ import annotations
 import argparse
 import csv
 import os
-import random
 import re
 import shutil
 import sys
@@ -126,7 +125,18 @@ def _clone_node_allocation(block: str) -> tuple[str, str]:
     return outer.group(1), new_block
 
 
-def patch_topology(target: Path, node_degree: str, validator_count: str) -> None:
+def patch_topology(target: Path, node_degree: str, validator_count: str) -> str:
+    """Patch topology, carving out one dedicated 1-node NodeSystem for the attacker.
+
+    Returns the (freshly cloned) <NodeSystem> id of that dedicated node. It is
+    placed *first* among the <NodeTemplates> entries written to Net.p2pnetwork:
+    BlockchainSystemModelLoader.repairDanglingAttackerLinks (Java) falls back to
+    the first node system of the paired topology whenever an attack model's
+    linkedNodeSystem href doesn't resolve -- which is the case for every system
+    model except the one literal reference model an attack model was generated
+    against, since node-allocation ids are fresh UUIDs per system model. Placing
+    the dedicated node first makes that fallback land on it too.
+    """
     nodealloc_path = target / "Net.nodeallocation"
     p2p_path       = target / "Net.p2pnetwork"
 
@@ -138,10 +148,14 @@ def patch_topology(target: Path, node_degree: str, validator_count: str) -> None
         raise RuntimeError(f"{nodealloc_path}: no <NodeAllocations> blocks found.")
 
     total = int(validator_count)
-    if total <= 0:
-        raise ValueError(f"validator_count must be positive, got {validator_count!r}")
-    n_full, remainder = divmod(total, 4)
-    counts = [4] * n_full + ([remainder] if remainder else [])
+    if total < 2:
+        raise ValueError(
+            f"validator_count must be >= 2 (1 dedicated attacker node + "
+            f">=1 honest node), got {validator_count!r}"
+        )
+    honest_total = total - 1
+    n_full, remainder = divmod(honest_total, 4)
+    counts = [1] + [4] * n_full + ([remainder] if remainder else [])
 
     new_outer_ids: list[str] = []
     new_blocks: list[str]    = []
@@ -150,6 +164,14 @@ def patch_topology(target: Path, node_degree: str, validator_count: str) -> None
         outer_id, cloned = _clone_node_allocation(archetype)
         new_outer_ids.append(outer_id)
         new_blocks.append(cloned)
+
+    attacker_ns_ids = _NODE_SYSTEM_ID.findall(new_blocks[0])
+    if len(attacker_ns_ids) != 1:
+        raise RuntimeError(
+            f"{nodealloc_path}: expected exactly 1 <NodeSystem> in the dedicated "
+            f"attacker NodeAllocations block, found {len(attacker_ns_ids)}."
+        )
+    attacker_ns_id = attacker_ns_ids[0]
 
     nodealloc_parts  = _NODE_ALLOC_BLOCK.split(nodealloc_text)
     new_nodealloc    = nodealloc_parts[0] + "\n  ".join(new_blocks) + nodealloc_parts[-1]
@@ -173,6 +195,8 @@ def patch_topology(target: Path, node_degree: str, validator_count: str) -> None
     new_p2p, n = _replace_attr(new_p2p, "Connectivity", str(int(node_degree)))
     _require(new_p2p, "Connectivity", n, p2p_path)
     p2p_path.write_text(new_p2p, encoding="utf-8")
+
+    return attacker_ns_id
 
 
 def patch_linkallocation(path: Path, bandwidth_mbps: str) -> None:
@@ -246,35 +270,30 @@ def _set_attack_gamma(text: str, gamma_value: str) -> tuple[str, int]:
     return text[:match.start()] + new_tag + text[match.end():], 1
 
 
-def _node_system_ids(nodealloc_path: Path) -> list[str]:
-    text = nodealloc_path.read_text(encoding="utf-8")
-    ids  = _NODE_SYSTEM_ID.findall(text)
-    if not ids:
-        raise RuntimeError(f"{nodealloc_path}: no <NodeSystem> elements found.")
-    return ids
-
-
 def patch_attackmodel(
     path: Path,
     attacker_hash_power: str,
-    node_system_ids: list[str],
-    rng: random.Random,
+    attacker_ns_id: str,
     gamma: str,
 ) -> None:
-    """Patch Net.attackmodel with attacker-capability parameters (Stage 2)."""
+    """Patch Net.attackmodel with attacker-capability parameters (Stage 2).
+
+    attacker_ns_id is the dedicated 1-node NodeSystem id carved out by
+    patch_topology for whichever system model this attack model is being
+    generated against (see patch_topology's docstring) -- there is no
+    selection to make here, the attacker's NodeSystem is fixed by construction.
+    """
     text = path.read_text(encoding="utf-8")
 
     if _ATTACKERS_BLOCK.search(text) is None:
         raise RuntimeError(f"{path}: no <attackers> block found.")
 
-    # Always use exactly 1 attacker node (two-stage design assumption)
-    chosen_ns  = rng.sample(node_system_ids, 1)
     attacker_id = _new_id()
     power_share = f"{float(attacker_hash_power)}"
 
     attacker_block = (
         f'<attackers id="{attacker_id}" powerShare="{power_share}">\n'
-        f'    <linkedNodeSystem href="Net.nodeallocation#{chosen_ns[0]}"/>\n'
+        f'    <linkedNodeSystem href="Net.nodeallocation#{attacker_ns_id}"/>\n'
         f"  </attackers>"
     )
 
@@ -299,11 +318,13 @@ def generate_system_model(
     base_dir: Path,
     sys_dir: Path,
     row: dict,
-) -> None:
+) -> str:
     """Stage 1: copy base files (excluding Net.attackmodel) and apply system-parameter patches.
 
     sys_dir is created (or reused if it already exists — idempotent).
     Net.attackmodel is intentionally excluded — it lives in attack_models/ only.
+
+    Returns the dedicated attacker NodeSystem id from patch_topology.
     """
     sys_dir.mkdir(parents=True, exist_ok=True)
 
@@ -320,8 +341,9 @@ def generate_system_model(
         row["block_creation_interval"],
         row["max_block_size"],
     )
-    patch_topology(sys_dir, row["node_degree"], row["validator_count"])
+    attacker_ns_id = patch_topology(sys_dir, row["node_degree"], row["validator_count"])
     patch_linkallocation(sys_dir / "Net.linkallocation", row["bandwidth"])
+    return attacker_ns_id
 
 
 def generate_system_model_variant(
@@ -353,7 +375,7 @@ def generate_pair_model(
     base_dir: Path,
     atk_dir: Path,
     row: dict,
-    sys_ns_ids: list[str],
+    attacker_ns_id: str,
 ) -> None:
     """Stage 2: copy Net.attackmodel from base and patch with attacker-capability params.
 
@@ -379,12 +401,10 @@ def generate_pair_model(
     dst.write_text(text, encoding="utf-8")
 
     if row.get("attacker_hash_power"):
-        rng = random.Random(f"{row['attacker_config_id']}-{row.get('attack_strategy', '')}")
         patch_attackmodel(
             dst,
             row["attacker_hash_power"],
-            sys_ns_ids,
-            rng,
+            attacker_ns_id,
             row.get("tie_breaking_parameter", "0.0"),
         )
 
@@ -461,12 +481,14 @@ def main() -> int:
         sys_rows = list(reader)
 
     print(f"Stage 1 — generating {len(sys_rows)} system model(s)...")
-    # sys_id -> list of NodeSystem IDs (cached for Stage 2)
-    sys_ns_ids: dict[str, list[str]] = {}
+    # sys_id -> dedicated attacker NodeSystem id (cached for Stage 2)
+    sys_attacker_ns: dict[str, str] = {}
     # core_config_id -> reference sys_dir whose topology has already been patched;
     # reused (copied, not regenerated) by every other bandwidth variant
-    # sharing that core config.
+    # sharing that core config. attacker NodeSystem id is reused alongside it,
+    # since generate_system_model_variant copies the topology files unchanged.
     core_dirs: dict[str, Path] = {}
+    core_attacker_ns: dict[str, str] = {}
     n_topologies = 0
     for i, row in enumerate(sys_rows, 1):
         sys_id  = row["system_config_id"].strip()
@@ -475,13 +497,15 @@ def main() -> int:
 
         core_dir = core_dirs.get(core_id)
         if core_dir is None:
-            generate_system_model(args.base, sys_dir, row)
+            attacker_ns_id = generate_system_model(args.base, sys_dir, row)
             core_dirs[core_id] = sys_dir
+            core_attacker_ns[core_id] = attacker_ns_id
             n_topologies += 1
         else:
             generate_system_model_variant(core_dir, sys_dir, row["bandwidth"])
+            attacker_ns_id = core_attacker_ns[core_id]
 
-        sys_ns_ids[sys_id] = _node_system_ids(sys_dir / "Net.nodeallocation")
+        sys_attacker_ns[sys_id] = attacker_ns_id
         if i % 100 == 0 or i <= 3:
             print(f"  [{i:>4}] sys-{sys_id}")
 
@@ -503,10 +527,12 @@ def main() -> int:
             return 1
         atk_rows = list(reader)
 
-    # Pick any system config's ns_ids as the representative set for attack models.
-    # All system configs share the same attacker NodeSystem slot structure;
-    # we use sys-1 as the canonical reference.
-    representative_ns_ids = sys_ns_ids[sys_rows[0]["system_config_id"].strip()]
+    # Pick any system config's dedicated attacker NodeSystem id as the reference
+    # for attack models. All system configs carry one such dedicated node;
+    # we use sys-1 as the canonical reference (and Java-side dangling-link
+    # repair repoints every other pairing at the paired model's own dedicated
+    # node, which patch_topology always places first — see its docstring).
+    representative_ns_id = sys_attacker_ns[sys_rows[0]["system_config_id"].strip()]
 
     print(f"\nStage 2 — generating {len(atk_rows)} × {len(ATTACK_STRATEGIES)} attack model(s)...")
     atk_count = 0
@@ -520,7 +546,7 @@ def main() -> int:
             row_with_strategy = {**row, "attack_strategy": strategy}
             generate_pair_model(
                 args.base, atk_dir, row_with_strategy,
-                representative_ns_ids,
+                representative_ns_id,
             )
             atk_count += 1
             if atk_count % 100 == 0 or atk_count <= 3:

@@ -7,25 +7,40 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.P2PNetwo
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.TransactionSubmissionProcess;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.random.RandomGenerator;
 
 public class BlockchainSystem extends BlockchainSimulationObject {
 
     private final P2PNetwork _network;
     private final GeographicalRegions _geographicalRegions;
-    private final HashSet<BlockchainSystemNode> _nodes;
+    // LinkedHashSet, not HashSet: onInitialize() below iterates this set to start each node's
+    // mining process, and that iteration order determines which node's first event lands first
+    // in the event coordinator whenever two events share a timestamp (see
+    // EventCoordinatorImpl/EffectsTimeSlice, which dispatch same-timestamp events in the order
+    // they were raised). A HashSet's iteration order depends on BlockchainSystemNode's identity
+    // hashCode, which is not reproducible across separate JVM runs; the caller must therefore
+    // populate this set in a deterministic order (see ThreesimBlockchainSystemFactory).
+    private final LinkedHashSet<BlockchainSystemNode> _nodes;
     private final TransactionSubmissionProcess _transactionSubmissionProcess;
     private final double _blockReward;
+    // Network-wide (not per-node) recipient-selection draw: one seeded stream consumed once per
+    // submitted transaction, matching the tagged-generator pattern used for the other
+    // transaction-submission mechanics (see ThreesimBlockchainSystemFactory's "recipientSelection"
+    // tag) rather than a per-node-scoped generator, since this is a single routing decision, not a
+    // per-node draw.
+    private final RandomGenerator _recipientSelectionGenerator;
 
     public BlockchainSystem(
             String id,
             String name,
             P2PNetwork network,
             GeographicalRegions geographicalRegions,
-            HashSet<BlockchainSystemNode> nodes,
+            LinkedHashSet<BlockchainSystemNode> nodes,
             TransactionSubmissionProcess transactionSubmissionProcess,
-            double blockReward
+            double blockReward,
+            RandomGenerator recipientSelectionGenerator
     ) {
         super(id, name);
         _network = network;
@@ -33,6 +48,7 @@ public class BlockchainSystem extends BlockchainSimulationObject {
         _nodes = nodes;
         _transactionSubmissionProcess = transactionSubmissionProcess;
         _blockReward = blockReward;
+        _recipientSelectionGenerator = recipientSelectionGenerator;
     }
 
     @Override
@@ -62,12 +78,12 @@ public class BlockchainSystem extends BlockchainSimulationObject {
 
     private String selectRecipientNodeId() {
         List<BlockchainSystemNode> nodeList = new ArrayList<>(_nodes);
-        return nodeList.get((int) (Math.random() * nodeList.size())).getId();
+        return nodeList.get(_recipientSelectionGenerator.nextInt(nodeList.size())).getId();
     }
 
     public P2PNetwork getNetwork() { return _network; }
     public GeographicalRegions getGeographicalRegions() { return _geographicalRegions; }
-    public HashSet<BlockchainSystemNode> getNodes() { return _nodes; }
+    public LinkedHashSet<BlockchainSystemNode> getNodes() { return _nodes; }
     public TransactionSubmissionProcess getTransactionSubmissionProcess() { return _transactionSubmissionProcess; }
     public double getBlockReward() { return _blockReward; }
 }

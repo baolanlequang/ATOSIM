@@ -78,6 +78,10 @@ public class ThreesimSimulationFactory implements SimulationFactory {
             };
 
             ThreesimSimulationParameters baseParams = new ThreesimSimulationParameters(
+                    // Eclipse launch-config path has no CSV row / config_id concept; seeding here
+                    // is still deterministic per (launch, replication), just not traceable back to
+                    // a sampling-pipeline config_id the way the standalone batch runner's is.
+                    "",
                     Double.parseDouble(configuration.getAttribute(ThreesimAttributes.FAILURE_THROUGHPUT_THRESHOLD, ThreesimAttributes.FAILURE_THROUGHPUT_THRESHOLD_DEFAULT)),
                     Double.parseDouble(configuration.getAttribute(ThreesimAttributes.SHANNON_ENTROPY_K, ThreesimAttributes.SHANNON_ENTROPY_K_DEFAULT)),
                     Double.parseDouble(configuration.getAttribute(ThreesimAttributes.NAKAMOTO_COEFFICIENT_THRESHOLD, ThreesimAttributes.NAKAMOTO_COEFFICIENT_THRESHOLD_DEFAULT)),

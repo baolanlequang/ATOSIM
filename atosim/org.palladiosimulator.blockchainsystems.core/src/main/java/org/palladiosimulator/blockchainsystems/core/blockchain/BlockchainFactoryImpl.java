@@ -15,7 +15,7 @@ public class BlockchainFactoryImpl implements BlockchainFactory {
     @Override
     public Blockchain createBlockchain(Block genesisBlock, String nodeId) {
         BlockchainElement genesisElement = new BlockchainElement(
-                genesisBlock, null, BlockchainElementType.Included, 1);
+                genesisBlock, null, BlockchainElementType.Included, 1, 0L);
         return new BlockchainImpl(genesisElement, _numberOfRequiredSecurityConfirmations);
     }
 }

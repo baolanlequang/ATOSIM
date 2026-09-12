@@ -159,4 +159,5 @@ public class BlockchainSystemNode extends BlockchainSimulationObject implements 
 
     public double getResourcePower() { return _resourcePower; }
     public GeographicalRegion getGeographicalRegion() { return _geographicalRegion; }
+    public Blockchain getBlockchain() { return _blockchain; }
 }

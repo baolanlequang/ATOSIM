@@ -5,6 +5,7 @@ import java.util.Set;
 
 public class ThreesimSimulationParameters {
 
+    private final String configId;
     private final double failureThroughputThreshold;
     private final double shannonEntropyK;
     private final double nakamotoCoefficientThreshold;
@@ -26,6 +27,7 @@ public class ThreesimSimulationParameters {
     private final boolean staticValidationDelayEnabled;
 
     public ThreesimSimulationParameters(
+            String configId,
             double failureThroughputThreshold,
             double shannonEntropyK,
             double nakamotoCoefficientThreshold,
@@ -46,6 +48,7 @@ public class ThreesimSimulationParameters {
             TransactionGenerationMode transactionGenerationMode,
             boolean staticValidationDelayEnabled
     ) {
+        this.configId = configId != null ? configId : "";
         this.failureThroughputThreshold = failureThroughputThreshold;
         this.shannonEntropyK = shannonEntropyK;
         this.nakamotoCoefficientThreshold = nakamotoCoefficientThreshold;
@@ -68,6 +71,7 @@ public class ThreesimSimulationParameters {
         this.staticValidationDelayEnabled = staticValidationDelayEnabled;
     }
 
+    public String getConfigId() { return configId; }
     public double getFailureThroughputThreshold() { return failureThroughputThreshold; }
     public double getShannonEntropyK() { return shannonEntropyK; }
     public double getNakamotoCoefficientThreshold() { return nakamotoCoefficientThreshold; }

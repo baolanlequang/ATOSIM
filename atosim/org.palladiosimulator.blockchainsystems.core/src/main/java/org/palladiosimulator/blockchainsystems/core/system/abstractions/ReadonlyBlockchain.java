@@ -10,6 +10,15 @@ import java.util.Set;
 public interface ReadonlyBlockchain {
     Set<Block> getBlocks();
     Set<Block> getLastBlocksOfLongestChains();
+
+    /**
+     * Among the tips of the current longest chain(s) (an equal-work tie whenever more than one
+     * exists), returns the one that completed validation and was appended to this node's local
+     * view earliest -- i.e. deterministic first-validated-wins tie-breaking, never unordered
+     * collection iteration.
+     */
+    Block getPreferredTipOfLongestChains();
+
     Set<Block> getBlocksAtPosition(long position);
     long getPositionOfBlock(Block block);
     long getLength();

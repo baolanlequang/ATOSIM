@@ -18,7 +18,7 @@ N_CANDIDATE_SEEDS    = 1000  # seeds to evaluate; best is picked at runtime
 
 system_core_param_ranges = {
     "validator_count":          (20,      1_000),
-    "node_degree":              (1,       8),
+    "node_degree":              (2,       8),
     "block_creation_interval":  (60_000,  1_200_000),
     "max_block_size":           (250_000, 8_000_000),
 }

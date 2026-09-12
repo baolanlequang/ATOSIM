@@ -10,10 +10,19 @@ JSON result files is achieved with a process pool INSIDE this single job
 work across many short-lived SLURM array sub-jobs. This avoids the
 scheduling overhead of many sub-minute array tasks.
 
-Corrected success formula (Eyal-Sirer):
+P_ij (attack success rate) uses status == "success" (D5's decisive-reorg
+definition, invariant-8 verified): P_ij = mean(1[status_r == "success"]).
+The corrected-Eyal-Sirer revenue-share-threshold formula below is no longer
+used for P_ij -- confirmed (prior task) numerically identical to the old,
+now-superseded JSON "Selfish Mining Attack Success" flag build_analysis_table.py
+was fixed to stop using, so it was a redundant re-derivation of the same
+stale definition, not an independently meaningful metric. It's kept ONLY
+for B_ij/B_bar_i/V_bar_i (the attacker-block-reward-weighted metric,
+intentionally kept alongside the D-bar-plus/V_reorg severity metric --
+those measure genuinely different things and both stay):
 
-    success_round_i = (revenue_share_i / 100) > attacker_hash_power
-    P_ij            = mean(success_round_i for all Monte Carlo rounds)
+    y_corrected = (revenue_share_i / 100) > attacker_hash_power
+    B_ij        = mean(attacker_blocks_i | y_corrected_i) over Monte Carlo rounds
 
 Pipeline stages, all within this one process:
 
@@ -113,6 +122,22 @@ def process_one_file(path):
         sim_result = data.get("simulationResult", {})
         round_results = sim_result.get("simulationRoundResults", [])
 
+        # status / attackerCausedChainReorganizationDepths are sibling
+        # per-round arrays on simulationResult (not part of the named-metric
+        # list above). This is D5's own decisive-reorg SUCCESS definition
+        # (attackerCausedChain...[i] > 0 iff status[i] == "success", per
+        # invariant 8) -- drives P_ij below and the D-bar-plus severity
+        # metric further down. DIFFERENT from the corrected-Eyal-Sirer
+        # y_corrected computed below: y_corrected is an economic-
+        # profitability threshold (realized revenue share vs. fair
+        # hash-power share), while status is a purely mechanical "did the
+        # attacker's block win the reorg race" outcome. Empirically these
+        # diverge on ~17% of rounds (status==success but y_corrected==0 is
+        # common; the reverse is rare) -- y_corrected is kept only for
+        # B_ij/B_bar_i/V_bar_i now (see module docstring), not for P_ij.
+        status_list = sim_result.get("status", [])
+        depth_list = sim_result.get("attackerCausedChainReorganizationDepths", [])
+
         n_rounds_kept = 0
         n_rounds_dropped = 0
         n_success = 0
@@ -124,7 +149,11 @@ def process_one_file(path):
         stale_rate_sum = 0.0
         n_stale_rate_valid = 0
 
-        for round_metrics in round_results:
+        n_status_success = 0
+        n_status_failure = 0
+        status_success_depth_sum = 0.0
+
+        for round_index, round_metrics in enumerate(round_results):
             metrics = {m["name"]: m.get("value") for m in round_metrics}
 
             revenue_share = metrics.get("Attacker Revenue Share")
@@ -155,13 +184,43 @@ def process_one_file(path):
                 stale_rate_sum += float(stale_rate) / 100.0
                 n_stale_rate_valid += 1
 
-            # --- corrected Eyal-Sirer success criterion ---
+            # --- corrected Eyal-Sirer criterion: used ONLY for B_ij/B_bar_i/
+            # V_bar_i (the attacker-block-reward-weighted metric) below, NOT
+            # for P_ij anymore -- see module docstring for why.
             y_corrected = 1 if (float(revenue_share) / 100.0) > attacker_hash_power else 0
             if y_corrected == 1:
                 n_success += 1
                 success_block_sum += float(attacker_blocks)
 
-        p_ij = (n_success / n_rounds_kept) if n_rounds_kept > 0 else np.nan
+            # --- status-based success (D5's decisive-reorg definition; see
+            # module docstring). Drives P_ij below and Dbar_plus_ij further
+            # down. Conditioned on the same n_rounds_kept validity gate as
+            # everything else in this loop, so R stays a single agreed-upon
+            # per-file round count across every metric this function emits.
+            if round_index < len(status_list) and round_index < len(depth_list):
+                if status_list[round_index] == "success":
+                    n_status_success += 1
+                    status_success_depth_sum += float(depth_list[round_index])
+                elif status_list[round_index] == "failure":
+                    n_status_failure += 1
+
+        # P_ij: attack success rate, status-based (see module docstring).
+        # FIX (colleague review, ported from build_analysis_table.py's
+        # verified sanity copy: sanity_check_run/03_pipeline_check/
+        # pv_fix_sanity/build_analysis_table_sanity.py -- no smoke-test copy
+        # of this file exists, so this fix is applied directly here,
+        # verified against the same known Fast/Slow expected values used to
+        # verify that copy): denominator changed from n_rounds_kept (ALL
+        # valid rounds, including unresolved) to (n_status_success +
+        # n_status_failure) -- resolved rounds only. Dividing by all rounds
+        # implicitly treated every unresolved round as if it were a
+        # failure, contradicting D3 ("unresolved episodes must never be
+        # counted as failures"). NaN (not 0) when there are zero resolved
+        # rounds.
+        n_resolved = n_status_success + n_status_failure
+        p_ij = (n_status_success / n_resolved) if n_resolved > 0 else np.nan
+        # B_ij: still y_corrected-based -- n_success/success_block_sum above
+        # are untouched, feeding only B_ij/B_bar_i/V_bar_i now.
         b_ij = (success_block_sum / n_success) if n_success > 0 else np.nan
         revenue_share_mean = (
             (revenue_share_sum / n_revenue_share_valid / 100.0)
@@ -172,16 +231,27 @@ def process_one_file(path):
             (stale_rate_sum / n_stale_rate_valid) if n_stale_rate_valid > 0 else np.nan
         )
 
+        # Dbar_plus_ij: mean attacker-caused reorg depth, conditional on
+        # status=="success". NaN (not 0) when n_status_success==0 -- same
+        # "undefined, not zero" convention as B_ij above, since a pair with
+        # no successful rounds has no observed depth to average.
+        dbar_plus_ij = (
+            (status_success_depth_sum / n_status_success) if n_status_success > 0 else np.nan
+        )
+
         return {
             "ok": True,
             "config_id": config_id,
             "P_ij": p_ij,
             "B_ij": b_ij,
+            "Dbar_plus_ij": dbar_plus_ij,
             "revenue_share_mean": revenue_share_mean,
             "stale_block_rate_mean": stale_block_rate_mean,
             "n_rounds": n_rounds_kept,
             "n_rounds_dropped": n_rounds_dropped,
             "n_success": n_success,
+            "n_status_success": n_status_success,
+            "n_status_failure": n_status_failure,
             "error": None,
             "path": path,
         }
@@ -192,11 +262,14 @@ def process_one_file(path):
             "config_id": None,
             "P_ij": None,
             "B_ij": None,
+            "Dbar_plus_ij": None,
             "revenue_share_mean": None,
             "stale_block_rate_mean": None,
             "n_rounds": 0,
             "n_rounds_dropped": 0,
             "n_success": 0,
+            "n_status_success": 0,
+            "n_status_failure": 0,
             "error": "{}: {}".format(type(exc).__name__, exc),
             "path": path,
         }
@@ -257,10 +330,12 @@ def build_merged_table(results, config_csv_df, logger):
             "config_id": r["config_id"],
             "P_ij": r["P_ij"],
             "B_ij": r["B_ij"],
+            "Dbar_plus_ij": r["Dbar_plus_ij"],
             "revenue_share_mean": r["revenue_share_mean"],
             "stale_block_rate_mean": r["stale_block_rate_mean"],
             "n_rounds": r["n_rounds"],
             "n_success": r["n_success"],
+            "n_status_success": r["n_status_success"],
         }
         for r in results
     ]
@@ -353,6 +428,16 @@ def aggregate_system_level(merged, r_rounds, n_bootstrap, seed, logger):
     n_success_matrix = merged.pivot(
         index="system_config_id", columns="attacker_config_id", values="n_success"
     ).reindex(index=system_ids, columns=attacker_ids)
+    # D-bar-plus severity (status-based success, see process_one_file) --
+    # pivoted the same way as the P_ij/B_ij/n_success matrices above. (No
+    # separate P_status matrix anymore: P_ij/p_matrix above is already
+    # status-based, so it doubles as P_status_bar_i's old data source.)
+    dbar_plus_matrix = merged.pivot(
+        index="system_config_id", columns="attacker_config_id", values="Dbar_plus_ij"
+    ).reindex(index=system_ids, columns=attacker_ids)
+    n_status_success_matrix = merged.pivot(
+        index="system_config_id", columns="attacker_config_id", values="n_status_success"
+    ).reindex(index=system_ids, columns=attacker_ids)
 
     n_missing_p = int(p_matrix.isna().sum().sum())
     if n_missing_p > 0:
@@ -365,6 +450,16 @@ def aggregate_system_level(merged, r_rounds, n_bootstrap, seed, logger):
     n_success_arr = n_success_matrix.fillna(0.0).to_numpy()
     b_arr = b_matrix.fillna(0.0).to_numpy()
     p_arr = p_matrix.to_numpy()
+    # Raw (NaN-preserving) copy for nanmean-based aggregation (Dbar_plus_i
+    # bootstrap CI) -- a 0.0-filled copy is used separately below only for
+    # the pooled-sum V_reorg/Dbar_plus_i formula, where it's always paired
+    # with n_status_success_arr (also 0 in the same cells), so the fill
+    # can't corrupt that specific computation. nanmean must NOT use the
+    # filled copy, or an undefined (NaN) pair would be miscounted as a
+    # measured zero depth.
+    dbar_plus_arr_raw = dbar_plus_matrix.to_numpy()
+    dbar_plus_arr = dbar_plus_matrix.fillna(0.0).to_numpy()
+    n_status_success_arr = n_status_success_matrix.fillna(0.0).to_numpy()
 
     j_per_row = (~np.isnan(p_arr)).sum(axis=1)
 
@@ -386,18 +481,49 @@ def aggregate_system_level(merged, r_rounds, n_bootstrap, seed, logger):
             "all sampled attacker-context configs.".format(n_zero_success_configs)
         )
 
+    # D-bar-plus / V_reorg: same pooled-round-level pattern as B_bar_i/V_bar_i
+    # above, just substituting the status-based success/depth accumulators.
+    # (P_bar_i above is already status-based -- see module docstring -- so
+    # there's no separate P_status_bar_i here anymore; p_bar/ci_low/ci_high
+    # already serve that role.)
+    sum_status_success = n_status_success_arr.sum(axis=1)
+    sum_status_success_times_d = (n_status_success_arr * dbar_plus_arr).sum(axis=1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        dbar_plus_i = np.where(
+            sum_status_success > 0, sum_status_success_times_d / sum_status_success, np.nan
+        )
+    with np.errstate(invalid="ignore", divide="ignore"):
+        v_reorg = sum_status_success_times_d / (j_actual * r_rounds)
+
+    n_zero_status_success_configs = int((sum_status_success == 0).sum())
+    if n_zero_status_success_configs > 0:
+        logger.write(
+            "Note: {} system configurations had zero status=='success' rounds "
+            "across all sampled attacker-context configs (D-bar-plus "
+            "undefined for these).".format(n_zero_status_success_configs)
+        )
+
     logger.write(
-        "Stage 3: running bootstrap for P_bar_i CI: {} resamples over {} "
-        "attacker-context configs (seed={})".format(n_bootstrap, n_j, seed)
+        "Stage 3: running bootstrap for P_bar_i / Dbar_plus_i CIs: "
+        "{} resamples over {} attacker-context configs "
+        "(seed={})".format(n_bootstrap, n_j, seed)
     )
     rng = np.random.default_rng(seed)
     boot_means = np.empty((n_i, n_bootstrap), dtype=float)
+    boot_means_d = np.empty((n_i, n_bootstrap), dtype=float)
     for b in range(n_bootstrap):
         col_idx = rng.integers(0, n_j, size=n_j)
         boot_means[:, b] = np.nanmean(p_arr[:, col_idx], axis=1)
+        boot_means_d[:, b] = np.nanmean(dbar_plus_arr_raw[:, col_idx], axis=1)
 
     ci_low = np.percentile(boot_means, 2.5, axis=1)
     ci_high = np.percentile(boot_means, 97.5, axis=1)
+    # Plain percentile (not nanpercentile): any NaN draw makes the whole
+    # row's CI NaN, so an under-replicated system config (few attacker
+    # configs sampled) reports "no CI available" rather than a spuriously
+    # precise zero-width interval collapsing to the point estimate.
+    dbar_plus_ci_low = np.percentile(boot_means_d, 2.5, axis=1)
+    dbar_plus_ci_high = np.percentile(boot_means_d, 97.5, axis=1)
 
     sys_params = (
         merged[["system_config_id"] + SYSTEM_PARAM_COLS]
@@ -410,11 +536,17 @@ def aggregate_system_level(merged, r_rounds, n_bootstrap, seed, logger):
         {
             "system_config_id": system_ids,
             "n_attacker_configs_used": j_per_row,
-            "P_bar_i": p_bar,
+            "P_bar_i": p_bar,  # status-based (see module docstring)
             "P_bar_i_ci_low": ci_low,
             "P_bar_i_ci_high": ci_high,
             "B_bar_i": b_bar,
             "V_bar_i": v_bar,
+            # D-bar-plus severity metrics (status-based success -- see
+            # process_one_file). Shares P_bar_i above (no separate P here).
+            "Dbar_plus_i": dbar_plus_i,
+            "Dbar_plus_i_ci_low": dbar_plus_ci_low,
+            "Dbar_plus_i_ci_high": dbar_plus_ci_high,
+            "V_reorg_i": v_reorg,
         }
     ).set_index("system_config_id")
 
@@ -448,7 +580,7 @@ def main():
     parser.add_argument("--expected-i", type=int, default=500, help="Expected number of system configurations")
     parser.add_argument("--expected-j", type=int, default=200, help="Expected number of attacker-context configurations")
     parser.add_argument("--r-rounds", type=int, default=500, help="Monte Carlo rounds per (i,j) pair")
-    parser.add_argument("--n-bootstrap", type=int, default=1000, help="Bootstrap resamples for P_bar_i CI")
+    parser.add_argument("--n-bootstrap", type=int, default=1000, help="Bootstrap resamples for P_bar_i/Dbar_plus_i CIs")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for bootstrap")
     args = parser.parse_args()
 
@@ -504,6 +636,18 @@ def main():
                 system_level.loc[system_level["V_bar_i"].idxmin(), "system_config_id"],
                 system_level["V_bar_i"].max(),
                 system_level.loc[system_level["V_bar_i"].idxmax(), "system_config_id"],
+            )
+        )
+        logger.write(
+            "Summary (D-bar-plus severity): mean Dbar_plus_i={:.4f}, "
+            "mean V_reorg_i={:.4f}, min V_reorg_i={:.4f} (system_config_id={}), "
+            "max V_reorg_i={:.4f} (system_config_id={})".format(
+                system_level["Dbar_plus_i"].mean(skipna=True),
+                system_level["V_reorg_i"].mean(),
+                system_level["V_reorg_i"].min(),
+                system_level.loc[system_level["V_reorg_i"].idxmin(), "system_config_id"],
+                system_level["V_reorg_i"].max(),
+                system_level.loc[system_level["V_reorg_i"].idxmax(), "system_config_id"],
             )
         )
 

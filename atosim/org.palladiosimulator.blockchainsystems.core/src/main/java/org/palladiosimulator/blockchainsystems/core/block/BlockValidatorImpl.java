@@ -20,6 +20,19 @@ public class BlockValidatorImpl extends BlockchainNodeObject implements BlockVal
     private final boolean _staticValidationDelayEnabled;
     private BiConsumer<Block, Boolean> _onBlockValidatedCallback;
 
+    // Item 6: single-server FCFS validation queue for this node, represented as the simulated
+    // time at which the node becomes free to start its next validation -- not an explicit
+    // List/Queue<Block>. This is a complete FCFS queue, not merely a mutex: onBlockReceived (see
+    // every *NodeBehavior class) calls validateBlock() unconditionally and synchronously as each
+    // block arrives, and those calls happen in the node's guaranteed non-decreasing arrival-time
+    // dispatch order (EventCoordinatorImpl's TreeMap<Long, EffectsTimeSlice> scheduling, already
+    // confirmed correct by fix 7 -- not touched here). Each block's start/finish time is therefore
+    // computed once, immediately, in call order, with no separate "wake up and pick next pending
+    // block" step where order could be lost -- a monotonically-advancing free-time scalar is
+    // sufficient to preserve FCFS ordering under that guarantee, and needs no unordered/ordered
+    // collection of its own.
+    private long _queueFreeTime = 0L;
+
     public BlockValidatorImpl(ValueProvider<Long> blockValidationDurationProvider, boolean staticValidationDelayEnabled) {
         _blockValidationDurationProvider = blockValidationDurationProvider;
         _staticValidationDelayEnabled = staticValidationDelayEnabled;
@@ -45,10 +58,21 @@ public class BlockValidatorImpl extends BlockchainNodeObject implements BlockVal
     }
 
     private void handleBlockValidationStartedEvent(BlockValidationStartedEvent event) {
+        // event.getOccurrenceTime() is this block's arrival at the validator (unchanged meaning).
+        // Its actual validation start is delayed to whenever the node's single validation slot
+        // frees up, if that's later -- this is the FCFS queueing itself: a block that arrives
+        // while another is still being validated waits for it to finish before its own delay
+        // starts counting, rather than validating concurrently.
+        long arrivalTime = event.getOccurrenceTime();
+        long startTime = Math.max(arrivalTime, _queueFreeTime);
+
         long staticDelay = _staticValidationDelayEnabled ? _blockValidationDurationProvider.getValue() : 0L;
         long delay = staticDelay + processingDelay(event.block());
+        long finishTime = startTime + delay;
+        _queueFreeTime = finishTime;
+
         BlockValidationFinishedEvent finished = new BlockValidationFinishedEvent(
-                getSimulationContext().getSystemClock().getCurrentTime() + delay,
+                finishTime,
                 this,
                 event.block()
         );

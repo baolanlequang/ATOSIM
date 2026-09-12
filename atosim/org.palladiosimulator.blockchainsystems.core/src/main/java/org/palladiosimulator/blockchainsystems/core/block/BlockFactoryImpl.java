@@ -6,14 +6,13 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public class BlockFactoryImpl implements BlockFactory {
 
     @Override
-    public Block createGenesisBlock() {
+    public Block createGenesisBlock(String hash) {
         return new BlockImpl(
-                UUID.randomUUID().toString(),
+                hash,
                 null, null,
                 0, 0,
                 new HashSet<>(),

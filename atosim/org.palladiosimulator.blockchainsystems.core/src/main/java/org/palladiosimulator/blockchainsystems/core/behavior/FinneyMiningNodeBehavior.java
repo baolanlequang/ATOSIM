@@ -8,7 +8,7 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeContext;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 
-import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * Stronger Finney-mining behavior with explicit armed/released/invalidated state.
@@ -22,9 +22,16 @@ import java.util.UUID;
  * Notes:
  * - It intentionally removes transactions only after INCLUDED or FORKING outcomes.
  */
-public class FinneyMiningNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
+public class FinneyMiningNodeBehavior extends BlockchainNodeObject
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
+    private RandomGenerator _blockHashGenerator;
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        _blockHashGenerator = generator;
+    }
 
     /**
      * The single hidden pre-mined block used for the Finney attack.
@@ -125,7 +132,7 @@ public class FinneyMiningNodeBehavior extends BlockchainNodeObject implements Bl
         var selection = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
 
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _blockHashGenerator.nextLong(), _blockHashGenerator.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,

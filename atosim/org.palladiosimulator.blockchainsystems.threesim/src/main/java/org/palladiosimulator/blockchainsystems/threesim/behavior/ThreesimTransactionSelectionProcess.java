@@ -24,9 +24,16 @@ public class ThreesimTransactionSelectionProcess extends BlockchainNodeObject im
         int currentBlockSize = 0;
         Set<Transaction> selected = new HashSet<>();
         List<Transaction> sorted = context.getTrxMemPool().getTransactionsSortedByFeeRate();
+        // Item 7: a transaction that doesn't fit is skipped, not treated as the end of packing --
+        // sorted is by fee rate, not by size, so a later (lower-fee) transaction can still be
+        // smaller and fit even after an earlier, higher-fee one didn't. The loop naturally stops
+        // once every remaining transaction has been tried, which is exactly "stop only once
+        // nothing that could still fit remains" for this selector (a fixed, finite, already-known
+        // candidate list, unlike the deterministic-full-block selector's regenerable distribution
+        // -- no separate capacity-vs-floor precondition is needed here to guarantee termination).
         for (Transaction tx : sorted) {
             int newSize = currentBlockSize + tx.getSize();
-            if (newSize > _maxBlockSize) break;
+            if (newSize > _maxBlockSize) continue;
             currentBlockSize = newSize;
             selected.add(tx);
         }

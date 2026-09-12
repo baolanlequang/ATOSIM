@@ -17,9 +17,19 @@ public class ConnectedSubgraphNetworkBlockchainSystemFactory extends ThreesimBlo
     }
 
     @Override
-    protected P2PNetworkFactory createP2PNetworkFactory(ThreesimSimulationParameters params) {
+    protected P2PNetworkFactory createP2PNetworkFactory(ThreesimSimulationParameters params, long rootSeed) {
         return new ConnectedSubgraphP2PNetworkFactory(
-                (ConnectedSubgraphsNetworkTopology) networkTopology, params);
+                (ConnectedSubgraphsNetworkTopology) networkTopology, params, rootSeed);
+    }
+
+    @Override
+    protected java.util.Map<String, Integer> getNodeIdToIndexMapping(P2PNetworkCreationResult networkCreationResult) {
+        return ((ConnectedSubgraphNetworkCreationResult) networkCreationResult).getNodeIdToIndex();
+    }
+
+    @Override
+    protected String getTopologyId(P2PNetworkCreationResult networkCreationResult) {
+        return ((ConnectedSubgraphNetworkCreationResult) networkCreationResult).getTopologyId();
     }
 
     @Override

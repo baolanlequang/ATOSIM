@@ -5,7 +5,7 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 import java.util.Set;
 
 public interface BlockFactory {
-    Block createGenesisBlock();
+    Block createGenesisBlock(String hash);
 
     Block createBlock(
             String hash,

@@ -10,7 +10,6 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GammaAwareHonestBlockchainSystemNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
@@ -69,7 +68,7 @@ public class GammaAwareHonestBlockchainSystemNodeBehavior extends BlockchainNode
     public Block onCreatingBlock(long blockMinedAt, String previousBlockHash, BlockchainSystemNodeContext context) {
         var selected = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _random.nextLong(), _random.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,

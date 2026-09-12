@@ -8,14 +8,13 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeContext;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * Stronger selfish-mining behavior with explicit private-branch and tie-state tracking.
  *
- * Main state:
+ * Main state (item 9: now held in the shared {@link AttackForkState}, see the `state` field
+ * below -- semantics unchanged from when these were local fields):
  * - privateChain: attacker-mined blocks that are still hidden / unpublished
  * - publishedInCurrentTie: number of attacker blocks from the current private branch
  *   that have already been revealed to the public during the current tie episode
@@ -35,39 +34,23 @@ import java.util.UUID;
  * - It is intentionally conservative about transaction removal:
  *   only remove transactions after INCLUDED or FORKING append outcomes.
  */
-public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
+public class SelfishMiningNodeBehavior extends BlockchainNodeObject
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
+    private RandomGenerator _blockHashGenerator;
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        _blockHashGenerator = generator;
+    }
 
     /**
-     * Hidden attacker blocks that have been mined but not yet published.
-     * Index 0 is the next hidden block that would be published first.
+     * Item 9: shared private-branch/fork state -- replaces the privateChain/ownTipHash/
+     * publishedInCurrentTie/inTieState fields this class used to hold directly. See
+     * {@link AttackForkState}'s class doc for what each checklist concept maps to.
      */
-    private final List<Block> privateChain = new ArrayList<>();
-
-    /**
-     * Hash of the attacker's own most recently authored block, published or not.
-     * Kept separate from privateChain because privateChain empties out the moment a
-     * block is published (e.g. to force a tie), even though the pool must keep mining
-     * on top of that same block rather than falling back to an ambiguous public tip.
-     */
-    private String ownTipHash = null;
-
-    /**
-     * Number of attacker blocks from the current private branch that were already
-     * revealed to the public during the current tie/race episode.
-     *
-     * This is not the same thing as hidden lead. It lets us distinguish:
-     * - how many blocks remain hidden
-     * - whether we already revealed some private advantage into the public view
-     */
-    private int publishedInCurrentTie = 0;
-
-    /**
-     * True when the selfish miner is currently in the public tie/race phase.
-     * This is the tie phase inside selfish mining, not the separate "race attack".
-     */
-    private boolean inTieState = false;
+    private final AttackForkState state = new AttackForkState();
 
     @Override
     public void onNodeInitialized(BlockchainSystemNodeContext context) {
@@ -93,63 +76,75 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
 
     @Override
     public void onBlockValidated(Block block, boolean isValid, BlockchainSystemNodeContext context) {
-        if (!isValid) {
-            return;
-        }
+        // Item 9: phase captured before/after via try-finally so every exit path (including the
+        // early `return`s below, unchanged) still logs a transition if the phase actually moved --
+        // this wrapper adds no new branch to the logic itself.
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            if (!isValid) {
+                return;
+            }
 
-        if (inTieState) {
-            handleBlockWhileInTie(block, context);
-            return;
-        }
+            if (state.isInContest()) {
+                handleBlockWhileInTie(block, context);
+                return;
+            }
 
-        int hiddenLead = hiddenLead();
+            int hiddenLead = hiddenLead();
 
-        // No hidden advantage left -> behave honestly.
-        if (hiddenLead == 0) {
-            adoptPublicBlockAndAbandonPrivateState(block, context);
-            return;
-        }
+            // No hidden advantage left -> behave honestly.
+            if (hiddenLead == 0) {
+                adoptPublicBlockAndAbandonPrivateState(block, context);
+                return;
+            }
 
-        // Exactly one hidden block:
-        // reveal it to create a public tie, then wait to see who wins the next block.
-        if (hiddenLead == 1) {
+            // Exactly one hidden block:
+            // reveal it to create a public tie, then wait to see who wins the next block.
+            if (hiddenLead == 1) {
+                boolean published = publishOneHiddenBlock(context);
+                if (published) {
+                    state.setInContest(true);
+                    state.setPublishedInCurrentContest(1);
+                }
+                return;
+            }
+
+            // Exactly two hidden blocks:
+            // reveal all to override the public chain with a longer attacker branch.
+            if (hiddenLead == 2) {
+                publishAllHiddenBlocks(context);
+                clearTieStateOnly();
+                return;
+            }
+
+            // hiddenLead > 2:
+            // reveal one block to keep pressure on the public chain,
+            // but preserve the remaining hidden advantage.
             boolean published = publishOneHiddenBlock(context);
             if (published) {
-                inTieState = true;
-                publishedInCurrentTie = 1;
+                // We intentionally do NOT enter tie state here by default.
+                // This branch models the selfish miner maintaining a reduced but still positive hidden lead.
+                clearTieStateOnly();
             }
-            return;
-        }
-
-        // Exactly two hidden blocks:
-        // reveal all to override the public chain with a longer attacker branch.
-        if (hiddenLead == 2) {
-            publishAllHiddenBlocks(context);
-            clearTieStateOnly();
-            return;
-        }
-
-        // hiddenLead > 2:
-        // reveal one block to keep pressure on the public chain,
-        // but preserve the remaining hidden advantage.
-        boolean published = publishOneHiddenBlock(context);
-        if (published) {
-            // We intentionally do NOT enter tie state here by default.
-            // This branch models the selfish miner maintaining a reduced but still positive hidden lead.
-            clearTieStateOnly();
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
     @Override
     public void onBlockMined(Block block, BlockchainSystemNodeContext context) {
-        privateChain.add(block);
-        ownTipHash = block.getHash();
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            state.recordMinedBlock(block);
 
-        // If the attacker mines during a tie, that usually means the selfish miner can
-        // immediately reveal remaining hidden blocks and try to secure the win.
-        if (inTieState) {
-            publishAllHiddenBlocks(context);
-            clearTieStateOnly();
+            // If the attacker mines during a tie, that usually means the selfish miner can
+            // immediately reveal remaining hidden blocks and try to secure the win.
+            if (state.isInContest()) {
+                publishAllHiddenBlocks(context);
+                clearTieStateOnly();
+            }
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
@@ -158,7 +153,7 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
         var selection = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
 
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _blockHashGenerator.nextLong(), _blockHashGenerator.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,
@@ -174,8 +169,8 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
         // (Algorithm 1's "mine at the head of the private chain"). Falling back to the
         // generic public-tip lookup here would pick arbitrarily between my own tip and a
         // tied honest tip during a race.
-        if (ownTipHash != null) {
-            return ownTipHash;
+        if (state.getOwnTipHash() != null) {
+            return state.getOwnTipHash();
         }
 
         return honest.onPreviousBlockSelection(context);
@@ -224,16 +219,15 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
      * @return true iff the block was meaningfully appended and removed from hidden state
      */
     private boolean publishOneHiddenBlock(BlockchainSystemNodeContext context) {
-        if (privateChain.isEmpty()) {
+        Block publish = state.peekNextToPublish();
+        if (publish == null) {
             return false;
         }
-
-        Block publish = privateChain.get(0);
 
         AppendOutcome outcome = BehaviorUtils.INSTANCE.appendBlockToBlockchainDetailed(publish, context);
 
         if (outcome == AppendOutcome.INCLUDED || outcome == AppendOutcome.FORKING) {
-            privateChain.remove(0);
+            state.removeFirstPending();
             context.getTrxMemPool().removeTransactions(publish.getTransactions());
             context.getMiningProcess().restartMining();
             context.getBlockPropagationStrategy().distribute(publish);
@@ -247,30 +241,27 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject implements B
      * Publish all remaining hidden attacker blocks in order.
      */
     private void publishAllHiddenBlocks(BlockchainSystemNodeContext context) {
-        while (!privateChain.isEmpty()) {
-            int sizeBefore = privateChain.size();
+        while (!state.getPrivateChain().isEmpty()) {
+            int sizeBefore = state.getPrivateChain().size();
             boolean published = publishOneHiddenBlock(context);
 
             // Safety guard against infinite loops if append fails and no progress is made.
-            if (!published || privateChain.size() == sizeBefore) {
+            if (!published || state.getPrivateChain().size() == sizeBefore) {
                 break;
             }
         }
     }
 
     private int hiddenLead() {
-        return privateChain.size();
+        return state.hiddenLead();
     }
 
     private void clearTieStateOnly() {
-        inTieState = false;
-        publishedInCurrentTie = 0;
+        state.clearContestOnly();
     }
 
     private void resetPrivateState() {
-        privateChain.clear();
-        ownTipHash = null;
-        clearTieStateOnly();
+        state.reset();
     }
 
     @Override

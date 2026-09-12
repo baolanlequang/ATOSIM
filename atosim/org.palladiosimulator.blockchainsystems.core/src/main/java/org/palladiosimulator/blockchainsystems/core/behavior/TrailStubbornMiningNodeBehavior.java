@@ -8,9 +8,7 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeContext;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * Trail-stubborn mining, a.k.a. "Tj-stubborn" (Nayak et al., "Stubborn Mining", Section 3.2).
@@ -26,7 +24,8 @@ import java.util.UUID;
  * ahead-side transition (lead=1 reveal-one-to-tie; lead=2 reveal-all-to-win; lead&gt;2
  * reveal-one-to-pressure; the lead=0' win-on-own-block case) is unchanged from selfish mining.
  *
- * State:
+ * State (item 9: now held in the shared {@link AttackForkState}, see the `state` field below --
+ * semantics unchanged from when these were local fields):
  * - privateChain: attacker-mined blocks that are still hidden / unpublished (used both while
  *   ahead and while trying to catch up from behind)
  * - ownTipHash: hash of the attacker's own most recently authored block, published or not
@@ -36,39 +35,21 @@ import java.util.UUID;
  *   not trailing)
  */
 public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
+    private RandomGenerator _blockHashGenerator;
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        _blockHashGenerator = generator;
+    }
 
     /**
-     * Hidden attacker blocks that have been mined but not yet published.
-     * Index 0 is the next hidden block that would be revealed first.
+     * Item 9: shared private-branch/fork state -- replaces the privateChain/ownTipHash/
+     * inTieState/publishedInCurrentContest/deficit fields this class used to hold directly.
      */
-    private final List<Block> privateChain = new ArrayList<>();
-
-    /**
-     * Hash of the attacker's own most recently authored block, published or not.
-     * Kept separate from privateChain because privateChain empties out the moment a
-     * block is published, even though the attacker must keep mining on top of that same
-     * block rather than falling back to an ambiguous public tip.
-     */
-    private String ownTipHash = null;
-
-    /**
-     * True when the attacker is currently in a tied public contest.
-     */
-    private boolean inTieState = false;
-
-    /**
-     * Number of attacker blocks already revealed in the current contest.
-     */
-    private int publishedInCurrentContest = 0;
-
-    /**
-     * How many blocks behind the public chain the attacker currently trails.
-     * 0 means not trailing (privateChain, if non-empty, represents a hidden lead instead).
-     */
-    private int deficit = 0;
+    private final AttackForkState state = new AttackForkState();
 
     /**
      * Threshold j: the attacker gives up once deficit exceeds j (Delta &lt;= -(j+1)).
@@ -108,50 +89,55 @@ public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
 
     @Override
     public void onBlockValidated(Block block, boolean isValid, BlockchainSystemNodeContext context) {
-        if (!isValid) {
-            return;
-        }
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            if (!isValid) {
+                return;
+            }
 
-        if (deficit > 0) {
-            handleBlockWhileTrailing(block, context);
-            return;
-        }
+            if (state.getDeficit() > 0) {
+                handleBlockWhileTrailing(block, context);
+                return;
+            }
 
-        if (inTieState) {
-            handleBlockWhileInTie(block, context);
-            return;
-        }
+            if (state.isInContest()) {
+                handleBlockWhileInTie(block, context);
+                return;
+            }
 
-        int hiddenLead = hiddenLead();
+            int hiddenLead = hiddenLead();
 
-        // lead=0: instead of adopting immediately (selfish mining), start trailing - keep
-        // mining on my own current tip rather than switching to this new one.
-        if (hiddenLead == 0) {
-            beginTrailing(block, context);
-            return;
-        }
+            // lead=0: instead of adopting immediately (selfish mining), start trailing - keep
+            // mining on my own current tip rather than switching to this new one.
+            if (hiddenLead == 0) {
+                beginTrailing(block, context);
+                return;
+            }
 
-        // lead=1: reveal one block to force a tie (unchanged from selfish mining).
-        if (hiddenLead == 1) {
+            // lead=1: reveal one block to force a tie (unchanged from selfish mining).
+            if (hiddenLead == 1) {
+                boolean published = publishOneHiddenBlock(context);
+                if (published) {
+                    state.setInContest(true);
+                    state.setPublishedInCurrentContest(1);
+                }
+                return;
+            }
+
+            // lead=2: reveal everything and win outright (unchanged from selfish mining).
+            if (hiddenLead == 2) {
+                publishAllHiddenBlocks(context);
+                clearTieStateOnly();
+                return;
+            }
+
+            // lead>2: reveal one block to keep pressure while preserving the rest (unchanged).
             boolean published = publishOneHiddenBlock(context);
             if (published) {
-                inTieState = true;
-                publishedInCurrentContest = 1;
+                clearTieStateOnly();
             }
-            return;
-        }
-
-        // lead=2: reveal everything and win outright (unchanged from selfish mining).
-        if (hiddenLead == 2) {
-            publishAllHiddenBlocks(context);
-            clearTieStateOnly();
-            return;
-        }
-
-        // lead>2: reveal one block to keep pressure while preserving the rest (unchanged).
-        boolean published = publishOneHiddenBlock(context);
-        if (published) {
-            clearTieStateOnly();
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
@@ -161,9 +147,9 @@ public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
      * later give-up can still resolve this block's ancestry.
      */
     private void handleBlockWhileTrailing(Block block, BlockchainSystemNodeContext context) {
-        deficit++;
+        state.incrementDeficit();
 
-        if (deficit > j) {
+        if (state.getDeficit() > j) {
             adoptPublicBlockAndAbandonPrivateState(block, context);
             return;
         }
@@ -192,35 +178,38 @@ public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
      * adopting it, while still recording the block so the local view stays connected.
      */
     private void beginTrailing(Block block, BlockchainSystemNodeContext context) {
-        if (ownTipHash == null) {
-            ownTipHash = block.getPreviousHash();
+        if (state.getOwnTipHash() == null) {
+            state.setOwnTipHash(block.getPreviousHash());
         }
-        deficit = 1;
+        state.setDeficit(1);
         BehaviorUtils.INSTANCE.appendBlockToBlockchainDetailed(block, context);
     }
 
     @Override
     public void onBlockMined(Block block, BlockchainSystemNodeContext context) {
-        if (deficit > 0) {
-            // Mining while trailing catches up by one block. Reaching deficit=0 this way lands
-            // at the paper's "0''" state, which behaves like a plain hidden lead of 1 since
-            // nothing has been revealed - no special-casing needed beyond the decrement.
-            privateChain.add(block);
-            ownTipHash = block.getHash();
-            deficit--;
-            return;
-        }
+        AttackPhase phaseBefore = AttackForkState.computePhase(state);
+        try {
+            if (state.getDeficit() > 0) {
+                // Mining while trailing catches up by one block. Reaching deficit=0 this way lands
+                // at the paper's "0''" state, which behaves like a plain hidden lead of 1 since
+                // nothing has been revealed - no special-casing needed beyond the decrement.
+                state.recordMinedBlock(block);
+                state.decrementDeficit();
+                return;
+            }
 
-        // Selfish mining's own-mining rule is unchanged: only winning an already-tied race
-        // outright (state 0', no remaining hidden material) reveals.
-        boolean wasWinningRace = inTieState && privateChain.isEmpty();
+            // Selfish mining's own-mining rule is unchanged: only winning an already-tied race
+            // outright (state 0', no remaining hidden material) reveals.
+            boolean wasWinningRace = state.isInContest() && state.getPrivateChain().isEmpty();
 
-        privateChain.add(block);
-        ownTipHash = block.getHash();
+            state.recordMinedBlock(block);
 
-        if (wasWinningRace) {
-            publishAllHiddenBlocks(context);
-            clearTieStateOnly();
+            if (wasWinningRace) {
+                publishAllHiddenBlocks(context);
+                clearTieStateOnly();
+            }
+        } finally {
+            AttackForkState.logPhaseTransitionIfChanged(getSimulationContext(), getTraceEventLogger(), state, phaseBefore);
         }
     }
 
@@ -229,7 +218,7 @@ public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
         var selection = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
 
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _blockHashGenerator.nextLong(), _blockHashGenerator.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,
@@ -244,8 +233,8 @@ public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
         // Always continue mining on top of my own last-authored block, published or not -
         // this holds whether I'm ahead (extending hidden material) or trailing (trying to
         // catch back up to the tip I refused to adopt).
-        if (ownTipHash != null) {
-            return ownTipHash;
+        if (state.getOwnTipHash() != null) {
+            return state.getOwnTipHash();
         }
 
         return honest.onPreviousBlockSelection(context);
@@ -271,16 +260,15 @@ public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
      * @return true iff the block was meaningfully appended and removed from hidden state
      */
     private boolean publishOneHiddenBlock(BlockchainSystemNodeContext context) {
-        if (privateChain.isEmpty()) {
+        Block publish = state.peekNextToPublish();
+        if (publish == null) {
             return false;
         }
-
-        Block publish = privateChain.get(0);
 
         AppendOutcome outcome = BehaviorUtils.INSTANCE.appendBlockToBlockchainDetailed(publish, context);
 
         if (outcome == AppendOutcome.INCLUDED || outcome == AppendOutcome.FORKING) {
-            privateChain.remove(0);
+            state.removeFirstPending();
             context.getTrxMemPool().removeTransactions(publish.getTransactions());
             context.getMiningProcess().restartMining();
             context.getBlockPropagationStrategy().distribute(publish);
@@ -294,30 +282,26 @@ public class TrailStubbornMiningNodeBehavior extends BlockchainNodeObject
      * Publish all remaining hidden attacker blocks in order.
      */
     private void publishAllHiddenBlocks(BlockchainSystemNodeContext context) {
-        while (!privateChain.isEmpty()) {
-            int sizeBefore = privateChain.size();
+        while (!state.getPrivateChain().isEmpty()) {
+            int sizeBefore = state.getPrivateChain().size();
             boolean published = publishOneHiddenBlock(context);
 
-            if (!published || privateChain.size() == sizeBefore) {
+            if (!published || state.getPrivateChain().size() == sizeBefore) {
                 break;
             }
         }
     }
 
     private int hiddenLead() {
-        return privateChain.size();
+        return state.hiddenLead();
     }
 
     private void clearTieStateOnly() {
-        inTieState = false;
-        publishedInCurrentContest = 0;
+        state.clearContestOnly();
     }
 
     private void resetPrivateState() {
-        privateChain.clear();
-        ownTipHash = null;
-        deficit = 0;
-        clearTieStateOnly();
+        state.reset();
     }
 
     @Override

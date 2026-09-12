@@ -1,12 +1,12 @@
 package org.palladiosimulator.blockchainsystems.threesim.behavior;
 
+import org.palladiosimulator.blockchainsystems.core.behavior.BlockHashSeedable;
 import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishFinneyNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishLeadStubbornNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishRaceNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.CombinedSelfishTrailStubbornNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.EqualForkStubbornMiningNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.FinneyMiningNodeBehavior;
-import org.palladiosimulator.blockchainsystems.core.behavior.GammaAwareHonestBlockchainSystemNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.HonestBlockchainSystemNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.LeadStubbornMiningNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.behavior.RaceMiningNodeBehavior;
@@ -14,22 +14,28 @@ import org.palladiosimulator.blockchainsystems.core.behavior.SelfishMiningNodeBe
 import org.palladiosimulator.blockchainsystems.core.behavior.TrailStubbornMiningNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeBehavior;
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeBehaviorFactory;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.DeterministicSeeds;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
+
+import java.util.random.RandomGenerator;
 
 public class ThreesimBlockchainSystemNodeBehaviorFactory implements BlockchainSystemNodeBehaviorFactory {
 
     private final ThreesimSimulationParameters _simulationParameters;
+    private final long _rootSeed;
 
-    public ThreesimBlockchainSystemNodeBehaviorFactory(ThreesimSimulationParameters simulationParameters) {
+    public ThreesimBlockchainSystemNodeBehaviorFactory(ThreesimSimulationParameters simulationParameters, long rootSeed) {
         _simulationParameters = simulationParameters;
+        _rootSeed = rootSeed;
     }
 
     @Override
     public BlockchainSystemNodeBehavior create(String nodeId) {
         boolean isAttacker = _simulationParameters.getAttackerNodeIds().contains(nodeId);
 
+        BlockchainSystemNodeBehavior behavior;
         if (isAttacker) {
-            return switch (_simulationParameters.getAttackType()) {
+            behavior = switch (_simulationParameters.getAttackType()) {
                 case RACE -> new RaceMiningNodeBehavior();
                 case MAJORITY -> new HonestBlockchainSystemNodeBehavior();
                 case SELFISH_MINING -> new SelfishMiningNodeBehavior();
@@ -43,17 +49,18 @@ public class ThreesimBlockchainSystemNodeBehaviorFactory implements BlockchainSy
                 case COMBINED_SELFISH_TRAIL_STUBBORN -> new CombinedSelfishTrailStubbornNodeBehavior();
                 default -> new HonestBlockchainSystemNodeBehavior();
             };
+        } else {
+            behavior = new HonestBlockchainSystemNodeBehavior();
         }
 
-        return switch (_simulationParameters.getAttackType()) {
-            case SELFISH_MINING, LEAD_STUBBORN_MINING, EQUAL_FORK_STUBBORN_MINING,
-                 TRAIL_STUBBORN_MINING, RACE, COMBINED_SELFISH_RACE, COMBINED_SELFISH_FINNEY,
-                 COMBINED_SELFISH_LEAD_STUBBORN, COMBINED_SELFISH_TRAIL_STUBBORN, MAJORITY ->
-                    new GammaAwareHonestBlockchainSystemNodeBehavior(
-                            _simulationParameters.getAttackerNodeIds(),
-                            _simulationParameters.getGamma()
-                    );
-            default -> new HonestBlockchainSystemNodeBehavior();
-        };
+        // Every behavior class that generates a block hash in onCreatingBlock (directly or via
+        // an internal sub-behavior) implements BlockHashSeedable; a per-node seeded generator
+        // replaces the unseeded UUID.randomUUID() each of them used before.
+        if (behavior instanceof BlockHashSeedable seedable) {
+            RandomGenerator blockHashGenerator = DeterministicSeeds.seededGenerator(_rootSeed, "blockHash:" + nodeId);
+            seedable.setBlockHashGenerator(blockHashGenerator);
+        }
+
+        return behavior;
     }
 }

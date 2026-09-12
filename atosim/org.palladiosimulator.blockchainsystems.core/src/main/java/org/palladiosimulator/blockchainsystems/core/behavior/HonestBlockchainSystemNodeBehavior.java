@@ -7,9 +7,17 @@ import org.palladiosimulator.blockchainsystems.core.system.abstractions.Blockcha
 import org.palladiosimulator.blockchainsystems.core.system.abstractions.BlockchainSystemNodeContext;
 import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Transaction;
 
-import java.util.UUID;
+import java.util.random.RandomGenerator;
 
-public class HonestBlockchainSystemNodeBehavior extends BlockchainNodeObject implements BlockchainSystemNodeBehavior {
+public class HonestBlockchainSystemNodeBehavior extends BlockchainNodeObject
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+
+    private RandomGenerator _blockHashGenerator;
+
+    @Override
+    public void setBlockHashGenerator(RandomGenerator generator) {
+        _blockHashGenerator = generator;
+    }
 
     @Override
     public void onBlockReceived(Block block, BlockchainSystemNodeContext context) {
@@ -51,7 +59,7 @@ public class HonestBlockchainSystemNodeBehavior extends BlockchainNodeObject imp
     public Block onCreatingBlock(long blockMinedAt, String previousBlockHash, BlockchainSystemNodeContext context) {
         var selectedTrxsResult = context.getTransactionSelectionProcess().selectTransactionsForBlock(context);
         return context.getBlockFactory().createBlock(
-                UUID.randomUUID().toString(),
+                String.format("%016x%016x", _blockHashGenerator.nextLong(), _blockHashGenerator.nextLong()),
                 previousBlockHash,
                 context.getId(),
                 blockMinedAt,
@@ -62,8 +70,7 @@ public class HonestBlockchainSystemNodeBehavior extends BlockchainNodeObject imp
 
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
-        return context.getBlockchain().getLastBlocksOfLongestChains().stream()
-                .findFirst().get().getHash();
+        return context.getBlockchain().getPreferredTipOfLongestChains().getHash();
     }
 
     @Override
