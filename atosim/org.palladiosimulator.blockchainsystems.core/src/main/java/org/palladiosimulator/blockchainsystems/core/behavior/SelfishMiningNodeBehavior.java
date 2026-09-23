@@ -173,6 +173,15 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject
             return state.getOwnTipHash();
         }
 
+        // During a selfish-mining tie, mine on the attacker's public branch.
+        if (inTieState) {
+            Set<Block> tips = context.getBlockchain().getLastBlocksOfLongestChains();
+            for (Block tip : tips) {
+                if (context.getId().equals(tip.getOriginId())) {
+                    return tip.getHash();
+                }
+            }
+        }
         return honest.onPreviousBlockSelection(context);
     }
 
