@@ -33,6 +33,15 @@ public class BlockValidatorImpl extends BlockchainNodeObject implements BlockVal
     // collection of its own.
     private long _queueFreeTime = 0L;
 
+    // Diagnostic-only, off by default: gates the one-off per-node publish/reception/
+    // validation timestamp dump (colleague's raw propagation-time example request). Read
+    // once at class-init time, same system property checked in ThreesimSimulationMonitor's
+    // matching flag. When false (the default for every existing/scheduled batch run), the
+    // two logEvent() calls below never execute -- zero new trace events are ever
+    // constructed, and this class's existing FCFS/timing logic above is otherwise untouched.
+    private static final boolean DIAGNOSTIC_PROPAGATION_DUMP_ENABLED =
+            Boolean.getBoolean("threesim.diagnosticPropagationDump");
+
     public BlockValidatorImpl(ValueProvider<Long> blockValidationDurationProvider, boolean staticValidationDelayEnabled) {
         _blockValidationDurationProvider = blockValidationDurationProvider;
         _staticValidationDelayEnabled = staticValidationDelayEnabled;
@@ -71,6 +80,11 @@ public class BlockValidatorImpl extends BlockchainNodeObject implements BlockVal
         long finishTime = startTime + delay;
         _queueFreeTime = finishTime;
 
+        if (DIAGNOSTIC_PROPAGATION_DUMP_ENABLED
+                && getTraceEventLogger().isEventTypeEnabled(BlockValidationStartedTraceEvent.EVENT_TYPE)) {
+            getTraceEventLogger().logEvent(new BlockValidationStartedTraceEvent(arrivalTime, event.block()));
+        }
+
         BlockValidationFinishedEvent finished = new BlockValidationFinishedEvent(
                 finishTime,
                 this,
@@ -85,6 +99,10 @@ public class BlockValidatorImpl extends BlockchainNodeObject implements BlockVal
     }
 
     private void handleBlockValidationFinishedEvent(BlockValidationFinishedEvent event) {
+        if (DIAGNOSTIC_PROPAGATION_DUMP_ENABLED
+                && getTraceEventLogger().isEventTypeEnabled(BlockValidationFinishedTraceEvent.EVENT_TYPE)) {
+            getTraceEventLogger().logEvent(new BlockValidationFinishedTraceEvent(event.occurrenceTime(), event.block()));
+        }
         if (_onBlockValidatedCallback != null) {
             _onBlockValidatedCallback.accept(event.block(), true);
         }

@@ -1,6 +1,7 @@
 package org.palladiosimulator.blockchainsystems.core.behavior;
 
 import org.jetbrains.annotations.NotNull;
+import org.palladiosimulator.blockchainsystems.core.block.BlockBroadcastTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.Block;
 import org.palladiosimulator.blockchainsystems.core.common.BlockchainNodeObject;
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.Event;
@@ -231,6 +232,10 @@ public class SelfishMiningNodeBehavior extends BlockchainNodeObject
             context.getTrxMemPool().removeTransactions(publish.getTransactions());
             context.getMiningProcess().restartMining();
             context.getBlockPropagationStrategy().distribute(publish);
+            if (getTraceEventLogger().isEventTypeEnabled(BlockBroadcastTraceEvent.EVENT_TYPE)) {
+                getTraceEventLogger().logEvent(new BlockBroadcastTraceEvent(
+                        getSimulationContext().getSystemClock().getCurrentTime(), publish));
+            }
             return true;
         }
 

@@ -4,6 +4,9 @@ import org.palladiosimulator.blockchainsystems.core.behavior.AttackPhase;
 import org.palladiosimulator.blockchainsystems.core.behavior.AttackPhaseTransitionTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.Block;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.BlockType;
+import org.palladiosimulator.blockchainsystems.core.block.BlockBroadcastTraceEvent;
+import org.palladiosimulator.blockchainsystems.core.block.BlockValidationFinishedTraceEvent;
+import org.palladiosimulator.blockchainsystems.core.block.BlockValidationStartedTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.blockchain.BlockAppendedTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.blockchain.BlockTypeChangedTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.blockchain.ChainReorganizedTraceEvent;
@@ -124,6 +127,14 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     private final List<Long> _propagationTimesP95Coverage = new ArrayList<>();
     private final List<Long> _propagationTimesP100Coverage = new ArrayList<>();
 
+    // block hash -> true network-broadcast timestamp (BlockBroadcastTraceEvent.getOccurrenceTime()),
+    // recorded only for blocks that went through one of the four attack behavior classes'
+    // publishOneHiddenBlock() -- i.e. blocks that were privately withheld before being revealed.
+    // Absent for every other block (honest-mined, or broadcast via a path that doesn't raise this
+    // event -- see recordBlockPropagation's fallback to getBlockMinedTimestamp() below), by
+    // design: those blocks never accumulated a mined-to-broadcast gap in the first place.
+    private final Map<String, Long> _blockBroadcastTimestamps = new HashMap<>();
+
     private final BlockchainSystemFailureLog _failureLog = new BlockchainSystemFailureLog();
     private final BlockRewardMonitor _blockRewardMonitor = new BlockRewardMonitor();
 
@@ -163,13 +174,21 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     // once, right where the existing termination condition it records already fires.
     private boolean _quiescenceReached = false;
 
+    // _replicationId: this round's index, threaded through from ThreesimSimulationRound purely
+    // so the diagnostic dump (see handleDiagnosticPropagationEvent below) can gate on "is this
+    // one of the first few rounds", per DiagnosticPropagationDumpWriter's round-based sampling
+    // window -- not used anywhere in decision logic, event handling, or timestamp computation.
+    private final int _replicationId;
+
     public ThreesimSimulationMonitor(
             LongestChainExceededMaxLengthCondition maxBlockchainLengthCondition,
             double failureThroughputThreshold,
-            ThreesimSimulationParameters simulationParameters) {
+            ThreesimSimulationParameters simulationParameters,
+            int replicationId) {
         _maxBlockchainLengthCondition = maxBlockchainLengthCondition;
         _failureThroughputThreshold = failureThroughputThreshold;
         _simulationParameters = simulationParameters;
+        _replicationId = replicationId;
     }
 
     @Override
@@ -218,6 +237,21 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
     @Override
     public void onTraceEventOccurred(TraceEvent event, TraceEventLogOrigin logOrigin) {
+        // Diagnostic-only dump (off by default -- DiagnosticPropagationDumpWriter.ENABLED
+        // reads -Dthreesim.diagnosticPropagationDump=true once at class-init). Intercepted and
+        // returned before _lastEventTimestamp/any other state below is touched, so this branch
+        // has zero effect on quiescence timing or any other already-verified logic in this
+        // class, whether or not the flag is enabled. These two event types are only ever
+        // raised by BlockValidatorImpl when the same flag is enabled (see that class); when
+        // disabled, onTraceEventOccurred never even receives them, so this check is a cheap
+        // no-op string comparison in the normal/production path either way.
+        if (DiagnosticPropagationDumpWriter.ENABLED
+                && (BlockValidationStartedTraceEvent.EVENT_TYPE.equals(event.getEventType())
+                        || BlockValidationFinishedTraceEvent.EVENT_TYPE.equals(event.getEventType()))) {
+            handleDiagnosticPropagationEvent(event, logOrigin);
+            return;
+        }
+
         _lastEventTimestamp = event.getOccurrenceTime();
 
         if (BlockMinedTraceEvent.EVENT_TYPE.equals(event.getEventType())) {
@@ -293,6 +327,21 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
                     && e.getNewPhase() == AttackPhase.TIED_CONTEST) {
                 _leadStubbornLostLeadTransitions++;
             }
+
+        } else if (BlockBroadcastTraceEvent.EVENT_TYPE.equals(event.getEventType())) {
+            // Not diagnostic-only (unlike BlockValidationStarted/FinishedTraceEvent above): this
+            // event is now raised unconditionally by the four attack behavior classes'
+            // publishOneHiddenBlock(), and recordBlockPropagation() below depends on it for the
+            // production P90/95/100-coverage metrics. putIfAbsent, not put: a block hash is only
+            // ever broadcast once (each of the four classes calls this exactly once per hidden
+            // block, from its own single owning attacker node), so the first (and only expected)
+            // write wins; putIfAbsent is defensive, not a designed-for overwrite-prevention path.
+            BlockBroadcastTraceEvent e = (BlockBroadcastTraceEvent) event;
+            String hash = e.getBlock().getHash();
+            _blockBroadcastTimestamps.putIfAbsent(hash, e.getOccurrenceTime());
+            if (DiagnosticPropagationDumpWriter.ENABLED && DiagnosticPropagationDumpWriter.shouldTrack(_replicationId)) {
+                DiagnosticPropagationDumpWriter.recordBroadcast(hash, e.getOccurrenceTime());
+            }
         }
     }
 
@@ -352,6 +401,20 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     // and immediately upon being crossed (not batched until 100% is reached), so a block that
     // reaches 90%/95% coverage but never 100% before the round ends still correctly contributes
     // to the 90%/95% lists -- only the 100% sample (if any) is missing for that block.
+    //
+    // Broadcast-moment fix (follow-up to the colleague review): the delay's start point is now
+    // _blockBroadcastTimestamps.get(hash) when available -- the true network-broadcast moment,
+    // via BlockBroadcastTraceEvent -- falling back to getBlockMinedTimestamp() otherwise. The
+    // fallback is not a special case for edge conditions: it is the ONLY available timestamp for
+    // every block that never went through one of the four attack behavior classes'
+    // publishOneHiddenBlock() (every honest-mined block, every block from an attack strategy or
+    // path that doesn't raise BlockBroadcastTraceEvent, e.g. Race/Finney/EqualFork's own
+    // adopt-and-reforward path -- see BlockBroadcastTraceEvent's own doc for which sites raise
+    // it and why the four adoptPublicBlockAndAbandonPrivateState() re-forward sites deliberately
+    // do not). For those blocks mined-time and broadcast-time already coincide by construction
+    // (immediate, unconditional distribute() at mining time), so the fallback changes nothing
+    // for them -- only privately-withheld attacker blocks, where mined-time and broadcast-time
+    // can differ by an arbitrary amount, are affected by this fix.
     private void recordBlockPropagation(Block block, String nodeId, long time) {
         String hash = block.getHash();
         Set<String> seenAt = _blockAppearedAtNodes.computeIfAbsent(hash, k -> new HashSet<>());
@@ -361,24 +424,50 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
         boolean[] finalized = _blockThresholdFinalized.computeIfAbsent(hash, k -> new boolean[COVERAGE_THRESHOLDS.length]);
         int seenCount = seenAt.size();
         int totalNodes = _nodes.size();
-        long minedAt = block.getBlockMinedTimestamp();
+        Long broadcastAt = _blockBroadcastTimestamps.get(hash);
+        long baseTime = broadcastAt != null ? broadcastAt : block.getBlockMinedTimestamp();
 
         if (!finalized[0] && seenCount >= (int) Math.ceil(COVERAGE_THRESHOLDS[0] * totalNodes)) {
             finalized[0] = true;
-            _propagationTimesP90Coverage.add(time - minedAt);
+            _propagationTimesP90Coverage.add(time - baseTime);
         }
         if (!finalized[1] && seenCount >= (int) Math.ceil(COVERAGE_THRESHOLDS[1] * totalNodes)) {
             finalized[1] = true;
-            _propagationTimesP95Coverage.add(time - minedAt);
+            _propagationTimesP95Coverage.add(time - baseTime);
         }
         if (!finalized[2] && seenCount >= (int) Math.ceil(COVERAGE_THRESHOLDS[2] * totalNodes)) {
             finalized[2] = true;
-            _propagationTimesP100Coverage.add(time - minedAt);
+            _propagationTimesP100Coverage.add(time - baseTime);
         }
 
         if (finalized[2]) {
             _blockAppearedAtNodes.remove(hash);
             _blockThresholdFinalized.remove(hash);
+        }
+    }
+
+    // Diagnostic-only (see onTraceEventOccurred's early-return guard above). Both event types
+    // key off the block's own getBlockMinedTimestamp() -- the same field the existing
+    // (production) recordBlockPropagation() already treats as the propagation-time start point
+    // (see that method below), so this dump uses no new/different notion of "publish time".
+    // BlockValidationStartedTraceEvent buffers this node's reception timestamp;
+    // BlockValidationFinishedTraceEvent completes and writes the one row for this (block, node)
+    // -- see DiagnosticPropagationDumpWriter for why exactly one combined row per node, not two
+    // partial ones, and why the started-before-finished ordering it relies on is guaranteed.
+    private void handleDiagnosticPropagationEvent(TraceEvent event, TraceEventLogOrigin logOrigin) {
+        if (event instanceof BlockValidationStartedTraceEvent started) {
+            if (!DiagnosticPropagationDumpWriter.shouldTrack(_replicationId)) {
+                return;
+            }
+            String blockHash = started.getBlock().getHash();
+            DiagnosticPropagationDumpWriter.recordReception(blockHash, logOrigin.getId(), started.getOccurrenceTime());
+        } else if (event instanceof BlockValidationFinishedTraceEvent finished) {
+            if (!DiagnosticPropagationDumpWriter.shouldTrack(_replicationId)) {
+                return;
+            }
+            String blockHash = finished.getBlock().getHash();
+            DiagnosticPropagationDumpWriter.recordValidationComplete(
+                    blockHash, finished.getBlock().getBlockMinedTimestamp(), logOrigin.getId(), finished.getOccurrenceTime());
         }
     }
 

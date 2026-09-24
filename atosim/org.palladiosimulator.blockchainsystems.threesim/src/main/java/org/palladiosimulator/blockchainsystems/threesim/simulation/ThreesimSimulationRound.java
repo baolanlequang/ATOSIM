@@ -26,20 +26,22 @@ public class ThreesimSimulationRound
             int replicationId) {
 
         this(blockchainSystemFactory.createBlockchainSystem(originalParameters, replicationId),
-                logOutputs, maxAllowedBlockchainLength, originalParameters);
+                logOutputs, maxAllowedBlockchainLength, originalParameters, replicationId);
     }
 
     private ThreesimSimulationRound(
             BlockchainSystemWithParameters result,
             Set<TraceEventLogOutput> logOutputs,
             long maxAllowedBlockchainLength,
-            ThreesimSimulationParameters originalParameters) {
+            ThreesimSimulationParameters originalParameters,
+            int replicationId) {
 
         super(result.getSystem(), logOutputs,
                 new ThreesimSimulationMonitor(
                         new LongestChainExceededMaxLengthCondition(maxAllowedBlockchainLength),
                         originalParameters.getFailureThroughputThreshold(),
-                        result.getEffectiveParameters()));
+                        result.getEffectiveParameters(),
+                        replicationId));
         _effectiveParameters = result.getEffectiveParameters();
         _topologyDeterminismInfo = result.getTopologyDeterminismInfo();
     }

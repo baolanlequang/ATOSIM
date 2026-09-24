@@ -74,7 +74,7 @@ for (( ROW_INDEX=ROW_START; ROW_INDEX<=ROW_END; ROW_INDEX++ )); do
          -jar atosim.jar \
          sanity_check_run/campaign_prep/run_configurations_selfish_risky.csv \
          sampling/generated_models \
-         sampling/configuration.json \
+         sanity_check_run/campaign_prep/configuration_risky_hmax600.json \
          --row-index ${ROW_INDEX} \
          --output-dir "${TMP_OUT}"
 done
