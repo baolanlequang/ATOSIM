@@ -71,7 +71,7 @@ resubmit_main() {
     [ -f "${CONFIG_JSON}" ] || resubmit_fail "${CONFIG_JSON} missing (run from the repo root)"
     [ -f "${csv}" ] || resubmit_fail "${csv} missing"
     [ -d sampling/generated_models ] || resubmit_fail "sampling/generated_models missing"
-    [ -f "${list_file}" ] || resubmit_fail "${list_file} missing (run make_resubmit_lists.py)"
+    [ -n "${ROW_LIST:-}" ] || [ -f "${list_file}" ] || resubmit_fail "${list_file} missing (run make_resubmit_lists.py)"
     [ -n "${TMPDIR:-}" ] && [ -d "${TMPDIR}" ] || resubmit_fail "TMPDIR is unset or not a directory"
 
     # Strategy destination: the production scripts do `mkdir -p "${RESULTS_DIR}"`
@@ -87,25 +87,48 @@ resubmit_main() {
 
     local array_id="${SLURM_ARRAY_TASK_ID:-0}"
     local task_id=$(( array_id + task_offset ))
-    local line first_row count
-    line="$(sed -n "$(( task_id + 1 ))p" "${list_file}")"
-    [ -n "${line}" ] || resubmit_fail "task ${task_id} (array id ${array_id} + TASK_OFFSET ${task_offset}) is beyond the end of ${list_file} ($(wc -l < "${list_file}") tasks)"
-    read -r first_row count <<< "${line}"
-    case "${first_row}${count}" in ''|*[!0-9]*) resubmit_fail "bad line '${line}' in ${list_file}" ;; esac
-    local last_row=$(( first_row + count - 1 ))
+    local rows=() line first_row count last_row rows_desc cfg_desc row_timing i
+    if [ -n "${ROW_LIST:-}" ]; then
+        # Explicit 0-based row_index values (comma-separated); the task list and TASK_OFFSET are not used.
+        case "${ROW_LIST}" in *[!0-9,]*|,*|*,|*,,*) resubmit_fail "ROW_LIST='${ROW_LIST}' must be comma-separated row_index values" ;; esac
+        IFS=',' read -r -a rows <<< "${ROW_LIST}"
+        task_id="list"; rows_desc="${ROW_LIST}"; cfg_desc="row_index+1 for each"
+        # Own file name (job id + sanitized list) so it never collides with row_timing_task<N>.csv.
+        local list_tag="${ROW_LIST//,/_}"
+        [ "${#list_tag}" -le 60 ] || list_tag="${list_tag:0:40}_n${#rows[@]}"
+        row_timing="${log_dir}/row_timing_list_${SLURM_JOB_ID:-nojob}_${list_tag}.csv"
+    else
+        line="$(sed -n "$(( task_id + 1 ))p" "${list_file}")"
+        [ -n "${line}" ] || resubmit_fail "task ${task_id} (array id ${array_id} + TASK_OFFSET ${task_offset}) is beyond the end of ${list_file} ($(wc -l < "${list_file}") tasks)"
+        read -r first_row count <<< "${line}"
+        case "${first_row}${count}" in ''|*[!0-9]*) resubmit_fail "bad line '${line}' in ${list_file}" ;; esac
+        last_row=$(( first_row + count - 1 ))
+        for (( i=0; i<count; i++ )); do rows+=( $(( first_row + i )) ); done
+        rows_desc="${first_row}-${last_row}"; cfg_desc="$(( first_row + 1 ))-$(( last_row + 1 ))"
+        row_timing="${log_dir}/row_timing_task${task_id}.csv"
+    fi
 
-    local row_timing="${log_dir}/row_timing_task${task_id}.csv"
     local tmp_out="${TMPDIR}/resubmit_${STRATEGY}_${SLURM_JOB_ID:-dry}_${array_id}"
 
-    echo "[TASK] strategy=${STRATEGY} task_id=${task_id} (array=${array_id} offset=${task_offset}) rows=${first_row}-${last_row} config_ids=$(( first_row + 1 ))-$(( last_row + 1 )) jar=${JAR} xmx=${XMX_FLAG} job=${SLURM_JOB_ID:-none} node=$(hostname) at=$(date -Is)"
+    echo "[TASK] strategy=${STRATEGY} task_id=${task_id} (array=${array_id} offset=${task_offset}) rows=${rows_desc} config_ids=${cfg_desc} jar=${JAR} xmx=${XMX_FLAG} job=${SLURM_JOB_ID:-none} node=$(hostname) at=$(date -Is)"
     echo "[DEST] results=${dest_dir} row_timing=${row_timing}"
 
+    # Optional environment switches (defaults reproduce the previous flags exactly):
+    #   HEAPDUMP=off      no -XX:+HeapDumpOnOutOfMemoryError / HeapDumpPath at all
+    #   HEAPDUMP_DIR=<d>  write heapdump_row<N>.hprof there instead of the job-local tmp dir
+    #   HEAPDUMP_KEEP=1   keep the .hprof after the row (default: deleted after each row)
+    #   OOM_EXIT=1        add -XX:+ExitOnOutOfMemoryError (a row ends at its first OOM, JVM exit code 3)
+    local heapdump_dir="${HEAPDUMP_DIR:-${tmp_out}}"
     java_cmd() {
+        local extra=()
+        if [ "${HEAPDUMP:-on}" != "off" ]; then
+            extra+=(-XX:+HeapDumpOnOutOfMemoryError "-XX:HeapDumpPath=${heapdump_dir}/heapdump_row$1.hprof")
+        fi
+        [ "${OOM_EXIT:-0}" = "1" ] && extra+=(-XX:+ExitOnOutOfMemoryError)
         JAVA_CMD=(java "${XMX_FLAG}"
             -XX:+UseG1GC
             -XX:ParallelGCThreads=8
-            -XX:+HeapDumpOnOutOfMemoryError
-            "-XX:HeapDumpPath=${tmp_out}/heapdump_row$1.hprof"
+            "${extra[@]}"
             -jar "${JAR}"
             "${csv}"
             sampling/generated_models
@@ -116,11 +139,11 @@ resubmit_main() {
 
     if [ "${dry}" = "1" ]; then
         local present=0 r
-        for (( r=first_row; r<=last_row; r++ )); do
+        for r in "${rows[@]}"; do
             [ -s "${dest_dir}/result_run_$(( r + 1 )).json" ] && present=$(( present + 1 ))
         done
-        echo "[DRY_RUN] ${present}/${count} rows of this task already have a non-empty result in ${dest_dir} (would be skipped)"
-        java_cmd "${first_row}"
+        echo "[DRY_RUN] ${present}/${#rows[@]} rows of this task already have a non-empty result in ${dest_dir} (would be skipped)"
+        java_cmd "${rows[0]}"
         echo "[DRY_RUN] java command for the first row:"
         printf '  %q' "${JAVA_CMD[@]}"; echo
         echo "[DRY_RUN] exiting without starting java"
@@ -130,9 +153,9 @@ resubmit_main() {
     mkdir -p "${log_dir}" "${tmp_out}" logs || resubmit_fail "cannot create ${log_dir} / ${tmp_out}"
     [ -f "${row_timing}" ] || echo "job_id,task_id,row_index,config_id,start_epoch,end_epoch,elapsed_s,exit_code,status" > "${row_timing}"
 
-    local i row config_id dest_file t0 t1 rc status f base
-    for (( i=0; i<count; i++ )); do
-        row=$(( first_row + i )); config_id=$(( row + 1 ))
+    local row config_id dest_file t0 t1 rc status f base row_err
+    for row in "${rows[@]}"; do
+        config_id=$(( row + 1 ))
         dest_file="${dest_dir}/result_run_${config_id}.json"
         t0=$(date +%s)
         if [ -s "${dest_file}" ]; then
@@ -143,8 +166,10 @@ resubmit_main() {
         rm -f "${tmp_out}"/result_run_*
         echo "[ROW START] row_index=${row} config_id=${config_id} epoch=${t0}"
         java_cmd "${row}"
-        "${JAVA_CMD[@]}"
+        row_err="${tmp_out}/row_${row}.stderr"
+        "${JAVA_CMD[@]}" 2> "${row_err}"      # stdout (round progress) stays live in the job log
         rc=$?
+        cat "${row_err}" >&2                  # replay stderr into the job's .err after the row
         t1=$(date +%s)
         status=no_output
         if [ -s "${tmp_out}/result_run_${config_id}.json" ]; then
@@ -159,10 +184,13 @@ resubmit_main() {
             cp "${tmp_out}/result_run_${config_id}.json" "${dest_dir}/.part_result_run_${config_id}.json" \
                 && mv -f "${dest_dir}/.part_result_run_${config_id}.json" "${dest_file}" || status=copy_failed
         fi
+        # ATOSIMSimulator.main catches the wrapped OutOfMemoryError and exits 0 with no result, so detect it in stderr.
+        if [ "${status}" = "no_output" ] && grep -q "java.lang.OutOfMemoryError" "${row_err}"; then status=row_oom; fi
+        [ "${HEAPDUMP_KEEP:-0}" = "1" ] || rm -f "${heapdump_dir}/heapdump_row${row}.hprof"
         echo "[ROW END] row_index=${row} config_id=${config_id} elapsed_s=$(( t1 - t0 )) exit=${rc} status=${status}"
         echo "${SLURM_JOB_ID:-},${task_id},${row},${config_id},${t0},${t1},$(( t1 - t0 )),${rc},${status}" >> "${row_timing}"
         [ "${status}" = "ok" ] && rm -f "${tmp_out}"/result_run_*
     done
 
-    echo "[TASK DONE] strategy=${STRATEGY} task_id=${task_id} rows=${first_row}-${last_row} at=$(date -Is)"
+    echo "[TASK DONE] strategy=${STRATEGY} task_id=${task_id} rows=${rows_desc} at=$(date -Is)"
 }
