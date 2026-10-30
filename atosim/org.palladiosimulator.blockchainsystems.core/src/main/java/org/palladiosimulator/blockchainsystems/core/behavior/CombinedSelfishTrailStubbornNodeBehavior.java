@@ -11,7 +11,7 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 import java.util.random.RandomGenerator;
 
 public class CombinedSelfishTrailStubbornNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable, UnpublishedBlockCounter {
 
     private final SelfishMiningNodeBehavior selfish = new SelfishMiningNodeBehavior();
     private final TrailStubbornMiningNodeBehavior trailStubborn = new TrailStubbornMiningNodeBehavior();
@@ -60,6 +60,38 @@ public class CombinedSelfishTrailStubbornNodeBehavior extends BlockchainNodeObje
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
         return selfish.onPreviousBlockSelection(context);
+    }
+
+    // UnpublishedBlockCounter: both sub-behaviours record every mined block (onBlockMined calls
+    // both), so counts are combined with max, not summed. The round is held open if either
+    // sub-behaviour holds it open.
+    @Override
+    public int getUnpublishedBlockCount() {
+        return Math.max(selfish.getUnpublishedBlockCount(), trailStubborn.getUnpublishedBlockCount());
+    }
+
+    @Override
+    public long getBranchStartTime() {
+        long x = selfish.getBranchStartTime(), y = trailStubborn.getBranchStartTime();
+        if (x == NO_BRANCH) return y;
+        if (y == NO_BRANCH) return x;
+        return Math.min(x, y);
+    }
+
+    @Override
+    public boolean hasOpenContest() { return selfish.hasOpenContest() || trailStubborn.hasOpenContest(); }
+
+    @Override
+    public int getTrailingDeficit() { return Math.max(selfish.getTrailingDeficit(), trailStubborn.getTrailingDeficit()); }
+
+    @Override
+    public long getDroppedUnpublishableBlockCount() {
+        return selfish.getDroppedUnpublishableBlockCount() + trailStubborn.getDroppedUnpublishableBlockCount();
+    }
+
+    @Override
+    public boolean holdsRoundOpen(long lastReorgTimestamp) {
+        return selfish.holdsRoundOpen(lastReorgTimestamp) || trailStubborn.holdsRoundOpen(lastReorgTimestamp);
     }
 
     @Override

@@ -21,6 +21,19 @@ public class MiningProcessImpl extends BlockchainNodeObject implements MiningPro
 
     private boolean _isMining = false;
 
+    // At most one pending BlockMinedEvent per mining process (AH_rate_depth_check): every schedule
+    // cancels the pending event first, so a reschedule from inside the onBlockMined callback (a
+    // publish -> restartMining()) followed by the reschedule after the callback can no longer leave
+    // two exponential clocks running. _pendingEvent is the one live event; any other event of this
+    // process that still fires (cancelEventsFor cannot remove an event due at the current time) is
+    // stale and ignored.
+    private BlockMinedEvent _pendingEvent;
+    // Diagnostic: schedules that found an event still pending, i.e. not cancelled by the caller
+    // first (restartMining cancels explicitly and is not counted). Before the fix each of these left
+    // a second pending event; now each is a harmless resample of a memoryless clock.
+    private long _schedulesWhilePending = 0;
+    private long _staleEventsIgnored = 0;
+
     public MiningProcessImpl(double meanBlockTime, RandomGenerator randomGenerator) {
         _poissonProcess = new PoissonProcess(1.0 / meanBlockTime, randomGenerator);
     }
@@ -28,6 +41,11 @@ public class MiningProcessImpl extends BlockchainNodeObject implements MiningPro
     @Override
     public void dispatchEvent(Event event) {
         if (!BlockMinedEvent.EVENT_TYPE.equals(event.getEventType())) return;
+        if (event != _pendingEvent) {
+            _staleEventsIgnored++;
+            return;
+        }
+        _pendingEvent = null;
         if (!_isMining) return;
 
         BlockMinedEvent blockMinedEvent = (BlockMinedEvent) event;
@@ -48,15 +66,18 @@ public class MiningProcessImpl extends BlockchainNodeObject implements MiningPro
         if (_previousBlockSelectionCallback == null) {
             throw new IllegalStateException("Previous block selection callback must be set before scheduling a new block mined event.");
         }
+        if (_pendingEvent != null) _schedulesWhilePending++;
+        cancelPendingEvent();
         String previousBlockHash = _previousBlockSelectionCallback.get();
 
-        getSimulationContext().getEventCoordinator().raiseEvent(
-                new BlockMinedEvent(
-                        getNextBlockMinedEventOccurrenceTimestamp(),
-                        previousBlockHash,
-                        this
-                )
+        BlockMinedEvent event = new BlockMinedEvent(
+                getNextBlockMinedEventOccurrenceTimestamp(),
+                previousBlockHash,
+                this
         );
+        // set before raiseEvent: an event due now is dispatched inside raiseEvent and must be live
+        _pendingEvent = event;
+        getSimulationContext().getEventCoordinator().raiseEvent(event);
         return previousBlockHash;
     }
 
@@ -71,7 +92,14 @@ public class MiningProcessImpl extends BlockchainNodeObject implements MiningPro
 
     private void cancelPendingEvent() {
         getSimulationContext().getEventCoordinator().cancelEventsFor(this);
+        _pendingEvent = null;
     }
+
+    /** Schedules that found an event still pending (see _schedulesWhilePending). */
+    public long getSchedulesWhilePending() { return _schedulesWhilePending; }
+
+    /** Fired events of this process that were no longer the live one and were ignored. */
+    public long getStaleEventsIgnored() { return _staleEventsIgnored; }
 
     @Override
     public void startMining() {

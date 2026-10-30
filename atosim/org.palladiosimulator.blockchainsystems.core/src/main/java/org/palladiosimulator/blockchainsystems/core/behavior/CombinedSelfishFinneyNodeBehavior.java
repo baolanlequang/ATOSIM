@@ -11,7 +11,7 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 import java.util.random.RandomGenerator;
 
 public class CombinedSelfishFinneyNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable, UnpublishedBlockCounter {
 
     private final SelfishMiningNodeBehavior selfish = new SelfishMiningNodeBehavior();
     private final FinneyMiningNodeBehavior finney = new FinneyMiningNodeBehavior();
@@ -60,6 +60,38 @@ public class CombinedSelfishFinneyNodeBehavior extends BlockchainNodeObject
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
         return selfish.onPreviousBlockSelection(context);
+    }
+
+    // UnpublishedBlockCounter: both sub-behaviours record every mined block (onBlockMined calls
+    // both), so counts are combined with max, not summed. The round is held open if either
+    // sub-behaviour holds it open.
+    @Override
+    public int getUnpublishedBlockCount() {
+        return Math.max(selfish.getUnpublishedBlockCount(), finney.getUnpublishedBlockCount());
+    }
+
+    @Override
+    public long getBranchStartTime() {
+        long x = selfish.getBranchStartTime(), y = finney.getBranchStartTime();
+        if (x == NO_BRANCH) return y;
+        if (y == NO_BRANCH) return x;
+        return Math.min(x, y);
+    }
+
+    @Override
+    public boolean hasOpenContest() { return selfish.hasOpenContest() || finney.hasOpenContest(); }
+
+    @Override
+    public int getTrailingDeficit() { return Math.max(selfish.getTrailingDeficit(), finney.getTrailingDeficit()); }
+
+    @Override
+    public long getDroppedUnpublishableBlockCount() {
+        return selfish.getDroppedUnpublishableBlockCount() + finney.getDroppedUnpublishableBlockCount();
+    }
+
+    @Override
+    public boolean holdsRoundOpen(long lastReorgTimestamp) {
+        return selfish.holdsRoundOpen(lastReorgTimestamp) || finney.holdsRoundOpen(lastReorgTimestamp);
     }
 
     @Override

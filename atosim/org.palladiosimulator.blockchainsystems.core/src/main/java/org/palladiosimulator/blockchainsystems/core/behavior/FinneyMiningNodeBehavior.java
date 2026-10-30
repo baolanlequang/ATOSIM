@@ -23,7 +23,7 @@ import java.util.random.RandomGenerator;
  * - It intentionally removes transactions only after INCLUDED or FORKING outcomes.
  */
 public class FinneyMiningNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable, UnpublishedBlockCounter {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
     private RandomGenerator _blockHashGenerator;
@@ -192,6 +192,24 @@ public class FinneyMiningNodeBehavior extends BlockchainNodeObject
         attackReleased = false;
         attackInvalidated = false;
     }
+
+    // UnpublishedBlockCounter (read-only, for the simulation monitor): the one withheld Finney
+    // block while it is held and neither released nor invalidated.
+    @Override
+    public int getUnpublishedBlockCount() {
+        return (privateBlock != null && !attackReleased && !attackInvalidated) ? 1 : 0;
+    }
+
+    @Override
+    public long getBranchStartTime() {
+        return privateBlock != null ? privateBlock.getBlockMinedTimestamp() : NO_BRANCH;
+    }
+
+    @Override
+    public boolean hasOpenContest() { return false; }
+
+    @Override
+    public int getTrailingDeficit() { return 0; }
 
     @Override
     public void dispatchEvent(Event event) {

@@ -14,4 +14,12 @@ public interface PropagationStrategy<E extends Propagatable> extends Traceable {
     void setNetworkInterface(NodeP2PNetworkInterface networkInterface);
     void setBlockchainSystemNodeContext(BlockchainSystemNodeContext context);
     void setOnReceivedCallback(Consumer<E> onReceivedCallback);
+
+    /**
+     * Marks an element this node created itself (e.g. a locally mined block) as known, so that
+     * announcements and copies of it coming back from neighbours are dropped like any other
+     * duplicate. No-op by default; see BlockPropagationStrategy.
+     */
+    default void markKnown(E element) {
+    }
 }

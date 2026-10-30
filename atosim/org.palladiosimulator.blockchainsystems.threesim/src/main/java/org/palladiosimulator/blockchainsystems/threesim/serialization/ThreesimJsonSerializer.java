@@ -18,6 +18,7 @@ import org.palladiosimulator.blockchainsystems.threesim.creation.TopologyDetermi
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ChainReorganizationOccurrence;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.EpisodeStatus;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ReplicationDiagnostics;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimAverageSimulationRoundResult;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimMonteCarloSimulationResult;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ThreesimSimulationRoundResult;
@@ -57,6 +58,9 @@ public class ThreesimJsonSerializer {
           .append(finalAttackerCausedReorgDepth(result.getSimulationRoundResult()));
         sb.append(",\n");
         sb.append("  \"status\": ").append(jsonStr(episodeStatusJson(result.getSimulationRoundResult().getEpisodeStatus())));
+        sb.append(",\n");
+        sb.append("  \"replicationDiagnostics\": ");
+        appendReplicationDiagnostics(sb, result.getSimulationRoundResult().getReplicationDiagnostics());
         sb.append(",\n");
         appendTopologyDeterminismInfo(sb, result.getSimulationRoundResult().getTopologyDeterminismInfo(), "  ");
         if (includeChainReorganizations) {
@@ -105,6 +109,14 @@ public class ThreesimJsonSerializer {
             sb.append(jsonStr(episodeStatusJson(rounds.get(i).getEpisodeStatus())));
         }
         sb.append("],\n");
+        sb.append("  \"replicationDiagnostics\": [\n");
+        for (int i = 0; i < rounds.size(); i++) {
+            sb.append("    ");
+            appendReplicationDiagnostics(sb, rounds.get(i).getReplicationDiagnostics());
+            if (i < rounds.size() - 1) sb.append(",");
+            sb.append("\n");
+        }
+        sb.append("  ],\n");
         sb.append("  \"topologyDeterminismInfo\": [\n");
         for (int i = 0; i < rounds.size(); i++) {
             sb.append("    ");
@@ -210,6 +222,37 @@ public class ThreesimJsonSerializer {
     private static long depthOf(ChainReorganizationOccurrence occurrence) {
         ChainReorganizedTraceEvent e = occurrence.getEvent();
         return e.getNewCanonicalTipHeight() - e.getCommonAncestorHeight();
+    }
+
+    // AC_fix_plan item 4: one object per round, every key always present (null where undefined),
+    // or a plain JSON null if the round carries no diagnostics.
+    private static void appendReplicationDiagnostics(StringBuilder sb, ReplicationDiagnostics d) {
+        if (d == null) {
+            sb.append("null");
+            return;
+        }
+        sb.append("{\"attackerBlocksMined\": ").append(d.attackerBlocksMined())
+          .append(", \"totalBlocksMined\": ").append(d.totalBlocksMined())
+          .append(", \"unpublishedAttackerBlocksAtEnd\": ").append(d.unpublishedAttackerBlocksAtEnd())
+          .append(", \"attackerHoldsRoundOpenAtEnd\": ").append(d.attackerHoldsRoundOpenAtEnd())
+          .append(", \"duplicateBodiesDroppedChainOrPoolNetwork\": ").append(d.duplicateBodiesDroppedChainOrPoolNetwork())
+          .append(", \"duplicateBodiesDroppedKnownSetOnlyNetwork\": ").append(d.duplicateBodiesDroppedKnownSetOnlyNetwork())
+          .append(", \"duplicateInvsIgnoredChainOrPoolNetwork\": ").append(d.duplicateInvsIgnoredChainOrPoolNetwork())
+          .append(", \"duplicateInvsIgnoredKnownSetOnlyNetwork\": ").append(d.duplicateInvsIgnoredKnownSetOnlyNetwork())
+          .append(", \"duplicateBodiesDroppedChainOrPoolAttacker\": ").append(d.duplicateBodiesDroppedChainOrPoolAttacker())
+          .append(", \"duplicateBodiesDroppedKnownSetOnlyAttacker\": ").append(d.duplicateBodiesDroppedKnownSetOnlyAttacker())
+          .append(", \"duplicateInvsIgnoredChainOrPoolAttacker\": ").append(d.duplicateInvsIgnoredChainOrPoolAttacker())
+          .append(", \"duplicateInvsIgnoredKnownSetOnlyAttacker\": ").append(d.duplicateInvsIgnoredKnownSetOnlyAttacker())
+          .append(", \"honestAdoptionDepthMax\": ").append(d.honestAdoptionDepthMax())
+          .append(", \"honestAdoptionDepthMedian\": ").append(d.honestAdoptionDepthMedian())
+          .append(", \"honestNodesWithAdoptionReorg\": ").append(d.honestNodesWithAdoptionReorg())
+          .append(", \"honestNodeCount\": ").append(d.honestNodeCount())
+          .append(", \"honestOutcomeDisagreementAtEnd\": ").append(d.honestOutcomeDisagreementAtEnd())
+          .append(", \"droppedUnpublishableAttackerBlocks\": ").append(d.droppedUnpublishableAttackerBlocks())
+          .append(", \"simulatedDurationMs\": ").append(d.simulatedDurationMs())
+          .append(", \"miningSchedulesWhilePendingAttacker\": ").append(d.miningSchedulesWhilePendingAttacker())
+          .append(", \"miningSchedulesWhilePendingNetwork\": ").append(d.miningSchedulesWhilePendingNetwork())
+          .append("}");
     }
 
     // D5 episode-resolution status (see EpisodeStatus) as its lowercase JSON string, or null if

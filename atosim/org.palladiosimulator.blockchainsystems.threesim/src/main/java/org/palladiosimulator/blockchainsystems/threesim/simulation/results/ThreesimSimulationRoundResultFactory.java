@@ -163,6 +163,6 @@ public class ThreesimSimulationRoundResultFactory {
 
                 new AttackSuccessTimeCalculator(_monitor.getAttackSuccessTime()).calculate()
         ), _monitor.getChainReorganizations(), _topologyDeterminismInfo, _monitor.getEpisodeStatus(),
-                _monitor.getDecisiveAttackerReorg());
+                _monitor.getDecisiveAttackerReorg(), _monitor.getReplicationDiagnostics());
     }
 }

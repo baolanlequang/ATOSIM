@@ -37,7 +37,7 @@ import java.util.random.RandomGenerator;
  * below, just never used to change how a newly-validated block gets handled.
  */
 public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable, UnpublishedBlockCounter {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
     private RandomGenerator _blockHashGenerator;
@@ -218,6 +218,20 @@ public class LeadStubbornMiningNodeBehavior extends BlockchainNodeObject
     private void resetPrivateState() {
         state.reset();
     }
+
+    // UnpublishedBlockCounter: read-only views of `state` for the simulation monitor (end rule,
+    // diagnostics). No decision in this class reads them.
+    @Override
+    public int getUnpublishedBlockCount() { return state.getUnpublishedSuffix().size(); }
+
+    @Override
+    public long getBranchStartTime() { return state.getBranchStartTime(); }
+
+    @Override
+    public boolean hasOpenContest() { return state.isInContest(); }
+
+    @Override
+    public int getTrailingDeficit() { return state.getDeficit(); }
 
     @Override
     public void dispatchEvent(Event event) {

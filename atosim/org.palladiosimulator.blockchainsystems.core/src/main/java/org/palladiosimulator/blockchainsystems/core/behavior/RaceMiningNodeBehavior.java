@@ -28,7 +28,7 @@ import java.util.random.RandomGenerator;
  * only transaction-gossip timing manipulation.
  */
 public class RaceMiningNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable, UnpublishedBlockCounter {
 
     private final HonestBlockchainSystemNodeBehavior honest = new HonestBlockchainSystemNodeBehavior();
     private RandomGenerator _blockHashGenerator;
@@ -270,6 +270,22 @@ public class RaceMiningNodeBehavior extends BlockchainNodeObject
         privateChain.clear();
         clearContestStateOnly();
     }
+
+    // UnpublishedBlockCounter (read-only, for the simulation monitor). Race keeps no fork point;
+    // its branch start is the mined time of the oldest still-hidden block.
+    @Override
+    public int getUnpublishedBlockCount() { return privateChain.size(); }
+
+    @Override
+    public long getBranchStartTime() {
+        return privateChain.isEmpty() ? NO_BRANCH : privateChain.get(0).getBlockMinedTimestamp();
+    }
+
+    @Override
+    public boolean hasOpenContest() { return inContestState; }
+
+    @Override
+    public int getTrailingDeficit() { return 0; }
 
     @Override
     public void dispatchEvent(Event event) {

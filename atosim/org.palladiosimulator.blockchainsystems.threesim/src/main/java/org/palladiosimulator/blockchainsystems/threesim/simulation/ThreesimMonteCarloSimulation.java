@@ -68,7 +68,9 @@ public class ThreesimMonteCarloSimulation
                         r.getChainReorganizations(),
                         r.getTopologyDeterminismInfo(),
                         r.getEpisodeStatus(),
-                        r.getDecisiveAttackerReorg()))
+                        r.getDecisiveAttackerReorg(),
+                        // must be carried here too, or every round's diagnostics are silently null
+                        r.getReplicationDiagnostics()))
                 .collect(Collectors.toList());
 
         return new ThreesimMonteCarloSimulationResult(

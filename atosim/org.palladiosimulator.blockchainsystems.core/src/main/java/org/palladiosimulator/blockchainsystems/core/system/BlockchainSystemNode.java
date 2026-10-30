@@ -112,7 +112,11 @@ public class BlockchainSystemNode extends BlockchainSimulationObject implements 
         _blockValidator.initialize(getSimulationContext());
         _blockValidator.initializeLogger(this);
 
-        _miningProcess.setOnBlockMinedCallback(b -> _behavior.onBlockMined(b, _context));
+        // markKnown first: a node's own block is known before any echo of it can arrive
+        _miningProcess.setOnBlockMinedCallback(b -> {
+            _blockPropagationStrategy.markKnown(b);
+            _behavior.onBlockMined(b, _context);
+        });
         _miningProcess.setPreviousBlockSelectionCallback(() -> _behavior.onPreviousBlockSelection(_context));
         _miningProcess.setOnCreatingBlockCallback((blockMinedAt, prevHash) -> _behavior.onCreatingBlock(blockMinedAt, prevHash, _context));
         _miningProcess.initialize(getSimulationContext());
@@ -160,4 +164,7 @@ public class BlockchainSystemNode extends BlockchainSimulationObject implements 
     public double getResourcePower() { return _resourcePower; }
     public GeographicalRegion getGeographicalRegion() { return _geographicalRegion; }
     public Blockchain getBlockchain() { return _blockchain; }
+    public PropagationStrategy<Block> getBlockPropagationStrategy() { return _blockPropagationStrategy; }
+    public BlockchainSystemNodeBehavior getBehavior() { return _behavior; }
+    public MiningProcess getMiningProcess() { return _miningProcess; }
 }

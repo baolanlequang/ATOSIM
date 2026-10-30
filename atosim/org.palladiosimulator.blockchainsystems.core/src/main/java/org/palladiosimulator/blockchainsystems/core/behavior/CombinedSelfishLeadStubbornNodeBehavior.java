@@ -11,7 +11,7 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 import java.util.random.RandomGenerator;
 
 public class CombinedSelfishLeadStubbornNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable, UnpublishedBlockCounter {
 
     private final SelfishMiningNodeBehavior selfish = new SelfishMiningNodeBehavior();
     private final LeadStubbornMiningNodeBehavior leadStubborn = new LeadStubbornMiningNodeBehavior();
@@ -60,6 +60,38 @@ public class CombinedSelfishLeadStubbornNodeBehavior extends BlockchainNodeObjec
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
         return selfish.onPreviousBlockSelection(context);
+    }
+
+    // UnpublishedBlockCounter: both sub-behaviours record every mined block (onBlockMined calls
+    // both), so counts are combined with max, not summed. The round is held open if either
+    // sub-behaviour holds it open.
+    @Override
+    public int getUnpublishedBlockCount() {
+        return Math.max(selfish.getUnpublishedBlockCount(), leadStubborn.getUnpublishedBlockCount());
+    }
+
+    @Override
+    public long getBranchStartTime() {
+        long x = selfish.getBranchStartTime(), y = leadStubborn.getBranchStartTime();
+        if (x == NO_BRANCH) return y;
+        if (y == NO_BRANCH) return x;
+        return Math.min(x, y);
+    }
+
+    @Override
+    public boolean hasOpenContest() { return selfish.hasOpenContest() || leadStubborn.hasOpenContest(); }
+
+    @Override
+    public int getTrailingDeficit() { return Math.max(selfish.getTrailingDeficit(), leadStubborn.getTrailingDeficit()); }
+
+    @Override
+    public long getDroppedUnpublishableBlockCount() {
+        return selfish.getDroppedUnpublishableBlockCount() + leadStubborn.getDroppedUnpublishableBlockCount();
+    }
+
+    @Override
+    public boolean holdsRoundOpen(long lastReorgTimestamp) {
+        return selfish.holdsRoundOpen(lastReorgTimestamp) || leadStubborn.holdsRoundOpen(lastReorgTimestamp);
     }
 
     @Override

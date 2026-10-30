@@ -11,7 +11,7 @@ import org.palladiosimulator.blockchainsystems.core.transaction.abstractions.Tra
 import java.util.random.RandomGenerator;
 
 public class CombinedSelfishRaceNodeBehavior extends BlockchainNodeObject
-        implements BlockchainSystemNodeBehavior, BlockHashSeedable {
+        implements BlockchainSystemNodeBehavior, BlockHashSeedable, UnpublishedBlockCounter {
 
     private final SelfishMiningNodeBehavior selfish = new SelfishMiningNodeBehavior();
     private final RaceMiningNodeBehavior race = new RaceMiningNodeBehavior();
@@ -60,6 +60,38 @@ public class CombinedSelfishRaceNodeBehavior extends BlockchainNodeObject
     @Override
     public String onPreviousBlockSelection(BlockchainSystemNodeContext context) {
         return selfish.onPreviousBlockSelection(context);
+    }
+
+    // UnpublishedBlockCounter: both sub-behaviours record every mined block (onBlockMined calls
+    // both), so counts are combined with max, not summed. The round is held open if either
+    // sub-behaviour holds it open.
+    @Override
+    public int getUnpublishedBlockCount() {
+        return Math.max(selfish.getUnpublishedBlockCount(), race.getUnpublishedBlockCount());
+    }
+
+    @Override
+    public long getBranchStartTime() {
+        long x = selfish.getBranchStartTime(), y = race.getBranchStartTime();
+        if (x == NO_BRANCH) return y;
+        if (y == NO_BRANCH) return x;
+        return Math.min(x, y);
+    }
+
+    @Override
+    public boolean hasOpenContest() { return selfish.hasOpenContest() || race.hasOpenContest(); }
+
+    @Override
+    public int getTrailingDeficit() { return Math.max(selfish.getTrailingDeficit(), race.getTrailingDeficit()); }
+
+    @Override
+    public long getDroppedUnpublishableBlockCount() {
+        return selfish.getDroppedUnpublishableBlockCount() + race.getDroppedUnpublishableBlockCount();
+    }
+
+    @Override
+    public boolean holdsRoundOpen(long lastReorgTimestamp) {
+        return selfish.holdsRoundOpen(lastReorgTimestamp) || race.holdsRoundOpen(lastReorgTimestamp);
     }
 
     @Override

@@ -52,8 +52,14 @@ public class AttackForkState {
     private boolean inContest = false;
     private int publishedInCurrentContest = 0;
     private int deficit = 0;
+    // Mined timestamp of the block that started the current private branch -- recorded at the
+    // same moment, and under the same condition, as forkPointHash. Read only by the simulation
+    // monitor's end rule (UnpublishedBlockCounter); never a decision input.
+    private long branchStartTime = UnpublishedBlockCounter.NO_BRANCH;
 
     public List<Block> getPrivateChain() { return privateChain; }
+
+    public long getBranchStartTime() { return branchStartTime; }
 
     /** Same list as {@link #getPrivateChain()} -- see the class doc's "unpublished suffix" note. */
     public List<Block> getUnpublishedSuffix() { return privateChain; }
@@ -87,6 +93,7 @@ public class AttackForkState {
     public void recordMinedBlock(Block block) {
         if (privateChain.isEmpty()) {
             forkPointHash = block.getPreviousHash();
+            branchStartTime = block.getBlockMinedTimestamp();
         }
         privateChain.add(block);
         ownTipHash = block.getHash();
@@ -124,6 +131,7 @@ public class AttackForkState {
         privateChain.clear();
         ownTipHash = null;
         forkPointHash = null;
+        branchStartTime = UnpublishedBlockCounter.NO_BRANCH;
         deficit = 0;
         clearContestOnly();
     }

@@ -17,6 +17,9 @@ public class ThreesimSimulationRoundResult implements SimulationRoundResult {
     // getDecisiveAttackerReorg()) -- null whenever episodeStatus isn't SUCCESS, since there is
     // then no decisive attacker-caused occurrence to point at.
     private final ChainReorganizationOccurrence decisiveAttackerReorg;
+    // Per-replication diagnostics (AC_fix_plan item 4); null for aggregate buckets such as
+    // ThreesimMonteCarloSimulation's generalResults.
+    private final ReplicationDiagnostics replicationDiagnostics;
 
     public ThreesimSimulationRoundResult(OutputMetricsSet outputMetrics, List<ChainReorganizationOccurrence> chainReorganizations) {
         this(outputMetrics, chainReorganizations, null, null, null);
@@ -35,11 +38,18 @@ public class ThreesimSimulationRoundResult implements SimulationRoundResult {
     public ThreesimSimulationRoundResult(OutputMetricsSet outputMetrics, List<ChainReorganizationOccurrence> chainReorganizations,
             TopologyDeterminismInfo topologyDeterminismInfo, EpisodeStatus episodeStatus,
             ChainReorganizationOccurrence decisiveAttackerReorg) {
+        this(outputMetrics, chainReorganizations, topologyDeterminismInfo, episodeStatus, decisiveAttackerReorg, null);
+    }
+
+    public ThreesimSimulationRoundResult(OutputMetricsSet outputMetrics, List<ChainReorganizationOccurrence> chainReorganizations,
+            TopologyDeterminismInfo topologyDeterminismInfo, EpisodeStatus episodeStatus,
+            ChainReorganizationOccurrence decisiveAttackerReorg, ReplicationDiagnostics replicationDiagnostics) {
         this.outputMetrics = outputMetrics;
         this.chainReorganizations = chainReorganizations;
         this.topologyDeterminismInfo = topologyDeterminismInfo;
         this.episodeStatus = episodeStatus;
         this.decisiveAttackerReorg = decisiveAttackerReorg;
+        this.replicationDiagnostics = replicationDiagnostics;
     }
 
     public OutputMetricsSet getOutputMetrics() { return outputMetrics; }
@@ -47,4 +57,5 @@ public class ThreesimSimulationRoundResult implements SimulationRoundResult {
     public TopologyDeterminismInfo getTopologyDeterminismInfo() { return topologyDeterminismInfo; }
     public EpisodeStatus getEpisodeStatus() { return episodeStatus; }
     public ChainReorganizationOccurrence getDecisiveAttackerReorg() { return decisiveAttackerReorg; }
+    public ReplicationDiagnostics getReplicationDiagnostics() { return replicationDiagnostics; }
 }

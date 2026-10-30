@@ -2,6 +2,7 @@ package org.palladiosimulator.blockchainsystems.threesim.monitoring;
 
 import org.palladiosimulator.blockchainsystems.core.behavior.AttackPhase;
 import org.palladiosimulator.blockchainsystems.core.behavior.AttackPhaseTransitionTraceEvent;
+import org.palladiosimulator.blockchainsystems.core.behavior.UnpublishedBlockCounter;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.Block;
 import org.palladiosimulator.blockchainsystems.core.block.abstractions.BlockType;
 import org.palladiosimulator.blockchainsystems.core.block.BlockBroadcastTraceEvent;
@@ -14,7 +15,9 @@ import org.palladiosimulator.blockchainsystems.core.common.abstractions.TraceEve
 import org.palladiosimulator.blockchainsystems.core.common.abstractions.TraceEventLogOrigin;
 import org.palladiosimulator.blockchainsystems.core.geography.GeographicalRegions;
 import org.palladiosimulator.blockchainsystems.core.mining.BlockMinedTraceEvent;
+import org.palladiosimulator.blockchainsystems.core.mining.MiningProcessImpl;
 import org.palladiosimulator.blockchainsystems.core.monitoring.abstractions.SimulationMonitor;
+import org.palladiosimulator.blockchainsystems.core.propagation.block.BlockPropagationStrategy;
 import org.palladiosimulator.blockchainsystems.core.simulation.termination.LongestChainExceededMaxLengthCondition;
 import org.palladiosimulator.blockchainsystems.core.transaction.TransactionSubmittedTraceEvent;
 import org.palladiosimulator.blockchainsystems.core.utils.CounterMap;
@@ -24,6 +27,7 @@ import org.palladiosimulator.blockchainsystems.threesim.simulation.AttackType;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.ThreesimSimulationParameters;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ChainReorganizationOccurrence;
 import org.palladiosimulator.blockchainsystems.threesim.simulation.results.EpisodeStatus;
+import org.palladiosimulator.blockchainsystems.threesim.simulation.results.ReplicationDiagnostics;
 import org.palladiosimulator.blockchainsystems.threesim.utils.BlockchainSystemFailureLog;
 import org.palladiosimulator.blockchainsystems.threesim.utils.BlocksMap;
 import org.palladiosimulator.blockchainsystems.core.system.BlockchainSystem;
@@ -180,6 +184,13 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     // window -- not used anywhere in decision logic, event handling, or timestamp computation.
     private final int _replicationId;
 
+    // AC_fix_plan item 4: mined-block counters and the per-replication diagnostics, frozen once at
+    // termination (snapshotRoundDiagnostics) so that nothing after the last processed time slice
+    // can change them.
+    private long _totalBlocksMined = 0;
+    private long _attackerBlocksMined = 0;
+    private ReplicationDiagnostics _replicationDiagnostics = null;
+
     public ThreesimSimulationMonitor(
             LongestChainExceededMaxLengthCondition maxBlockchainLengthCondition,
             double failureThroughputThreshold,
@@ -265,6 +276,8 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
                 _forkedBlocks.addNodeToBlock(block, logOrigin.getId(), e.getOccurrenceTime());
             }
             _blocksProposedPerNode.increment(logOrigin.getId());
+            _totalBlocksMined++;
+            if (isAttacker(block.getOriginId())) _attackerBlocksMined++;
             _minedBlockActualSizes.add(block.getSize());
             _minedBlockTransactionCounts.add(block.getTransactions().size());
 
@@ -353,10 +366,21 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
         // the wait by advancing _lastReorgTimestamp, so this checks the gap since the MOST
         // RECENT one, not the first. Falls through to the existing maxAllowedBlockchainLength
         // check below as a backstop if quiescence is never reached.
+        //
+        // End rule (AC_fix_plan item 2, decisions Q2/Q3): the quiet window alone is not enough --
+        // the attacker must also not still hold a private branch that started at or before the
+        // last reorganization (unpublished blocks, an open contest or a trailing deficit of that
+        // branch). A branch started after the last reorganization is a new attempt and does not
+        // hold the round open. If the cap is reached first, the round is unresolved, as before.
         if (!_chainReorganizations.isEmpty()) {
             long quiescenceWindow = (long) (0.5 * _simulationParameters.getBlockInterval());
-            if (_lastEventTimestamp - _lastReorgTimestamp >= quiescenceWindow) {
+            // Outcome agreement is evaluated last (short-circuit), only once the window and branch
+            // conditions already hold, because it walks every honest node's canonical chain.
+            if (_lastEventTimestamp - _lastReorgTimestamp >= quiescenceWindow
+                    && !attackerHoldsRoundOpen()
+                    && countHonestOutcomeDisagreement() == 0) {
                 _quiescenceReached = true;
+                snapshotRoundDiagnostics();
                 return true;
             }
         }
@@ -377,9 +401,15 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
 
             if (reachedDepth) {
                 _quiescenceReached = true;
+                snapshotRoundDiagnostics();
                 return true;
             }
         }
+
+        // Snapshot BEFORE the clear below, so that honestOutcomeDisagreementAtEnd still sees X in an
+        // unresolved round. Every other snapshot field is unaffected by the order: the round is
+        // UNRESOLVED either way (_quiescenceReached stays false), so the depth fields are null.
+        if (maxExceeded) snapshotRoundDiagnostics();
 
         if (maxExceeded && !_chainReorganizations.isEmpty()) {
             // Cap reached before quiescence was ever achieved (reorgs kept resetting the wait):
@@ -570,6 +600,86 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
         return depth;
     }
 
+    // Builds the per-replication diagnostics once, at the moment shouldTerminate() returns true
+    // (quiescence, RACE depth, or cap). getEpisodeStatus() is final by then: _quiescenceReached is
+    // set before this call, and the cap branch has already cleared _chainReorganizations.
+    private void snapshotRoundDiagnostics() {
+        if (_replicationDiagnostics != null) return;
+        long[] network = new long[4];
+        long[] attacker = new long[4];
+        for (BlockchainSystemNode node : _nodes) {
+            if (!(node.getBlockPropagationStrategy() instanceof BlockPropagationStrategy bps)) continue;
+            long[] c = {bps.getDuplicateBodiesDroppedChainOrPool(), bps.getDuplicateBodiesDroppedKnownSetOnly(),
+                    bps.getDuplicateInvsIgnoredChainOrPool(), bps.getDuplicateInvsIgnoredKnownSetOnly()};
+            boolean isAtk = isAttacker(node.getId());
+            for (int i = 0; i < 4; i++) {
+                network[i] += c[i];
+                if (isAtk) attacker[i] += c[i];
+            }
+        }
+        long schedulesWhilePendingNetwork = 0, schedulesWhilePendingAttacker = 0;
+        for (BlockchainSystemNode node : _nodes) {
+            if (!(node.getMiningProcess() instanceof MiningProcessImpl mp)) continue;
+            schedulesWhilePendingNetwork += mp.getSchedulesWhilePending();
+            if (isAttacker(node.getId())) schedulesWhilePendingAttacker += mp.getSchedulesWhilePending();
+        }
+        HonestAdoptionDepths depths = computeHonestAdoptionDepths();
+        _replicationDiagnostics = new ReplicationDiagnostics(
+                _attackerBlocksMined,
+                _totalBlocksMined,
+                getUnpublishedAttackerBlockCount(),
+                attackerHoldsRoundOpen(),
+                network[0], network[1], network[2], network[3],
+                attacker[0], attacker[1], attacker[2], attacker[3],
+                depths.max(), depths.median(), depths.nodesWithAdoptionReorg(), depths.honestNodeCount(),
+                countHonestOutcomeDisagreement(),
+                getDroppedUnpublishableAttackerBlockCount(),
+                _lastEventTimestamp,
+                schedulesWhilePendingAttacker,
+                schedulesWhilePendingNetwork);
+    }
+
+    /** The frozen diagnostics; built on demand if the round ended without shouldTerminate() (event queue empty). */
+    public ReplicationDiagnostics getReplicationDiagnostics() {
+        if (_replicationDiagnostics == null) snapshotRoundDiagnostics();
+        return _replicationDiagnostics;
+    }
+
+    // Q2/Q3 end-rule test across all attacker nodes (live behaviour state; shouldTerminate() runs
+    // on the round's single event thread between time slices). Behaviours that do not implement
+    // UnpublishedBlockCounter (honest) never hold the round open.
+    private boolean attackerHoldsRoundOpen() {
+        for (BlockchainSystemNode node : _nodes) {
+            if (isAttacker(node.getId()) && node.getBehavior() instanceof UnpublishedBlockCounter counter
+                    && counter.holdsRoundOpen(_lastReorgTimestamp)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Hidden attacker blocks dropped as unpublishable (AD 5.5), summed over attacker nodes. */
+    public long getDroppedUnpublishableAttackerBlockCount() {
+        long sum = 0;
+        for (BlockchainSystemNode node : _nodes) {
+            if (isAttacker(node.getId()) && node.getBehavior() instanceof UnpublishedBlockCounter counter) {
+                sum += counter.getDroppedUnpublishableBlockCount();
+            }
+        }
+        return sum;
+    }
+
+    /** Unpublished attacker blocks right now, summed over attacker nodes (any branch). */
+    public int getUnpublishedAttackerBlockCount() {
+        int sum = 0;
+        for (BlockchainSystemNode node : _nodes) {
+            if (isAttacker(node.getId()) && node.getBehavior() instanceof UnpublishedBlockCounter counter) {
+                sum += counter.getUnpublishedBlockCount();
+            }
+        }
+        return sum;
+    }
+
     private boolean isAttacker(String originId) {
         return originId != null && _simulationParameters.getAttackerNodeIds().contains(originId);
     }
@@ -753,78 +863,153 @@ public class ThreesimSimulationMonitor implements SimulationMonitor {
     // on the canonical chain once the round has converged. An attacker block that was simply
     // appended on top of the existing tip without ever winning a contested fork does not count --
     // that is FAILURE, not SUCCESS, however far up the chain it sits.
+    // SUCCESS iff the shared helper finds a surviving attacker block S on the witness's canonical
+    // chain -- the same condition as before (some block of X on that chain), now stated through
+    // the one helper that also gives S to getSurvivingAttackerBlockHash() and
+    // getDecisiveAttackerReorg(), so all of them refer to the same block.
     public EpisodeStatus getEpisodeStatus() {
         if (!_quiescenceReached) return EpisodeStatus.UNRESOLVED;
-
-        Set<String> displacingAttackerBlockHashes = new HashSet<>();
-        for (ChainReorganizationOccurrence occurrence : _chainReorganizations) {
-            for (ChainReorganizedTraceEvent.ChainBlock chainBlock : occurrence.getEvent().getReplacingChainBlocks()) {
-                if (isAttacker(chainBlock.getBlock().getOriginId())) {
-                    displacingAttackerBlockHashes.add(chainBlock.getBlock().getHash());
-                }
-            }
-        }
-        if (displacingAttackerBlockHashes.isEmpty()) return EpisodeStatus.FAILURE;
-
-        // Any node's local view is a valid witness for "the" canonical chain at quiescence --
-        // by design all nodes converge once the network has gone quiet -- but _nodes is picked
-        // deterministically (insertion-ordered LinkedHashSet, see BlockchainSystem._nodes) rather
-        // than via arbitrary iteration, consistent with this codebase's determinism conventions.
-        BlockchainSystemNode representativeNode = _nodes.iterator().next();
-        Block current = representativeNode.getBlockchain().getPreferredTipOfLongestChains();
-        while (current != null) {
-            if (displacingAttackerBlockHashes.contains(current.getHash())) {
-                return EpisodeStatus.SUCCESS;
-            }
-            String previousHash = current.getPreviousHash();
-            current = previousHash != null ? representativeNode.getBlockchain().getBlock(previousHash) : null;
-        }
-        return EpisodeStatus.FAILURE;
+        return findSurvivingAttackerBlockOnWitness() != null ? EpisodeStatus.SUCCESS : EpisodeStatus.FAILURE;
     }
 
-    // Item: chainReorganizationDepths/attackerCausedChainReorganizationDepths redefinition.
-    // Identifies WHICH recorded reorg occurrence produced the surviving attacker-origin block
-    // that getEpisodeStatus() (untouched, called as-is below) already used to decide SUCCESS --
-    // this method never independently re-decides success/failure, it only identifies which
-    // occurrence once that verdict is already known. Necessarily mirrors getEpisodeStatus()'s own
-    // hash-matching criterion and canonical-chain walk (that method discards which specific hash
-    // matched, and cannot be modified to retain it -- out of scope for this task), so this is
-    // intentionally coupled to getEpisodeStatus()'s definition of "attacker-caused displacement":
-    // if that definition ever changes, this method needs the same change alongside it.
-    //
-    // When multiple recorded reorgs' replacing chains include the same surviving hash (a later
-    // reorg's walk-back can re-traverse blocks an earlier reorg already introduced, if the later
-    // reorg's common ancestor sits before the earlier reorg's new tip), the EARLIEST occurrence
-    // that introduced the hash is reported as decisive, not the one closest to the tip -- that
-    // earlier occurrence is the one that actually put the block on the chain; a later occurrence
-    // re-listing the same hash is just re-confirming it was already there, not a new event. This
-    // matches "the decisive win" reading of D5's success definition.
-    public ChainReorganizationOccurrence getDecisiveAttackerReorg() {
-        if (getEpisodeStatus() != EpisodeStatus.SUCCESS) return null;
+    // X: every attacker-origin block that ever appeared in a recorded reorganization's replacing
+    // chain (at any node). Membership-only use.
+    private Set<String> displacingAttackerBlockHashes() {
+        Set<String> displacing = new HashSet<>();
+        for (ChainReorganizationOccurrence occurrence : _chainReorganizations) {
+            for (ChainReorganizedTraceEvent.ChainBlock chainBlock : occurrence.getEvent().getReplacingChainBlocks()) {
+                if (isAttacker(chainBlock.getBlock().getOriginId())) displacing.add(chainBlock.getBlock().getHash());
+            }
+        }
+        return displacing;
+    }
 
-        Map<String, ChainReorganizationOccurrence> hashToEarliestOccurrence = new LinkedHashMap<>();
+    // The single definition of the surviving attacker block S (decision Q9 and option (b) of
+    // AF_witness_check): among the blocks of X on the canonical chain of the status witness (the
+    // lowest-index honest node), the one closest to genesis. Null if no block of X is on that
+    // chain. Node 0 is not used: it is the attacker in the campaign models, and the attacker does
+    // not store honest blocks while it holds a hidden lead, so its chain is not the network's view.
+    private String findSurvivingAttackerBlockOnWitness() {
+        Set<String> displacing = displacingAttackerBlockHashes();
+        if (displacing.isEmpty()) return null;
+        BlockchainSystemNode witness = getStatusWitnessNode();
+        Block current = witness.getBlockchain().getPreferredTipOfLongestChains();
+        String survivor = null;
+        while (current != null) {
+            if (displacing.contains(current.getHash())) survivor = current.getHash();
+            String previousHash = current.getPreviousHash();
+            current = previousHash != null ? witness.getBlockchain().getBlock(previousHash) : null;
+        }
+        return survivor;
+    }
+
+    // Outcome agreement (end rule): each honest node's outcome is whether its canonical chain
+    // contains any block of X. Returns the number of honest nodes whose outcome differs from the
+    // witness's; quiescence requires 0. With X empty every outcome is "no", so this is 0.
+    private int countHonestOutcomeDisagreement() {
+        Map<String, Long> xHeights = new HashMap<>();
         for (ChainReorganizationOccurrence occurrence : _chainReorganizations) {
             for (ChainReorganizedTraceEvent.ChainBlock chainBlock : occurrence.getEvent().getReplacingChainBlocks()) {
                 if (isAttacker(chainBlock.getBlock().getOriginId())) {
-                    hashToEarliestOccurrence.putIfAbsent(chainBlock.getBlock().getHash(), occurrence);
+                    xHeights.putIfAbsent(chainBlock.getBlock().getHash(), chainBlock.getHeight());
                 }
             }
         }
+        if (xHeights.isEmpty()) return 0;
+        long minHeight = Long.MAX_VALUE;
+        for (long h : xHeights.values()) minHeight = Math.min(minHeight, h);
 
-        BlockchainSystemNode representativeNode = _nodes.iterator().next();
-        Block current = representativeNode.getBlockchain().getPreferredTipOfLongestChains();
-        ChainReorganizationOccurrence decisive = null;
-        while (current != null) {
-            ChainReorganizationOccurrence candidate = hashToEarliestOccurrence.get(current.getHash());
-            if (candidate != null) {
-                // Keep walking toward genesis: a later match overwrites an earlier (closer-to-tip)
-                // one, so the final value is the occurrence closest to genesis among all that match
-                // -- i.e. the earliest one, per the reasoning above.
-                decisive = candidate;
-            }
-            String previousHash = current.getPreviousHash();
-            current = previousHash != null ? representativeNode.getBlockchain().getBlock(previousHash) : null;
+        boolean witnessOutcome = canonicalChainContainsAny(getStatusWitnessNode(), xHeights.keySet(), minHeight);
+        int differing = 0;
+        for (BlockchainSystemNode node : _nodes) {
+            if (isAttacker(node.getId())) continue;
+            if (canonicalChainContainsAny(node, xHeights.keySet(), minHeight) != witnessOutcome) differing++;
         }
-        return decisive;
+        return differing;
+    }
+
+    // Walks the node's canonical chain from its preferred tip toward genesis, stopping below the
+    // lowest height any block of X has (nothing further down can be in X).
+    private static boolean canonicalChainContainsAny(BlockchainSystemNode node, Set<String> hashes, long minHeight) {
+        var chain = node.getBlockchain();
+        Block current = chain.getPreferredTipOfLongestChains();
+        long height = chain.getPositionOfBlock(current);
+        while (current != null && height >= minHeight) {
+            if (hashes.contains(current.getHash())) return true;
+            String previousHash = current.getPreviousHash();
+            current = previousHash != null ? chain.getBlock(previousHash) : null;
+            height--;
+        }
+        return false;
+    }
+
+    // AC_fix_plan item 3.3 / Q9: the surviving attacker block S (see the helper above). Null
+    // unless SUCCESS.
+    public String getSurvivingAttackerBlockHash() {
+        if (!_quiescenceReached) return null;
+        return findSurvivingAttackerBlockOnWitness();
+    }
+
+    /** Per-node adoption depths of S (AC_fix_plan item 3.3). Depth fields are null unless SUCCESS. */
+    public record HonestAdoptionDepths(Long max, Double median, Integer nodesWithAdoptionReorg, int honestNodeCount) { }
+
+    // For every honest node: the depth (newCanonicalTipHeight - commonAncestorHeight) of the
+    // EARLIEST reorganization recorded at that node whose replacing chain contains S. Uses the raw
+    // per-node occurrences (ChainReorganizationOccurrence.getNodeId(), time-ordered); the
+    // serializers' ChainReorganizationDeduplicator, which drops node identity, is not involved.
+    // Honest nodes that hold S without any reorganization are counted in honestNodeCount only.
+    // Median of an even count = mean of the two middle values (Q5).
+    public HonestAdoptionDepths computeHonestAdoptionDepths() {
+        int honestNodeCount = 0;
+        for (BlockchainSystemNode node : _nodes) if (!isAttacker(node.getId())) honestNodeCount++;
+        String survivor = getSurvivingAttackerBlockHash();
+        if (survivor == null) return new HonestAdoptionDepths(null, null, null, honestNodeCount);
+
+        Map<String, Long> firstDepthPerNode = new LinkedHashMap<>();
+        for (ChainReorganizationOccurrence occurrence : _chainReorganizations) {
+            String nodeId = occurrence.getNodeId();
+            if (isAttacker(nodeId) || firstDepthPerNode.containsKey(nodeId)) continue;
+            ChainReorganizedTraceEvent e = occurrence.getEvent();
+            for (ChainReorganizedTraceEvent.ChainBlock chainBlock : e.getReplacingChainBlocks()) {
+                if (survivor.equals(chainBlock.getBlock().getHash())) {
+                    firstDepthPerNode.put(nodeId, e.getNewCanonicalTipHeight() - e.getCommonAncestorHeight());
+                    break;
+                }
+            }
+        }
+        if (firstDepthPerNode.isEmpty()) return new HonestAdoptionDepths(null, null, 0, honestNodeCount);
+
+        List<Long> depths = new ArrayList<>(firstDepthPerNode.values());
+        depths.sort(null);
+        int n = depths.size();
+        double median = (n % 2 == 1) ? depths.get(n / 2) : (depths.get(n / 2 - 1) + depths.get(n / 2)) / 2.0;
+        return new HonestAdoptionDepths(depths.get(n - 1), median, n, honestNodeCount);
+    }
+
+    // Q9 witness: the first honest node in _nodes. _nodes is ordered by the stable topology index
+    // (ThreesimBlockchainSystemFactory sorts by it), so this is the lowest-index honest node.
+    // Falls back to the first node only if every node is an attacker.
+    private BlockchainSystemNode getStatusWitnessNode() {
+        for (BlockchainSystemNode node : _nodes) {
+            if (!isAttacker(node.getId())) return node;
+        }
+        return _nodes.iterator().next();
+    }
+
+    // The recorded reorganization occurrence that defines D (chainReorganizationDepths /
+    // attackerCausedChainReorganizationDepths) in a SUCCESS round: the EARLIEST occurrence, at any
+    // node, whose replacing chain contains S -- the same S as status and the honest adoption depth
+    // fields (option (b) of AF_witness_check; previously S was looked up on node 0's chain).
+    // _chainReorganizations is in time order, so the first match is the earliest. A later
+    // occurrence re-listing S only re-confirms a block already on the chain. Null unless SUCCESS.
+    public ChainReorganizationOccurrence getDecisiveAttackerReorg() {
+        String survivor = getSurvivingAttackerBlockHash();
+        if (survivor == null) return null;
+        for (ChainReorganizationOccurrence occurrence : _chainReorganizations) {
+            for (ChainReorganizedTraceEvent.ChainBlock chainBlock : occurrence.getEvent().getReplacingChainBlocks()) {
+                if (survivor.equals(chainBlock.getBlock().getHash())) return occurrence;
+            }
+        }
+        return null; // unreachable: S is taken from these same occurrences
     }
 }
