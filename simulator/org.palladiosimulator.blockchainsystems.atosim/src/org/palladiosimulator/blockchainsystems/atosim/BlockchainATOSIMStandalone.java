@@ -112,7 +112,11 @@ public class BlockchainATOSIMStandalone {
         finalResult.put("simulationTime", stopTime - startTime);
         finalResult.put("memoryUsed", memoryUsed);
 
+        // serializeNulls: keep null-valued keys (e.g. replicationDiagnostics' depth fields in failure and
+        // unresolved rounds). Without it Gson drops them, and the per-round objects lose keys the
+        // serializer writes on purpose.
         String jsonResult = new GsonBuilder()
+                .serializeNulls()
                 .create()
                 .toJson(finalResult);
 

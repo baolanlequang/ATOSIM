@@ -53,11 +53,17 @@ public class ATOSIMSimulationFactory implements Simulation {
 
         String attackModelFilePath = configuration.getOrDefault("attackModelFilePath", "");
 
-        BlockchainSystem designBlockchainSystem =
-                loader.load(simulationParameters.getBlockchainSystemModelFilePath(), attackModelFilePath);
+        // attack_strategy = none: honest-only run. No attack model is loaded and the attack
+        // parameters are forced to "no attacker" (see getThreesimSimulationParametersFromConfiguration).
+        boolean honestOnly = ATOSIMSimulator.isHonestOnlyStrategy(configuration.get("attack_strategy"));
+
+        BlockchainSystem designBlockchainSystem = honestOnly
+                ? loader.loadWithoutAttackModel(simulationParameters.getBlockchainSystemModelFilePath())
+                : loader.load(simulationParameters.getBlockchainSystemModelFilePath(), attackModelFilePath);
 
         ThreesimSimulationParameters threesimSimulationParameters =
-                getThreesimSimulationParametersFromConfiguration(configuration, loader.getAttackScenario());
+                getThreesimSimulationParametersFromConfiguration(
+                        configuration, honestOnly ? null : loader.getAttackScenario(), honestOnly);
 
         ThreesimBlockchainSystemFactory blockchainSystemFactory =
                 createBlockchainSystemFactory(designBlockchainSystem);
@@ -103,7 +109,7 @@ public class ATOSIMSimulationFactory implements Simulation {
     }
 
     private ThreesimSimulationParameters getThreesimSimulationParametersFromConfiguration(
-            Map<String, String> configuration, AttackScenario attackScenario) {
+            Map<String, String> configuration, AttackScenario attackScenario, boolean honestOnly) {
 
         double failureThroughputThreshold =
                 Double.parseDouble(configuration.getOrDefault("failureThroughputThreshold", "1.0"));
@@ -136,7 +142,16 @@ public class ATOSIMSimulationFactory implements Simulation {
         long deltaA;
         long deltaB;
 
-        if (attackScenario != null) {
+        if (honestOnly) {
+            // Every node honest: no attacker ids, no attacker power share, and neither the CSV's
+            // attacker_hash_power/tie_breaking_parameter nor an attack_type override is read.
+            attackType = AttackType.NONE;
+            attackerNodeIds = Collections.emptySet();
+            attackerHashPower = 0.0;
+            gamma = 0.0;
+            deltaA = 0L;
+            deltaB = 0L;
+        } else if (attackScenario != null) {
             Attack attack = attackScenario.getAttack();
             attackType = mapAttackType(attack);
             attackerNodeIds = attackScenario.getAttackers().stream()

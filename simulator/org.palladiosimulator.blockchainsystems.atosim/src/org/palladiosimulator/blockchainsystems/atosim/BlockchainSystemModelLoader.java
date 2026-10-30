@@ -51,6 +51,19 @@ public class BlockchainSystemModelLoader {
     }
 
     public BlockchainSystem load(String systemModelUri, String attackModelFilePath) {
+        return load(systemModelUri, attackModelFilePath, true);
+    }
+
+    /**
+     * Loads only the system model, for honest-only runs (attack_strategy = none). Unlike
+     * {@link #load(String)}, this never falls back to a {@code <baseName>.attackmodel} lying next to
+     * the system model, so {@link #getAttackScenario()} always returns {@code null} afterwards.
+     */
+    public BlockchainSystem loadWithoutAttackModel(String systemModelUri) {
+        return load(systemModelUri, null, false);
+    }
+
+    private BlockchainSystem load(String systemModelUri, String attackModelFilePath, boolean attackModelAllowed) {
         Path modelPath = Paths.get(systemModelUri).toAbsolutePath();
         Path folderPath = modelPath.getParent();
         String folderName = folderPath.getFileName().toString();
@@ -60,7 +73,7 @@ public class BlockchainSystemModelLoader {
         Path attackModelPath = (attackModelFilePath != null && !attackModelFilePath.isBlank())
                 ? Paths.get(attackModelFilePath).toAbsolutePath()
                 : folderPath.resolve(baseName + ".attackmodel");
-        boolean hasAttackModel = java.nio.file.Files.exists(attackModelPath);
+        boolean hasAttackModel = attackModelAllowed && java.nio.file.Files.exists(attackModelPath);
 
         ResourceSet resourceSet = new ResourceSetImpl();
         XMIResourceFactoryImpl xmiFactory = new XMIResourceFactoryImpl();

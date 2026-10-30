@@ -15,7 +15,8 @@ Each invariant's result includes which of these three cases it is, rather
 than silently treating a schema check as a full verification.
 
 Usage:
-    # Per-file invariants (2, 4, 6, 7, 8; partial 1, 3; N/A 5) on each file:
+    # Per-file invariants (1, 2, 3, 4, 6, 7, 8, 11, 12, 13; N/A 5) on each file, then check 3b
+    # (check 3 passes at every alpha value among the inputs; needs files of two alpha values):
     python invariant_checker.py single result_run_A.json [result_run_B.json ...]
 
     # Everything: per-file checks on each input, plus cross-file topology
@@ -51,30 +52,45 @@ def sim_result(doc):
 # ---------------------------------------------------------------------------
 # Invariant 1: total block-production rate equals 1/tau_B
 # ---------------------------------------------------------------------------
-def check_invariant_1(doc):
-    """PARTIAL: only the configured rate parameter is checkable from JSON.
+def _mining_rates(doc):
+    """Pooled mining counts and simulated exposure from replicationDiagnostics, or None if the
+    file predates simulatedDurationMs. Returns (attacker_blocks, total_blocks, duration_ms, block_interval_ms)."""
+    sr = sim_result(doc)
+    diags = sr.get("replicationDiagnostics")
+    if not isinstance(diags, list) or not diags or any(not isinstance(d, dict) or "simulatedDurationMs" not in d for d in diags):
+        return None
+    bci = sr["threesimSimulationParameters"].get("blockInterval")
+    return (sum(d["attackerBlocksMined"] for d in diags), sum(d["totalBlocksMined"] for d in diags),
+            sum(d["simulatedDurationMs"] for d in diags), bci)
 
-    The full invariant needs (a) a raw "blocks mined" count and (b) the
-    simulated elapsed time per round, to compute an observed rate and
-    compare it against 1/blockInterval. Neither is serialized -- the
-    closest proxies are "Total Block Rewards" (CONFIRMED blocks, which
-    requires reaching confirmationDepth and so badly undercounts given
-    rounds usually terminate at first-reorg/quiescence well before that)
-    and simulationTime/startSimulationTime/stopSimulationTime (real JVM
-    wall-clock time, not simulated time). Forcing a rate computation out of
-    either would be a proxy weak enough to be misleading, not a check --
-    reporting PARTIAL (config sanity only) rather than inventing one.
+
+def _rate_interval(n, duration_ms, bci, z=2.576):
+    """Blocks per block interval with an approximate Poisson interval (normal approximation, z=2.576: 99%)."""
+    r = n / duration_ms * bci
+    h = z * (n ** 0.5) / duration_ms * bci
+    return r, r - h, r + h
+
+
+def check_invariant_1(doc):
+    """Network-wide block production rate equals 1 / tau_B.
+
+    Pooled over rounds: total rate = sum(totalBlocksMined) / sum(simulatedDurationMs) x blockInterval, in
+    blocks per block interval. simulatedDurationMs ends at the moment the round's end was decided, the
+    same moment up to which blocks are counted, so this ratio estimates the Poisson rate without the
+    stopping-rule bias of a per-round block ratio. PASS if 1.0 lies inside the approximate 99% Poisson
+    interval. N/A for files written before simulatedDurationMs existed.
     """
-    params = sim_result(doc)["threesimSimulationParameters"]
-    block_interval = params.get("blockInterval")
-    ok = isinstance(block_interval, (int, float)) and block_interval > 0
+    m = _mining_rates(doc)
+    if m is None:
+        return {"status": NA, "evidence": "replicationDiagnostics.simulatedDurationMs absent (older result file)", "note": None}
+    _, n_tot, dur, bci = m
+    if not dur or not bci:
+        return {"status": FAIL, "evidence": f"duration {dur} ms, blockInterval {bci}", "note": "no exposure to estimate a rate"}
+    r, lo, hi = _rate_interval(n_tot, dur, bci)
     return {
-        "status": PARTIAL if ok else FAIL,
-        "evidence": f"threesimSimulationParameters.blockInterval={block_interval}",
-        "note": ("Only checked that blockInterval (tau_B) is a positive configured "
-                 "value. No raw mined-block count or per-round simulated-elapsed-time "
-                 "field exists in current JSON output to compute an observed rate "
-                 "against it -- full check needs new instrumentation."),
+        "status": PASS if lo <= 1.0 <= hi else FAIL,
+        "evidence": f"total rate {r:.4f} blocks per block interval, 99% interval [{lo:.4f}, {hi:.4f}] ({n_tot} blocks over {dur} ms, tau_B {bci} ms)",
+        "note": None if lo <= 1.0 <= hi else "configured rate 1.0 outside the 99% interval",
     }
 
 
@@ -107,25 +123,28 @@ def check_invariant_2(doc):
 # Invariant 3: honest power sums to 1-alpha
 # ---------------------------------------------------------------------------
 def check_invariant_3(doc):
-    """PARTIAL: only the configured alpha is checkable from JSON.
+    """Attacker mining share equals alpha (and honest nodes together 1 - alpha).
 
-    The real invariant is about AttackAwareResourcePowerCalculator's
-    realized per-node power distribution summing correctly -- that
-    calculator's per-node output isn't serialized anywhere in JSON, only
-    the single configured attackerHashPower scalar is. 1 - alpha for a
-    scalar alpha is a tautology, not an independent check of the realized
-    distribution; reporting PARTIAL rather than dressing up the tautology
-    as a pass.
+    Pooled over rounds: attacker rate = sum(attackerBlocksMined) / sum(simulatedDurationMs) x blockInterval.
+    PASS if the configured alpha (threesimSimulationParameters.attackerHashPower) lies inside the approximate
+    99% Poisson interval of the attacker rate. The honest rate (total minus attacker blocks) and its interval
+    are reported as evidence. N/A for files written before simulatedDurationMs existed.
     """
-    params = sim_result(doc)["threesimSimulationParameters"]
-    alpha = params.get("attackerHashPower")
-    ok = isinstance(alpha, (int, float)) and 0.0 <= alpha <= 1.0
+    m = _mining_rates(doc)
+    alpha = sim_result(doc)["threesimSimulationParameters"].get("attackerHashPower")
+    if m is None:
+        return {"status": NA, "evidence": "replicationDiagnostics.simulatedDurationMs absent (older result file)", "note": None}
+    n_att, n_tot, dur, bci = m
+    if not dur or not bci or not isinstance(alpha, (int, float)):
+        return {"status": FAIL, "evidence": f"duration {dur} ms, blockInterval {bci}, alpha {alpha}", "note": "cannot estimate"}
+    r, lo, hi = _rate_interval(n_att, dur, bci)
+    rh, loh, hih = _rate_interval(n_tot - n_att, dur, bci)
+    ok = lo <= alpha <= hi
     return {
-        "status": PARTIAL if ok else FAIL,
-        "evidence": f"threesimSimulationParameters.attackerHashPower={alpha}",
-        "note": ("Only checked alpha is a valid probability. Realized per-node power "
-                 "(AttackAwareResourcePowerCalculator's output) is not serialized -- "
-                 "full check needs new instrumentation exposing per-node resource power."),
+        "status": PASS if ok else FAIL,
+        "evidence": (f"attacker rate {r:.4f}, 99% interval [{lo:.4f}, {hi:.4f}] vs alpha {alpha}; "
+                     f"honest rate {rh:.4f}, 99% interval [{loh:.4f}, {hih:.4f}] vs 1 - alpha {1 - alpha:.4f}"),
+        "note": None if ok else "configured alpha outside the 99% interval of the attacker rate",
     }
 
 
@@ -288,16 +307,197 @@ def check_invariant_8(doc):
     }
 
 
+# ---------------------------------------------------------------------------
+# Invariant 11: replicationDiagnostics consistency (AC_fix_plan item 4)
+# ---------------------------------------------------------------------------
+DIAG_KEYS = [
+    "attackerBlocksMined", "totalBlocksMined", "unpublishedAttackerBlocksAtEnd", "attackerHoldsRoundOpenAtEnd",
+    "duplicateBodiesDroppedChainOrPoolNetwork", "duplicateBodiesDroppedKnownSetOnlyNetwork",
+    "duplicateInvsIgnoredChainOrPoolNetwork", "duplicateInvsIgnoredKnownSetOnlyNetwork",
+    "duplicateBodiesDroppedChainOrPoolAttacker", "duplicateBodiesDroppedKnownSetOnlyAttacker",
+    "duplicateInvsIgnoredChainOrPoolAttacker", "duplicateInvsIgnoredKnownSetOnlyAttacker",
+    "honestAdoptionDepthMax", "honestAdoptionDepthMedian", "honestNodesWithAdoptionReorg", "honestNodeCount",
+]
+
+
+def check_invariant_11(doc):
+    """Per-round hard checks on the replicationDiagnostics array.
+
+    - one non-null object per round, with every key present (honestOutcomeDisagreementAtEnd only
+      from the outcome-agreement build on, so it is checked when present);
+    - outcome agreement: a resolved round has honestOutcomeDisagreementAtEnd == 0 (every honest
+      node agrees with the witness on whether its chain holds an attacker block of X);
+    - end rule (decisions Q2/Q3, branch-start variant): a resolved round (success/failure) never
+      ends while the attacker still holds the round open, i.e. attackerHoldsRoundOpenAtEnd is
+      false. Unpublished attacker blocks at the end are allowed in a resolved round when they
+      belong to a branch started after the last reorganization (a new attempt), so
+      unpublishedAttackerBlocksAtEnd == 0 is NOT required;
+    - 0 <= attackerBlocksMined <= totalBlocksMined; all duplicate counters >= 0;
+    - depth fields: null unless status == success; honestAdoptionDepthMax >= 1 exactly when
+      honestNodesWithAdoptionReorg >= 1; honestAdoptionDepthMedian <= honestAdoptionDepthMax;
+      honestNodesWithAdoptionReorg <= honestNodeCount;
+    - miningSchedulesWhilePendingAttacker/Network (when present, from the AH fix on): >= 0 and
+      attacker <= network;
+    - honestNodesWithAdoptionReorg >= 1 whenever D (attackerCausedChainReorganizationDepths) > 0:
+      D and the adoption depths refer to the same surviving block S, so a positive D needs at least
+      one honest node whose chain received S through a recorded reorganization. (Not guaranteed by
+      construction: D's occurrence may be recorded at an attacker node only.)
+    N/A for result files written before the field existed.
+    """
+    sr = sim_result(doc)
+    diags = sr.get("replicationDiagnostics")
+    status_list = sr.get("status")
+    d_list = sr.get("attackerCausedChainReorganizationDepths") or []
+    if diags is None:
+        return {"status": NA, "evidence": "replicationDiagnostics absent (older result file)", "note": None}
+    if not isinstance(status_list, list) or len(diags) != len(status_list):
+        return {"status": FAIL, "evidence": "length mismatch with status", "note": None}
+    bad = []
+    for i, (d, st) in enumerate(zip(diags, status_list)):
+        if d is None or any(k not in d for k in DIAG_KEYS):
+            bad.append((i, "missing object or key")); continue
+        if st in ("success", "failure") and d["attackerHoldsRoundOpenAtEnd"]:
+            bad.append((i, "resolved round ended while the attacker held it open"))
+        if st in ("success", "failure") and d.get("honestOutcomeDisagreementAtEnd", 0) != 0:
+            bad.append((i, "resolved round ended while honest nodes disagreed on the outcome"))
+        if d.get("honestOutcomeDisagreementAtEnd", 0) < 0 or d.get("honestOutcomeDisagreementAtEnd", 0) > d["honestNodeCount"]:
+            bad.append((i, "honestOutcomeDisagreementAtEnd outside [0, honestNodeCount]"))
+        if not (0 <= d["attackerBlocksMined"] <= d["totalBlocksMined"]):
+            bad.append((i, "attackerBlocksMined outside [0, totalBlocksMined]"))
+        if any(d[k] < 0 for k in DIAG_KEYS[4:12]):
+            bad.append((i, "negative duplicate counter"))
+        if "miningSchedulesWhilePendingAttacker" in d or "miningSchedulesWhilePendingNetwork" in d:
+            sa, sn = d.get("miningSchedulesWhilePendingAttacker"), d.get("miningSchedulesWhilePendingNetwork")
+            if not isinstance(sa, int) or not isinstance(sn, int) or not (0 <= sa <= sn):
+                bad.append((i, "miningSchedulesWhilePending counters missing, negative or attacker > network"))
+        mx, med, n_with, n_honest = (d["honestAdoptionDepthMax"], d["honestAdoptionDepthMedian"],
+                                     d["honestNodesWithAdoptionReorg"], d["honestNodeCount"])
+        if st != "success":
+            if mx is not None or med is not None or n_with is not None:
+                bad.append((i, "depth fields set although status != success"))
+        else:
+            if n_with is None or (mx is not None and mx >= 1) != (n_with >= 1):
+                bad.append((i, "honestAdoptionDepthMax >= 1 does not match honestNodesWithAdoptionReorg >= 1"))
+            if mx is not None and med is not None and med > mx:
+                bad.append((i, "median above max"))
+            if n_with is not None and n_with > n_honest:
+                bad.append((i, "more nodes with an adoption reorg than honest nodes"))
+        if i < len(d_list) and d_list[i] > 0 and (n_with is None or n_with < 1):
+            bad.append((i, "D > 0 but no honest node received S through a recorded reorganization"))
+    return {
+        "status": PASS if not bad else FAIL,
+        "evidence": f"{len(diags)} rounds checked",
+        "note": None if not bad else f"{len(bad)} violation(s); first: round {bad[0][0]}: {bad[0][1]}",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Invariant 12: no attacker block dropped as unpublishable (phase 3, AD 5.5)
+# ---------------------------------------------------------------------------
+def check_invariant_12(doc):
+    """Per-round: replicationDiagnostics.droppedUnpublishableAttackerBlocks == 0.
+
+    The trail-stubborn behaviour drops a hidden block only if publishing it appended as STALE or
+    ALREADY_APPENDED (the block can never become public). After the phase-3 fix this should not
+    happen; any non-zero count is reported as FAIL so that it is investigated. N/A for result files
+    written before the field existed.
+    """
+    diags = sim_result(doc).get("replicationDiagnostics")
+    if not diags or not isinstance(diags[0], dict) or "droppedUnpublishableAttackerBlocks" not in diags[0]:
+        return {"status": NA, "evidence": "droppedUnpublishableAttackerBlocks absent (older result file)", "note": None}
+    bad = [(i, d["droppedUnpublishableAttackerBlocks"]) for i, d in enumerate(diags)
+           if d is not None and d.get("droppedUnpublishableAttackerBlocks", 0) != 0]
+    return {
+        "status": PASS if not bad else FAIL,
+        "evidence": f"{len(diags)} rounds checked",
+        "note": None if not bad else f"{len(bad)} round(s) with dropped blocks; first: round {bad[0][0]} ({bad[0][1]} dropped)",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Invariant 13: D <= honest adoption depth median <= max (AH_rate_depth_check)
+# ---------------------------------------------------------------------------
+def check_invariant_13(doc):
+    """Per success round: D <= honestAdoptionDepthMedian <= honestAdoptionDepthMax.
+
+    D is attackerCausedChainReorganizationDepths (as in checks 8 and 11): the depth of the earliest
+    recorded reorganization, at any node, whose replacing chain contains S. The honest adoption
+    depths are, per honest node, the depth of that node's earliest reorganization containing S; the
+    earliest switch is the shallowest in practice (AH), so D should not exceed their median. A
+    success round with a null median or max is reported as a violation. N/A for result files
+    written before the depth fields existed.
+    """
+    sr = sim_result(doc)
+    diags = sr.get("replicationDiagnostics")
+    status_list = sr.get("status")
+    d_list = sr.get("attackerCausedChainReorganizationDepths")
+    if not isinstance(diags, list) or not diags or not isinstance(diags[0], dict) or "honestAdoptionDepthMedian" not in diags[0]:
+        return {"status": NA, "evidence": "honest adoption depth fields absent (older result file)", "note": None}
+    if not isinstance(status_list, list) or not isinstance(d_list, list) or not (len(status_list) == len(d_list) == len(diags)):
+        return {"status": FAIL, "evidence": "length mismatch between status, D and replicationDiagnostics", "note": None}
+    bad, n_succ = [], 0
+    for i, (st, dv, d) in enumerate(zip(status_list, d_list, diags)):
+        if st != "success":
+            continue
+        n_succ += 1
+        med, mx = (d or {}).get("honestAdoptionDepthMedian"), (d or {}).get("honestAdoptionDepthMax")
+        if med is None or mx is None:
+            bad.append((i, f"D={dv}, median={med}, max={mx} (null)"))
+        elif not (dv <= med <= mx):
+            bad.append((i, f"D={dv}, median={med}, max={mx}"))
+    return {
+        "status": PASS if not bad else FAIL,
+        "evidence": f"{n_succ} success rounds checked",
+        "note": None if not bad else f"{len(bad)} violation(s); first: round {bad[0][0]}: {bad[0][1]}",
+    }
+
+
 SINGLE_FILE_CHECKS = [
     ("1. block-production rate = 1/tau_B", check_invariant_1),
     ("2. exactly one attacker controls alpha", check_invariant_2),
-    ("3. honest power sums to 1-alpha", check_invariant_3),
+    ("3. attacker mining rate = alpha (honest 1 - alpha)", check_invariant_3),
     ("4. every topology connected and bilateral", check_invariant_4),
     ("5. equal-work choices follow processing order", check_invariant_5),
     ("6. no episode ends after only one local reorg", check_invariant_6),
     ("7. unresolved episodes never encoded as failures", check_invariant_7),
     ("8. D > 0 exactly when status is successful", check_invariant_8),
+    ("11. replicationDiagnostics consistent (end rule, counts, depth fields)", check_invariant_11),
+    ("12. no attacker block dropped as unpublishable", check_invariant_12),
+    ("13. D <= honest adoption depth median <= max (success rounds)", check_invariant_13),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Invariant 3b: check 3 passes at every alpha value among the inputs (AH_rate_depth_check)
+# ---------------------------------------------------------------------------
+def check_invariant_3b(docs_and_results):
+    """Across the input files: check 3 (attacker rate = alpha, 99% interval) passes on every file, for
+    at least two distinct alpha values (the AH double-scheduling excess grew with alpha: 0.30 passed
+    while 0.45 failed). Check 3 itself is unchanged. N/A if fewer than two alpha values have a
+    rate-based check 3 result (N/A files, e.g. older ones without simulatedDurationMs, are skipped).
+    """
+    by_alpha = defaultdict(list)
+    for path, doc, results in docs_and_results:
+        r3 = results.get("3. attacker mining rate = alpha (honest 1 - alpha)")
+        if r3 is None or r3["status"] == NA:
+            continue
+        alpha = sim_result(doc)["threesimSimulationParameters"].get("attackerHashPower")
+        by_alpha[alpha].append((path, r3["status"]))
+    parts = []
+    failed = []
+    for alpha in sorted(by_alpha, key=lambda a: (a is None, a)):
+        rows = by_alpha[alpha]
+        n_pass = sum(1 for _, st in rows if st == PASS)
+        parts.append(f"alpha {alpha}: {n_pass}/{len(rows)} files pass")
+        failed += [(alpha, p) for p, st in rows if st != PASS]
+    if len(by_alpha) < 2:
+        return {"status": NA, "evidence": "; ".join(parts) or "no file with a rate-based check 3",
+                "note": "needs files of at least two alpha values"}
+    return {
+        "status": PASS if not failed else FAIL,
+        "evidence": "; ".join(parts),
+        "note": None if not failed else f"first failing file: alpha {failed[0][0]}: {failed[0][1]}",
+    }
 
 
 def run_single(path):
@@ -401,7 +601,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    single = sub.add_parser("single", help="Run per-file invariants (1-8) on each input")
+    single = sub.add_parser("single", help="Run per-file invariants (1-8, 11-13) on each input, plus 3b across them")
     single.add_argument("files", nargs="+")
 
     allcmd = sub.add_parser("all", help="Run per-file invariants on each input, plus cross-file topology comparisons (9, 10)")
@@ -411,11 +611,20 @@ def main():
 
     any_fail = False
     if args.command in ("single", "all"):
+        collected = []
         for path in args.files:
-            _, results = run_single(path)
+            doc, results = run_single(path)
             print_single_report(path, results)
+            collected.append((path, doc, results))
             if any(r["status"] == FAIL for r in results.values()):
                 any_fail = True
+        r3b = check_invariant_3b(collected)
+        print("\n=== across files ===")
+        print(f"  [{r3b['status']:7s}] 3b. check 3 passes at every alpha value  -- {r3b['evidence']}")
+        if r3b.get("note"):
+            print(f"            {r3b['note']}")
+        if r3b["status"] == FAIL:
+            any_fail = True
 
     if args.command == "all" and len(args.files) >= 2:
         run_cross_file(args.files)

@@ -110,17 +110,21 @@ public class ATOSIMSimulator {
                 // Copy CSV parameters as-is
                 config.putAll(row);
 
-                // CLI --attack-type overrides JSON and CSV values
-                if (cliAttackType != null) {
+                // attack_strategy = none: honest-only run, no attack model is resolved or loaded
+                // (see ATOSIMSimulationFactory). Every other strategy takes the unchanged path.
+                boolean honestOnly = isHonestOnlyStrategy(row.get("attack_strategy"));
+
+                // CLI --attack-type overrides JSON and CSV values (never for an honest-only row)
+                if (cliAttackType != null && !honestOnly) {
                     config.put("attack_type", cliAttackType);
                 }
 
                 Path systemModelPath = pickSystemModelPath(testmodelsDir, row.get("system_config_id"));
                 config.put("blockchainSystemModelFilePath", systemModelPath.toString());
 
-                Path attackModelPath = pickAttackModelPath(
+                Path attackModelPath = honestOnly ? null : pickAttackModelPath(
                         testmodelsDir, row.get("attack_strategy"), row.get("attacker_config_id"));
-                config.put("attackModelFilePath", attackModelPath.toString());
+                config.put("attackModelFilePath", honestOnly ? "" : attackModelPath.toString());
 
                 // runId == config_id (not a sequential counter) so that separate
                 // Slurm array tasks each writing result_run_<runId>.json never collide.
@@ -128,8 +132,16 @@ public class ATOSIMSimulator {
 
                 System.out.println("\n▶ Run " + runId + " | config_id=" + configId);
                 System.out.println("   System model: " + systemModelPath.toAbsolutePath());
-                System.out.println("   Attack model: " + attackModelPath.toAbsolutePath());
-                System.out.println("   Attack type  = " + config.getOrDefault("attack_type", "SELFISH_MINING (default)"));
+                if (honestOnly) {
+                    System.out.println("   Attack model: none (attack_strategy=none, honest-only run)");
+                    System.out.println("   Attack type  = NONE");
+                    if (cliAttackType != null) {
+                        System.out.println("   (--attack-type " + cliAttackType + " ignored for this honest-only row)");
+                    }
+                } else {
+                    System.out.println("   Attack model: " + attackModelPath.toAbsolutePath());
+                    System.out.println("   Attack type  = " + config.getOrDefault("attack_type", "SELFISH_MINING (default)"));
+                }
                 System.out.println("   Monte-Carlo rounds = "
                         + config.getOrDefault("numberOfMonteCarloRounds", "?"));
 
@@ -234,6 +246,15 @@ public class ATOSIMSimulator {
                                 + " in row: " + row);
             }
         }
+    }
+
+    /**
+     * True for the honest-only strategy value {@code none} (case-insensitive). Such a row still
+     * needs every column validateCsvColumns requires (attacker_config_id may be any non-blank
+     * placeholder); its attack model is neither resolved nor loaded.
+     */
+    static boolean isHonestOnlyStrategy(String attackStrategy) {
+        return attackStrategy != null && "none".equalsIgnoreCase(attackStrategy.strip());
     }
 
     private static int toRunId(String configId, int fallback) {
